@@ -17,7 +17,7 @@ packages = [{ include = "homeassistant_api" }]
 
 [tool.poetry.dependencies]
 aiohttp = "^3.8.1"
-aiohttp-client-cache = "^0.6.1"
+aiohttp-client-cache = ">=0.6.1"
 pydantic = ">=2.0"
 python = "^3.8,<4.0.0"
 requests = "^2.27.1"
