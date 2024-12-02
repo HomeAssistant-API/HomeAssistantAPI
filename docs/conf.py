@@ -20,7 +20,7 @@ sys.path.append(os.path.abspath("extensions"))
 # -- Project information -----------------------------------------------------
 
 project = "Homeassistant API"
-copyright = "2023, Nate Larsen"  # pylint: disable=redefined-builtin
+copyright = "2024, Nathan Larsen"  # pylint: disable=redefined-builtin
 author = "Nate Larsen"
 
 # The full version, including alpha/beta/rc tags
