@@ -1,6 +1,5 @@
 """Interact with your Homeassistant Instance remotely."""
 
-
 __all__ = (
     "Client",
     "State",
@@ -21,9 +20,11 @@ __all__ = (
     "ParameterMissingError",
     "RequestError",
     "UnauthorizedError",
+    "WebSocketClient",
 )
 
 from .client import Client
+from .websocket import WebSocketClient
 from .errors import (
     APIConfigurationError,
     EndpointNotFoundError,
