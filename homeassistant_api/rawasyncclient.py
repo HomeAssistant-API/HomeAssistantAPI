@@ -1,4 +1,5 @@
 """Module for interacting with Home Assistant asyncronously."""
+
 from __future__ import annotations
 
 import asyncio
@@ -176,11 +177,14 @@ class RawAsyncClient(RawBaseClient):
         :code:`POST /api/template`
         """
         try:
-            return cast(str, await self.async_request(
-                "template",
-                json=dict(template=template),
-                method="POST",
-            ))
+            return cast(
+                str,
+                await self.async_request(
+                    "template",
+                    json=dict(template=template),
+                    method="POST",
+                ),
+            )
         except RequestError as err:
             raise BadTemplateError(
                 "Your template is invalid. "

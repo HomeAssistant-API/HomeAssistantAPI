@@ -1,4 +1,5 @@
 """File for Service and Domain data models"""
+
 import gc
 import inspect
 from typing import TYPE_CHECKING, Any, Coroutine, Dict, Optional, Tuple, Union, cast
@@ -36,9 +37,7 @@ class Domain(BaseModel):
     def from_json(cls, json: Dict[str, Any], client: "Client") -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
-            raise ValueError(
-                "Missing services or attribute attribute in json argument."
-            )
+            raise ValueError("Missing services or domain attribute in json argument.")
         domain = cls(domain_id=cast(str, json.get("domain")), _client=client)
         services = json.get("services")
         assert isinstance(services, dict)

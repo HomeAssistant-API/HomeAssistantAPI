@@ -1,4 +1,5 @@
 """Module for all interaction with homeassistant."""
+
 from __future__ import annotations
 
 import json
