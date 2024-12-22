@@ -78,8 +78,9 @@ class RawWebSocketClient:
 
         if "id" in data:
             match data["type"]:
-                case "event":
+                case "subscribe_events" | "subscribe_trigger":
                     self._event_responses[data["id"]] = []
+                    self._result_responses[data["id"]] = None
                 case "ping":
                     self._ping_responses[data["id"]] = {"start": time.perf_counter_ns()}
                 case (
@@ -135,9 +136,8 @@ class RawWebSocketClient:
             if self._result_responses.get(id) is not None:
                 return self._result_responses.pop(id)
             if self._event_responses.get(id, []):
-                if len(self._event_responses[id]) > 1:
+                if len(self._event_responses[id]) > 0:
                     return self._event_responses[id].pop(0)
-                return self._event_responses.pop(id)[0]
             if self._ping_responses.get(id, {}).get("end") is not None:
                 return self._ping_responses.pop(id)
 
@@ -149,10 +149,7 @@ class RawWebSocketClient:
                     "Received a message without an id outside the auth phase."
                 )
 
-            data = self.handle_recv(data)
-
-            if data["id"] == id:  ## we've found the message we're looking for
-                return data
+            self.handle_recv(data)
 
     def authentication_phase(self) -> dict[str, Any]:
         """Authenticate with the websocket server."""
