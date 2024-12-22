@@ -208,4 +208,4 @@ def test_exception_unexpected_status_code() -> None:
 
 def test_unkown_scheme(cached_client: Client) -> None:
     with pytest.raises(ValueError):
-        cached_client.request("ftp://example.com")
+        Client("ftp://example.com", "token")
