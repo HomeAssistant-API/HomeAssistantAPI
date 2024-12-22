@@ -66,7 +66,13 @@ class Domain(BaseModel):
         """Allows services accessible as attributes"""
         if attr in self.services:
             return self.get_service(attr)
-        return super().__getattribute__(attr)
+        try:
+            return super().__getattribute__(attr)
+        except AttributeError as err:
+            try:
+                return object.__getattribute__(self, attr)
+            except AttributeError as e:
+                raise e from err
 
 
 class ServiceField(BaseModel):
