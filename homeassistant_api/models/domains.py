@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, Coroutine, Dict, Optional, Tuple, Union, 
 
 from pydantic import Field
 
+from homeassistant_api.errors import RequestError
+
 from .base import BaseModel
 from .states import State
 
@@ -94,26 +96,49 @@ class Service(BaseModel):
     description: Optional[str] = None
     fields: Optional[Dict[str, ServiceField]] = None
 
-    def trigger(self, **service_data) -> Tuple[State, ...]:
-        """Triggers the service associated with this object."""
-        return self.domain._client.trigger_service(
-            self.domain.domain_id,
-            self.service_id,
-            **service_data,
-        )
-
-    async def async_trigger(self, **service_data) -> Tuple[State, ...]:
-        """Triggers the service associated with this object."""
-        return await self.domain._client.async_trigger_service(
-            self.domain.domain_id,
-            self.service_id,
-            **service_data,
-        )
-
-    def __call__(
+    def trigger(
         self, **service_data
-    ) -> Union[Tuple[State, ...], Coroutine[Any, Any, Tuple[State, ...]]]:
+    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
         """Triggers the service associated with this object."""
+        try:
+            return self.domain._client.trigger_service_with_response(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+        except RequestError:
+            return self.domain._client.trigger_service(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+
+    async def async_trigger(
+        self, **service_data
+    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
+        """Triggers the service associated with this object."""
+        try:
+            return await self.domain._client.async_trigger_service_with_response(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+        except RequestError:
+            return await self.domain._client.async_trigger_service(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+
+    def __call__(self, **service_data) -> Union[
+        Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]],
+        Coroutine[
+            Any, Any, Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]
+        ],
+    ]:
+        """
+        Triggers the service associated with this object.
+        """
         assert (frame := inspect.currentframe()) is not None
         assert (parent_frame := frame.f_back) is not None
         try:
