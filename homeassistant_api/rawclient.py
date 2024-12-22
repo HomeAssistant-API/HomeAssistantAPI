@@ -303,12 +303,20 @@ class RawClient(RawBaseClient):
 
         Returns a list of the states changed and the response from the service call.
         """
-        data = cast(dict[str, Any], self.request(
-            join("services", domain, service) + "?return_response",
-            method="POST",
-            json=service_data,
-        ))
-        states = tuple(map(State.from_json, cast(List[Dict[Any, Any]], data.get("changed_states", []))))
+        data = cast(
+            dict[str, Any],
+            self.request(
+                join("services", domain, service) + "?return_response",
+                method="POST",
+                json=service_data,
+            ),
+        )
+        states = tuple(
+            map(
+                State.from_json,
+                cast(List[Dict[Any, Any]], data.get("changed_states", [])),
+            )
+        )
         return states, data.get("service_response", {})
 
     # EntityState methods
