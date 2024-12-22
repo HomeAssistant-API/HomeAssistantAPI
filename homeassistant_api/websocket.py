@@ -34,9 +34,9 @@ class WebSocketClient(RawWebSocketClient):
         # Note: Even though it says "get_states" this is actually comparable
         # to the `get_entities` method from the REST API clients.
         # TODO: do the same parsing logic as in the REST API client
-        return self.recv(self.send("get_states"))
+        return self.recv(self.send("get_states"))["result"]
 
-    def get_domains(self) -> list[str]:
+    def get_domains(self) -> dict[str, Domain]:
         """Get a list of (service) domains."""
         data = self.recv(self.send("get_services"))["result"]
         domains = map(
@@ -48,9 +48,29 @@ class WebSocketClient(RawWebSocketClient):
         )
         return {domain.domain_id: domain for domain in domains}
 
-    def trigger_service(self, domain: str, service: str, **service_data) -> None:
+    def trigger_service(
+        self,
+        domain: str,
+        service: str,
+        return_response: bool,  # Whether to return the response or not, no sensible default
+        entity_id: str | None = None,
+        **service_data,
+    ) -> None:
         """Trigger a service."""
-        pass
+        params = {
+            "domain": domain,
+            "service": service,
+            "service_data": service_data,
+            "return_response": return_response,
+        }
+        if entity_id is not None:
+            params["target"] = {"entity_id": entity_id}
+
+        data = self.recv(self.send("call_service", **params))
+
+        # TODO: handle data["result"]["context"]
+
+        return data["result"]["response"]
 
     def get_events(self) -> list[dict[str, str]]:
         """Get a list of events."""
