@@ -170,6 +170,7 @@ async def test_async_trigger_service(async_cached_client: Client) -> None:
     )
     assert isinstance(resp, tuple)
 
+
 def test_trigger_service_with_response(cached_client: Client) -> None:
     """Tests the `POST /api/services/<domain>/<service>?return_response` endpoint."""
     weather = cached_client.get_domain("weather")
@@ -188,6 +189,7 @@ async def test_async_trigger_service_with_response(async_cached_client: Client) 
     changed_states, data = await weather.get_forecasts(
         entity_id="weather.forecast_home",
         type="hourly",
+        return_response=True,
     )
     assert data is not None
 
