@@ -3,7 +3,7 @@
 from typing import Union
 
 
-class HomeassistantAPIError(BaseException):
+class HomeassistantAPIError(Exception):
     """Base class for custom errors"""
 
 
