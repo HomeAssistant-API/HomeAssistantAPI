@@ -3,7 +3,7 @@
 from typing import Union
 
 
-class HomeassistantAPIError(BaseException):
+class HomeassistantAPIError(Exception):
     """Base class for custom errors"""
 
 
@@ -84,3 +84,11 @@ class UnexpectedStatusCodeError(ResponseError):
 
     def __init__(self, status_code: int) -> None:
         super().__init__(f"Response has unexpected status code: {status_code!r}")
+
+
+class WebsocketError(HomeassistantAPIError):
+    """Error raised when an issue occurs with the websocket connection."""
+
+
+class ReceivingError(WebsocketError):
+    """Error raised when an issue occurs when receiving a message from the websocket server."""

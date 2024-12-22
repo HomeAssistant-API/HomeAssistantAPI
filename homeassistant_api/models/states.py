@@ -1,4 +1,5 @@
 """Module for the Entity State model."""
+
 from datetime import datetime
 from typing import Any, Dict, Optional
 

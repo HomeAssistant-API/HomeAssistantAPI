@@ -1,4 +1,5 @@
 """The Model objects for the entire library."""
+
 from .base import BaseModel
 from .domains import Domain, Service, ServiceField
 from .entity import Entity, Group

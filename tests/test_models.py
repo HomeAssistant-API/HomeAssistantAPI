@@ -1,4 +1,5 @@
 """Module that tests model methods."""
+
 import copy
 from datetime import datetime
 

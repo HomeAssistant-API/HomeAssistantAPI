@@ -104,15 +104,14 @@ class RawBaseClient:
         end_timestamp: Optional[datetime] = None,
         significant_changes_only: bool = False,
     ) -> Tuple[Dict[str, Optional[str]], str]:
-
         """Pre-logic for `Client.get_entity_histories` and `Client.async_get_entity_histories`."""
         params: Dict[str, Optional[str]] = {}
         if entities is not None:
             params["filter_entity_id"] = ",".join([ent.entity_id for ent in entities])
         if end_timestamp is not None:
-            params[
-                "end_time"
-            ] = end_timestamp.isoformat()  # Params are automatically URL encoded
+            params["end_time"] = (
+                end_timestamp.isoformat()
+            )  # Params are automatically URL encoded
         if significant_changes_only:
             params["significant_changes_only"] = None
         if start_timestamp is not None:
@@ -134,9 +133,11 @@ class RawBaseClient:
         if filter_entities is not None:
             params.update(
                 {
-                    "entity": filter_entities
-                    if isinstance(filter_entities, str)
-                    else ",".join(filter_entities)
+                    "entity": (
+                        filter_entities
+                        if isinstance(filter_entities, str)
+                        else ",".join(filter_entities)
+                    )
                 }
             )
         if end_timestamp is not None:

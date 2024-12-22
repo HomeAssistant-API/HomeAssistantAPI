@@ -10,7 +10,11 @@
     <img src="https://github.com/GrandMoff100/HomeAssistantAPI/blob/7edb4e6298d37bda19c08b807613c6d351788491/docs/images/homeassistant-logo.png?raw=true" width="60%">
 </a>
 
-## Python wrapper for Homeassistant's [REST API](https://developers.home-assistant.io/docs/api/rest/)
+## Python wrapper for Homeassistant's [Websocket API](https://developers.home-assistant.io/docs/api/websocket/) and [REST API](https://developers.home-assistant.io/docs/api/rest/)
+
+> Note: As of [this comment](https://github.com/home-assistant/architecture/discussions/1074#discussioncomment-9196867) the REST API is not getting any new features or endpoints.
+> However, it is not going to be deprecated according to [this comment](https://github.com/home-assistant/developers.home-assistant/pull/2150#pullrequestreview-2017433583)
+> But it is recommended to use the Websocket API for new integrations.
 
 Here is a quick example.
 
@@ -18,17 +22,15 @@ Here is a quick example.
 from homeassistant_api import Client
 
 with Client(
-    '<API Server URL>',
+    '<API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
     '<Your Long Lived Access-Token>'
 ) as client:
-
-    light = client.get_domain("light")
-
-    light.turn_on(entity_id="light.living_room_lamp")
+    light = client.trigger_service('light', 'turn_on', {'entity_id': 'light.living_room'})
 ```
 
-All the methods also support async!
-Just prefix the method with `async_`
+All the methods also support async/await!
+Just prefix the method with `async_` and pass the `use_async=True` argument to the `Client` constructor.
+Then you can use the methods as coroutines
 (i.e. `await light.async_turn_on(...)`).
 
 ## Documentation

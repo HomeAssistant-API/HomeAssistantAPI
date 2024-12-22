@@ -1,6 +1,5 @@
 """Interact with your Homeassistant Instance remotely."""
 
-
 __all__ = (
     "Client",
     "State",

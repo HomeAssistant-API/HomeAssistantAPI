@@ -1,6 +1,9 @@
 """Module containing the primary Client class."""
+
 import logging
 from typing import Any
+import urllib.parse as urlparse
+import warnings
 
 from .rawasyncclient import RawAsyncClient
 from .rawclient import RawClient
@@ -21,12 +24,26 @@ class Client(RawClient, RawAsyncClient):
 
     def __init__(
         self,
-        *args: Any,
+        api_url: str,
+        token: str,
         use_async: bool = False,
         verify_ssl: bool = True,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
-        if use_async:
-            RawAsyncClient.__init__(self, *args, verify_ssl=verify_ssl, **kwargs)
+        parsed = urlparse.urlparse(api_url)
+
+        if parsed.scheme in {"http", "https"}:
+            if use_async:
+                RawAsyncClient.__init__(
+                    self, api_url, token, verify_ssl=verify_ssl, **kwargs
+                )
+            else:
+                RawClient.__init__(
+                    self, api_url, token, verify_ssl=verify_ssl, **kwargs
+                )
+            warnings.warn(
+                "The REST API is being phased out and will be removed in a far future release. Please use the WebSocket API instead.",
+                DeprecationWarning,
+            )
         else:
-            RawClient.__init__(self, *args, verify_ssl=verify_ssl, **kwargs)
+            raise ValueError(f"Unknown scheme {parsed.scheme} in {api_url}")

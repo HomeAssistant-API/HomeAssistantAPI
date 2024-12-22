@@ -4,25 +4,9 @@
   "key": "core.restore_state",
   "data": [
     {
-      "state": {
-        "entity_id": "person.test_user",
-        "state": "unknown",
-        "attributes": {
-          "editable": true,
-          "id": "test_user",
-          "user_id": "e85fc7b7b8924dc9b024ce90ad23799e",
-          "friendly_name": "Test User"
-        },
-        "last_changed": "2023-03-11T22:49:37.025955+00:00",
-        "last_updated": "2023-03-11T22:49:38.001160+00:00",
-        "context": {
-          "id": "01GV9DV0YHA545RWX832E5W3XW",
-          "parent_id": null,
-          "user_id": null
-        }
-      },
+      "state": {"entity_id":"person.test_user","state":"unknown","attributes":{"editable":true,"id":"test_user","device_trackers":[],"user_id":"e85fc7b7b8924dc9b024ce90ad23799e","friendly_name":"Test User"},"last_changed":"2024-12-20T16:29:12.365217+00:00","last_reported":"2024-12-20T16:29:13.064958+00:00","last_updated":"2024-12-20T16:29:13.064958+00:00","context":{"id":"01JFJEDMZ89PTCR8TSCGBK4PP6","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2023-03-11T22:49:38.002949+00:00"
+      "last_seen": "2024-12-22T02:24:58.979320+00:00"
     }
   ]
 }

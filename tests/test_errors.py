@@ -2,7 +2,7 @@
 
 import json
 import os
-import unittest
+import unittest.mock
 from typing import Dict
 
 import aiohttp
@@ -204,3 +204,8 @@ def test_exception_response_error() -> None:
 def test_exception_unexpected_status_code() -> None:
     with pytest.raises(UnexpectedStatusCodeError):
         Processing(make_response(0, "", {})).process()
+
+
+def test_unkown_scheme(cached_client: Client) -> None:
+    with pytest.raises(ValueError):
+        Client("ftp://example.com", "token")
