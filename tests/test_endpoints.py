@@ -189,7 +189,6 @@ async def test_async_trigger_service_with_response(async_cached_client: Client) 
     changed_states, data = await weather.get_forecasts(
         entity_id="weather.forecast_home",
         type="hourly",
-        return_response=True,
     )
     assert data is not None
 
