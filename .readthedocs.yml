@@ -2,15 +2,14 @@ version: 2
 
 # Set the version of Python and other tools you might need
 build:
-  os: ubuntu-20.04
+  os: ubuntu-22.04
   tools:
     python: "3.10"
   jobs:
     pre_create_environment:
       - asdf plugin add poetry
-      - asdf install poetry latest
-      - asdf global poetry latest
-      - $POETRY_HOME/bin/pip install --user poetry-plugin-export
+      - asdf global poetry 1.8.3
+      - asdf install poetry
       - poetry export -f requirements.txt --output requirements.txt --with docs
     post_install:
       - pip install -r requirements.txt
