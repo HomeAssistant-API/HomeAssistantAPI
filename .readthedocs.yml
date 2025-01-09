@@ -10,6 +10,7 @@ build:
       - asdf plugin add poetry
       - asdf install poetry latest
       - asdf global poetry latest
+      - $POETRY_HOME/bin/pip install --user poetry-plugin-export
       - poetry export -f requirements.txt --output requirements.txt --with docs
     post_install:
       - pip install -r requirements.txt
