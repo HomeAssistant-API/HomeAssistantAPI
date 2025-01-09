@@ -8,8 +8,8 @@ build:
   jobs:
     pre_create_environment:
       - asdf plugin add poetry
+      - asdf install poetry 1.8.3
       - asdf global poetry 1.8.3
-      - asdf install poetry
       - poetry export -f requirements.txt --output requirements.txt --with docs
     post_install:
       - pip install -r requirements.txt
