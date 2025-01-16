@@ -20,11 +20,11 @@ __all__ = (
     "ParameterMissingError",
     "RequestError",
     "UnauthorizedError",
-    "WebSocketClient",
+    "WebsocketClient",
 )
 
 from .client import Client
-from .websocket import WebSocketClient
+from .websocket import WebsocketClient
 from .errors import (
     APIConfigurationError,
     EndpointNotFoundError,

@@ -22,6 +22,8 @@ from typing import (
 import requests
 import requests_cache
 
+from homeassistant_api.utils import prepare_entity_id
+
 from .errors import BadTemplateError, RequestError, RequestTimeoutError
 from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
 from .processing import Processing, ResponseType
@@ -139,7 +141,7 @@ class RawClient(RawBaseClient):
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
         data = self.request(url, params=params)
         for entry in data:
-            yield LogbookEntry.parse_obj(entry)
+            yield LogbookEntry.model_validate(entry)
 
     def get_entity_histories(
         self,
@@ -164,7 +166,7 @@ class RawClient(RawBaseClient):
             params=self.construct_params(params),
         )
         for states in data:
-            yield History.parse_obj({"states": states})
+            yield History.model_validate({"states": states})
 
     def get_rendered_template(self, template: str) -> str:
         """
@@ -331,7 +333,7 @@ class RawClient(RawBaseClient):
         Fetches the state of the entity specified.
         :code:`GET /api/states/<entity_id>`
         """
-        entity_id = self.prepare_entity_id(
+        entity_id = prepare_entity_id(
             group_id=group_id,
             slug=slug,
             entity_id=entity_id,
@@ -351,7 +353,7 @@ class RawClient(RawBaseClient):
         data = self.request(
             join("states", state.entity_id),
             method="POST",
-            json=json.loads(state.json()),
+            json=json.loads(state.model_dump_json()),
         )
         return State.from_json(cast(Dict[str, Any], data))
 
