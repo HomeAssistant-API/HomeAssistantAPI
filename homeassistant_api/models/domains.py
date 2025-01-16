@@ -97,9 +97,11 @@ class Service(BaseModel):
     fields: Optional[Dict[str, ServiceField]] = None
 
     def trigger(
-        self, **service_data
+        self, entity_id: str | None = None, **service_data
     ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
         """Triggers the service associated with this object."""
+        if entity_id is not None:
+            service_data["entity_id"] = entity_id
         try:
             return self.domain._client.trigger_service_with_response(
                 self.domain.domain_id,
@@ -114,9 +116,11 @@ class Service(BaseModel):
             )
 
     async def async_trigger(
-        self, **service_data
+        self, entity_id: str | None = None, **service_data
     ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
         """Triggers the service associated with this object."""
+        if entity_id is not None:
+            service_data["entity_id"] = entity_id
         try:
             return await self.domain._client.async_trigger_service_with_response(
                 self.domain.domain_id,
@@ -130,7 +134,7 @@ class Service(BaseModel):
                 **service_data,
             )
 
-    def __call__(self, **service_data) -> Union[
+    def __call__(self, entity_id: str | None = None, **service_data) -> Union[
         Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]],
         Coroutine[
             Any, Any, Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]
@@ -145,7 +149,7 @@ class Service(BaseModel):
             if inspect.iscoroutinefunction(
                 caller := gc.get_referrers(parent_frame.f_code)[0]
             ) or inspect.iscoroutine(caller):
-                return self.async_trigger(**service_data)
+                return self.async_trigger(entity_id=entity_id, **service_data)
         except IndexError:  # pragma: no cover
             pass
-        return self.trigger(**service_data)
+        return self.trigger(entity_id=entity_id, **service_data)
