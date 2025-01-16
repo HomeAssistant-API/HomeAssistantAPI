@@ -1,19 +1,35 @@
 import json
 import logging
 import time
+from pydantic import ValidationError
 
 # import threading
 
 import websockets.sync.client as ws
-from typing import Any
+from typing import Any, Optional, cast
 
-from homeassistant_api.errors import ReceivingError, ResponseError, UnauthorizedError
+from homeassistant_api.errors import (
+    ReceivingError,
+    RequestError,
+    ResponseError,
+    UnauthorizedError,
+)
+from homeassistant_api.models.base import BaseModel
+from homeassistant_api.models.websocket import (
+    AuthInvalid,
+    AuthOk,
+    AuthRequired,
+    ErrorResponse,
+    EventResponse,
+    PingResponse,
+    ResultResponse,
+)
 
 
 logger = logging.getLogger(__name__)
 
 
-class RawWebSocketClient:
+class RawWebsocketClient:
     api_url: str
     token: str
     _conn: ws.ClientConnection
@@ -26,12 +42,15 @@ class RawWebSocketClient:
         self.api_url = api_url
         self.token = token
         self._conn = None
+
         self._id_counter = 0
-        self._result_responses: dict[int, dict[str, Any]] = {}  # id -> response
-        self._event_responses: dict[int, list[dict[str, Any]]] = (
+        self._result_responses: dict[int, Optional[ResultResponse]] = (
+            {}
+        )  # id -> response
+        self._event_responses: dict[int, list[EventResponse]] = (
             {}
         )  # id -> [response, ...]
-        self._ping_responses: dict[int, dict[str, float]] = {}  # id -> (sent, received)
+        self._ping_responses: dict[int, PingResponse] = {}  # id -> (sent, received)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.api_url!r})"
@@ -39,7 +58,9 @@ class RawWebSocketClient:
     def __enter__(self):
         self._conn = ws.connect(self.api_url)
         self._conn.__enter__()
-        self.authentication_phase()
+        okay = self.authentication_phase()
+        logging.info("Authenticated with Home Assistant (%s)", okay.ha_version)
+        self.supported_features_phase()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -53,15 +74,13 @@ class RawWebSocketClient:
 
     def _send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
-        logger.info(f"Sending message: {data}")
+        logger.debug(f"Sending message: {data}")
         self._conn.send(json.dumps(data))
 
     def _recv(self) -> dict[str, Any]:
         """Receive a message from the websocket server."""
         _bytes = self._conn.recv()
-
-        # logger.info(f"Received message: {_bytes}")
-
+        logger.debug(f"Received message: {_bytes}")
         return json.loads(_bytes)
 
     def send(self, type: str, include_id: bool = True, **data: Any) -> int:
@@ -77,103 +96,104 @@ class RawWebSocketClient:
         self._send(data)
 
         if "id" in data:
-            match data["type"]:
-                case "subscribe_events" | "subscribe_trigger":
-                    self._event_responses[data["id"]] = []
-                    self._result_responses[data["id"]] = None
-                case "ping":
-                    self._ping_responses[data["id"]] = {"start": time.perf_counter_ns()}
-                case (
-                    _
-                ):  # anything else is one-time command that returns a "type": "result" entry
-                    self._result_responses[data["id"]] = None
+            if data["type"] == "ping":
+                self._ping_responses[data["id"]] = PingResponse(
+                    start=time.perf_counter_ns(),
+                    id=data["id"],
+                    type="pong",
+                )
+            else:
+                self._event_responses[data["id"]] = []
+                self._result_responses[data["id"]] = None
             return data["id"]
         return -1  # non-command messages don't have an id
 
     def check_success(self, data: dict[str, Any]) -> None:
         """Check if a command message was successful."""
-        match data:
-            case {"type": "result", "success": False, "error": {}}:
-                raise ResponseError(data["error"].pop("message"), data["error"])
-            case {"type": "result", "success": True}:
-                # this is the expected case
-                pass
-            case {"type": "result"}:
-                raise ResponseError(
-                    "Wrongly formatted response", data
-                )  # because "type": "result" should imply a "success" key
-        return data
+        try:
+            error_resp = ErrorResponse.model_validate(data)
+            raise RequestError(error_resp.error.code, error_resp.error.message)
+        except ValidationError:
+            pass
 
-    def handle_recv(self, data: dict[str, Any]) -> dict[str, Any]:
+    def handle_recv(
+        self, data: dict[str, Any]
+    ) -> EventResponse | ResultResponse | PingResponse:
         """Handle a received message."""
         if "id" not in data:
             raise ReceivingError(
                 "Received a message without an id outside the auth phase."
             )
+        self.check_success(data)
+        self.parse_response(data)
 
-        match data:
-            case {"type": "pong"}:
-                logger.info("Received pong message")
-                self._ping_responses[data["id"]].update(
-                    {"end": time.perf_counter_ns(), **data}
-                )
-                data = self._ping_responses[data["id"]]
-            case {"type": "result"}:
-                logger.info("Received result message")
-                self._result_responses[data["id"]] = data
-            case {"type": "event"}:
-                logger.info("Received event message")
-                self._event_responses[data["id"]].append(data)
-            case _:
-                logger.warning(f"Received unknown message: {data}")
+    def parse_response(self, data: dict[str, Any]) -> None:
+        if data.get("type") == "pong":
+            logger.info("Received pong message")
+            self._ping_responses[data["id"]] = PingResponse.model_validate(
+                {**data, "end": time.perf_counter_ns()}
+            )
+        elif data.get("type") == "result":
+            logger.info("Received result message")
+            self._result_responses[data["id"]] = ResultResponse.model_validate(data)
+        elif data.get("type") == "event":
+            logger.info("Received event message %s", data["event"]["event_type"])
+            self._event_responses[data["id"]].append(EventResponse.model_validate(data))
+        else:
+            raise ReceivingError(f"Received unexpected message type: {data}")
 
-        return self.check_success(data)
-
-    def recv(self, id: int) -> dict[str, Any]:
+    def recv(self, id: int) -> EventResponse | ResultResponse | PingResponse:
         """Receive a response to a message from the websocket server."""
         while True:
             ## have we received a message with the id we're looking for?
             if self._result_responses.get(id) is not None:
                 return self._result_responses.pop(id)
             if self._event_responses.get(id, []):
-                if len(self._event_responses[id]) > 0:
-                    return self._event_responses[id].pop(0)
+                return self._event_responses[id].pop(0)
             if self._ping_responses.get(id, {}).get("end") is not None:
                 return self._ping_responses.pop(id)
 
             ## if not, keep receiving messages until we do
-            data = self._recv()
+            self.handle_recv(self._recv())
 
-            if "id" not in data:
-                raise ResponseError(
-                    "Received a message without an id outside the auth phase."
-                )
-
-            self.handle_recv(data)
-
-    def authentication_phase(self) -> dict[str, Any]:
+    def authentication_phase(self) -> AuthOk:
         """Authenticate with the websocket server."""
         # Capture the first message from the server saying we need to authenticate
-        welcome = self._recv()
-        logging.debug(f"Received welcome message: {welcome}")
-        if welcome["type"] != "auth_required":
-            raise ResponseError("Unexpected response during authentication")
+        try:
+            welcome = AuthRequired.model_validate(self._recv())
+            logger.debug(f"Received welcome message: {welcome}")
+        except ValidationError as e:
+            raise ResponseError("Unexpected response during authentication") from e
 
         # Send our authentication token
         self.send("auth", access_token=self.token, include_id=False)
-        logging.debug("Sent auth message")
+        logger.debug("Sent auth message")
+
         # Check the response
-        match (resp := self._recv())["type"]:
-            case "auth_ok":
-                return None
-            case "auth_invalid":
-                raise UnauthorizedError()
-            case _:
-                raise ResponseError(
-                    "Unexpected response during authentication", resp["message"]
-                )
+        resp = self._recv()
+        try:
+            return AuthOk.model_validate(resp)
+        except ValidationError as e:
+            error_resp = AuthInvalid.model_validate(resp)
+            raise UnauthorizedError(error_resp.message) from e
+        except Exception as e:
+            raise ResponseError(
+                "Unexpected response during authentication", resp["message"]
+            ) from e
+
+    def supported_features_phase(self) -> None:
+        """Get the supported features from the websocket server."""
+        resp = self.recv(
+            self.send(
+                "supported_features",
+                features={
+                    # "coalesce_messages": 42, # including this key sets it to True
+                },
+            )
+        )
+        assert resp.result is None
 
     def ping_latency(self) -> float:
         """Get the latency (in milliseconds) of the connection by sending a ping message."""
-        pong = self.recv(self.send("ping"))
-        return (pong["end"] - pong["start"]) / 1_000_000
+        pong = cast(PingResponse, self.recv(self.send("ping")))
+        return (pong.end - pong.start) / 1_000_000
