@@ -23,11 +23,21 @@ from homeassistant_api.errors import (
     UnexpectedStatusCodeError,
 )
 from homeassistant_api.processing import Processing
+from homeassistant_api.utils import prepare_entity_id
+from homeassistant_api.websocket import WebsocketClient
 
 
 def test_unauthorized() -> None:
     with pytest.raises(UnauthorizedError):
         with Client(os.environ["HOMEASSISTANTAPI_URL"], "lolthisisawrongtokenforsure"):
+            pass
+
+
+def test_websocket_unauthorized() -> None:
+    with pytest.raises(UnauthorizedError):
+        with WebsocketClient(
+            os.environ["HOMEASSISTANTAPI_WS_URL"], "lolthisisawrongtokenforsure"
+        ):
             pass
 
 
@@ -104,22 +114,22 @@ async def test_async_invalid_template(async_cached_client: Client) -> None:
 
 def test_prepare_entity_id(cached_client: Client) -> None:
     """Tests all cases for :py:meth:`Client.prepare_entity_id`."""
-    assert cached_client.prepare_entity_id(group_id="person", slug="me") == "person.me"
-    assert cached_client.prepare_entity_id(entity_id="person.me") == "person.me"
-    assert "person.you" == cached_client.prepare_entity_id(
+    assert prepare_entity_id(group_id="person", slug="me") == "person.me"
+    assert prepare_entity_id(entity_id="person.me") == "person.me"
+    assert "person.you" == prepare_entity_id(
         group_id="person",
         entity_id="person.you",
     )
-    assert "person.you" == cached_client.prepare_entity_id(
+    assert "person.you" == prepare_entity_id(
         slug="me",
         entity_id="person.you",
     )
     with pytest.raises(ValueError):
-        cached_client.prepare_entity_id(group_id="person")  # No slug
+        prepare_entity_id(group_id="person")  # No slug
     with pytest.raises(ValueError):
-        cached_client.prepare_entity_id(slug="me")  # No group
+        prepare_entity_id(slug="me")  # No group
     with pytest.raises(ValueError):
-        cached_client.prepare_entity_id()  # No entity_id
+        prepare_entity_id()  # No entity_id
 
 
 def make_response(
@@ -206,6 +216,6 @@ def test_exception_unexpected_status_code() -> None:
         Processing(make_response(0, "", {})).process()
 
 
-def test_unkown_scheme(cached_client: Client) -> None:
+def test_unkown_scheme() -> None:
     with pytest.raises(ValueError):
         Client("ftp://example.com", "token")

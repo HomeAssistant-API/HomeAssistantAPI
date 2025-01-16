@@ -1,12 +1,12 @@
 import asyncio
 import logging
 import os
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator, Literal
 
 import pytest
 import pytest_asyncio
 
-from homeassistant_api import Client
+from homeassistant_api import Client, WebsocketClient
 
 TIMEOUT = 300
 
@@ -42,11 +42,25 @@ def event_loop():
 
 
 @pytest_asyncio.fixture(name="async_cached_client", scope="session")
-async def setup_async_cached_client(wait_for_server) -> AsyncGenerator[Client, None]:
+async def setup_async_cached_client(
+    wait_for_server: Literal[None],
+) -> AsyncGenerator[Client, None]:
     """Initializes the Client and enters an async cached session."""
     async with Client(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
         use_async=True,
+    ) as client:
+        yield client
+
+
+@pytest.fixture(name="websocket_client", scope="session")
+def setup_websocket_client(
+    wait_for_server: Literal[None],
+) -> Generator[Client, None, None]:
+    """Initializes the Client and enters a WebSocket session."""
+    with WebsocketClient(
+        os.environ["HOMEASSISTANTAPI_WS_URL"],
+        os.environ["HOMEASSISTANTAPI_TOKEN"],
     ) as client:
         yield client
