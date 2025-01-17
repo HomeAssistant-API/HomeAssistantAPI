@@ -1,7 +1,7 @@
 """Module for making sure endpoints that should succeed, do indeed succeed."""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from homeassistant_api import Client
 from homeassistant_api.models.events import Event

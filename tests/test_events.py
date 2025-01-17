@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+
 from homeassistant_api.websocket import WebsocketClient
 
 

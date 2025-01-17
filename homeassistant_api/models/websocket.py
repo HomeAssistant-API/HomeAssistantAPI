@@ -36,7 +36,7 @@ class PingResponse(BaseModel):
 
     id: int
     type: Literal["pong"]
-    start: Optional[int] = None  # added by the client, nanoseconds
+    start: int  # added by the client, nanoseconds
     end: Optional[int] = None  # added by the client, nanoseconds
 
 

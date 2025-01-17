@@ -12,19 +12,24 @@ from .base import BaseModel
 from .states import State
 
 if TYPE_CHECKING:
-    from homeassistant_api import Client
+    from homeassistant_api import Client, WebsocketClient
 
 
 class Domain(BaseModel):
     """Model representing the domain that services belong to."""
 
-    def __init__(self, *args, _client: Optional["Client"] = None, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        _client: Optional[Union["Client", "WebsocketClient"]] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         if _client is None:
             raise ValueError("No client passed.")
         object.__setattr__(self, "_client", _client)
 
-    _client: "Client"
+    _client: Union["Client", "WebsocketClient"]
     domain_id: str = Field(
         ...,
         description="The name of the domain that services belong to. "
@@ -36,7 +41,9 @@ class Domain(BaseModel):
     )
 
     @classmethod
-    def from_json(cls, json: Dict[str, Any], client: "Client") -> "Domain":
+    def from_json(
+        cls, json: Dict[str, Any], client: Union["Client", "WebsocketClient"]
+    ) -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
             raise ValueError("Missing services or domain attribute in json argument.")
@@ -98,7 +105,7 @@ class Service(BaseModel):
 
     def trigger(
         self, entity_id: str | None = None, **service_data
-    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
+    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]], dict[str, Any], None]:
         """Triggers the service associated with this object."""
         if entity_id is not None:
             service_data["entity_id"] = entity_id
@@ -121,6 +128,13 @@ class Service(BaseModel):
         """Triggers the service associated with this object."""
         if entity_id is not None:
             service_data["entity_id"] = entity_id
+        
+        from homeassistant_api import WebsocketClient  # prevent circular import
+
+        if isinstance(self.domain._client, WebsocketClient):
+            raise NotImplementedError(
+                "WebsocketClient does not support async/await syntax."
+            )
         try:
             return await self.domain._client.async_trigger_service_with_response(
                 self.domain.domain_id,
@@ -135,7 +149,7 @@ class Service(BaseModel):
             )
 
     def __call__(self, entity_id: str | None = None, **service_data) -> Union[
-        Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]],
+        Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]], dict[str, Any], None],
         Coroutine[
             Any, Any, Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]
         ],

@@ -1,21 +1,20 @@
 import contextlib
+import logging
+import urllib.parse as urlparse
 from typing import Any, Dict, Generator, Optional, Tuple, cast
 
-from homeassistant_api.models import Domain, Entity, State, Group
+from homeassistant_api.models import Domain, Entity, Group, State
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import (
     EventResponse,
     FiredEvent,
     FiredTrigger,
     ResultResponse,
+    TemplateEvent,
 )
 from homeassistant_api.utils import prepare_entity_id
+
 from .rawwebsocket import RawWebsocketClient
-
-import urllib.parse as urlparse
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,21 +40,30 @@ class WebsocketClient(RawWebsocketClient):
         """
         id = self.send("render_template", template=template, report_errors=True)
         first = self.recv(id)
-        assert first.result is None
+        assert cast(ResultResponse, first).result is None
         second = self.recv(id)
         self._unsubscribe(id)
-        return second.event.result
+        return cast(TemplateEvent, cast(EventResponse, second).event).result
 
     def get_config(self) -> dict[str, Any]:
         """Get the Home Assistant configuration."""
-        return self.recv(self.send("get_config"))["result"]
+        return cast(
+            dict[str, Any],
+            cast(
+                ResultResponse,
+                self.recv(self.send("get_config")),
+            ).result,
+        )
 
     def get_states(self) -> Tuple[State, ...]:
         """Get a list of states."""
-        return [
+        return tuple(
             State.from_json(state)
-            for state in self.recv(self.send("get_states")).result
-        ]
+            for state in cast(
+                list[dict[str, Any]],
+                cast(ResultResponse, self.recv(self.send("get_states"))).result,
+            )
+        )
 
     def get_state(  # pylint: disable=duplicate-code
         self,
@@ -78,6 +86,7 @@ class WebsocketClient(RawWebsocketClient):
         for state in self.get_states():
             if state.entity_id == entity_id:
                 return state
+        raise ValueError(f"Entity {entity_id} not found!")
 
     def get_entities(self) -> Dict[str, Group]:
         """
@@ -133,9 +142,9 @@ class WebsocketClient(RawWebsocketClient):
         domains = map(
             lambda item: Domain.from_json(
                 {"domain": item[0], "services": item[1]},
-                client=cast(WebsocketClient, self),
+                client=self,
             ),
-            cast(dict[str, Any], resp.result).items(),
+            cast(dict[str, Any], cast(ResultResponse, resp).result).items(),
         )
         return {domain.domain_id: domain for domain in domains}
 
@@ -167,12 +176,16 @@ class WebsocketClient(RawWebsocketClient):
         if entity_id is not None:
             params["target"] = {"entity_id": entity_id}
 
-        data = self.recv(self.send("call_service", **params))
+        data = self.recv(self.send("call_service", include_id=True, **params))
 
         # TODO: handle data["result"]["context"] ?
 
         assert (
-            data.result.get("response") is None
+            cast(
+                dict[str, Any],
+                cast(ResultResponse, data).result,
+            ).get("response")
+            is None
         )  # should always be None for services without a response
 
     def trigger_service_with_response(
@@ -191,9 +204,9 @@ class WebsocketClient(RawWebsocketClient):
         if entity_id is not None:
             params["target"] = {"entity_id": entity_id}
 
-        data = self.recv(self.send("call_service", **params))
+        data = self.recv(self.send("call_service", include_id=True, **params))
 
-        return data.result["response"]
+        return cast(dict[str, Any], cast(ResultResponse, data).result)["response"]
 
     @contextlib.contextmanager
     def subscribe_events(
@@ -210,7 +223,7 @@ class WebsocketClient(RawWebsocketClient):
     def _subscribe_events(self, event_type: Optional[str]) -> int:
         """Subscribe to all events of a certain type."""
         params = {"event_type": event_type} if event_type else {}
-        return self.recv(self.send("subscribe_events", **params)).id
+        return self.recv(self.send("subscribe_events", include_id=True, **params)).id
 
     @contextlib.contextmanager
     def subscribe_trigger(
@@ -227,12 +240,12 @@ class WebsocketClient(RawWebsocketClient):
         ``` -> `subscribe_trigger("state", entity_id="light.kitchen")`
         """
         subscription = self._subscribe_trigger(trigger, **trigger_fields)
-        yield map(
-            lambda x: x.variables,
-            cast(
+        yield (
+            fired_trigger.variables
+            for fired_trigger in cast(
                 Generator[FiredTrigger, None, None],
                 self._wait_for(subscription),
-            ),
+            )
         )
         self._unsubscribe(subscription)
 
@@ -251,22 +264,29 @@ class WebsocketClient(RawWebsocketClient):
         An iterator that waits for events of a certain type.
         """
         while True:
-            yield cast(EventResponse, self.recv(subscription_id)).event
+            yield cast(
+                FiredEvent
+                | FiredTrigger,  # we can cast this because TemplateEvent is only used for rendering templates
+                cast(EventResponse, self.recv(subscription_id)).event,
+            )
 
     def _unsubscribe(self, subcription_id: int) -> None:
         """Unsubscribe from all events of a certain type."""
         resp = self.recv(self.send("unsubscribe_events", subscription=subcription_id))
-        assert resp.result is None
+        assert cast(ResultResponse, resp).result is None
         self._event_responses.pop(subcription_id)
 
-    def fire_event(self, event_type: str, **event_data) -> Context:
+    def fire_event(self, event_type: str, include_id: bool, **event_data) -> Context:
         """Fire an event."""
-        params = {"event_type": event_type}
+        params: dict[str, Any] = {"event_type": event_type}
         if event_data:
             params["event_data"] = event_data
         return Context.from_json(
             cast(
-                ResultResponse,
-                self.recv(self.send("fire_event", **params)),
-            ).result["context"]
+                dict[str, dict[str, Any]],
+                cast(
+                    ResultResponse,
+                    self.recv(self.send("fire_event", include_id=True, **params)),
+                ).result,
+            )["context"]
         )

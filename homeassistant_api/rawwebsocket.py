@@ -1,12 +1,10 @@
 import json
 import logging
 import time
-from pydantic import ValidationError
-
-# import threading
+from typing import Any, Optional, cast
 
 import websockets.sync.client as ws
-from typing import Any, Optional, cast
+from pydantic import ValidationError
 
 from homeassistant_api.errors import (
     ReceivingError,
@@ -14,7 +12,6 @@ from homeassistant_api.errors import (
     ResponseError,
     UnauthorizedError,
 )
-from homeassistant_api.models.base import BaseModel
 from homeassistant_api.models.websocket import (
     AuthInvalid,
     AuthOk,
@@ -32,7 +29,7 @@ logger = logging.getLogger(__name__)
 class RawWebsocketClient:
     api_url: str
     token: str
-    _conn: ws.ClientConnection
+    _conn: Optional[ws.ClientConnection]
 
     def __init__(
         self,
@@ -75,12 +72,16 @@ class RawWebsocketClient:
     def _send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
         logger.debug(f"Sending message: {data}")
+        if self._conn is None:
+            raise ReceivingError("Connection is not open!")
         self._conn.send(json.dumps(data))
 
     def _recv(self) -> dict[str, Any]:
         """Receive a message from the websocket server."""
+        if self._conn is None:
+            raise ReceivingError("Connection is not open!")
         _bytes = self._conn.recv()
-        logger.debug(f"Received message: {_bytes}")
+        logger.debug("Received message: %s", _bytes)
         return json.loads(_bytes)
 
     def send(self, type: str, include_id: bool = True, **data: Any) -> int:
@@ -116,9 +117,7 @@ class RawWebsocketClient:
         except ValidationError:
             pass
 
-    def handle_recv(
-        self, data: dict[str, Any]
-    ) -> EventResponse | ResultResponse | PingResponse:
+    def handle_recv(self, data: dict[str, Any]) -> None:
         """Handle a received message."""
         if "id" not in data:
             raise ReceivingError(
@@ -130,9 +129,7 @@ class RawWebsocketClient:
     def parse_response(self, data: dict[str, Any]) -> None:
         if data.get("type") == "pong":
             logger.info("Received pong message")
-            self._ping_responses[data["id"]] = PingResponse.model_validate(
-                {**data, "end": time.perf_counter_ns()}
-            )
+            self._ping_responses[data["id"]].end = time.perf_counter_ns()
         elif data.get("type") == "result":
             logger.info("Received result message")
             self._result_responses[data["id"]] = ResultResponse.model_validate(data)
@@ -147,11 +144,14 @@ class RawWebsocketClient:
         while True:
             ## have we received a message with the id we're looking for?
             if self._result_responses.get(id) is not None:
-                return self._result_responses.pop(id)
+                return cast(dict[int, ResultResponse], self._result_responses).pop(
+                    id
+                )  # ughhh why can't mypy figure this out
             if self._event_responses.get(id, []):
                 return self._event_responses[id].pop(0)
-            if self._ping_responses.get(id, {}).get("end") is not None:
-                return self._ping_responses.pop(id)
+            if self._ping_responses.get(id) is not None:
+                if self._ping_responses[id].end is not None:
+                    return self._ping_responses.pop(id)
 
             ## if not, keep receiving messages until we do
             self.handle_recv(self._recv())
@@ -191,9 +191,10 @@ class RawWebsocketClient:
                 },
             )
         )
-        assert resp.result is None
+        assert cast(ResultResponse, resp).result is None
 
     def ping_latency(self) -> float:
         """Get the latency (in milliseconds) of the connection by sending a ping message."""
         pong = cast(PingResponse, self.recv(self.send("ping")))
+        assert pong.end is not None
         return (pong.end - pong.start) / 1_000_000

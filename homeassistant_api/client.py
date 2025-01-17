@@ -1,8 +1,8 @@
 """Module containing the primary Client class."""
 
 import logging
-from typing import Any
 import urllib.parse as urlparse
+from typing import Any
 
 from .rawasyncclient import RawAsyncClient
 from .rawclient import RawClient

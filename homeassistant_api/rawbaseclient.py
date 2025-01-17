@@ -1,9 +1,8 @@
 """Module for parent RawWrapper class"""
 
-import re
 from datetime import datetime
 from posixpath import join
-from typing import Dict, Iterable, Optional, Tuple, Union, Any
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 from .models import Entity
 
