@@ -60,7 +60,7 @@ class ResultResponse(BaseModel):
     id: int
     success: Literal[True]
     type: Literal["result"]
-    result: Optional[dict[str, Any]]
+    result: Optional[Any]
 
 
 class FiredEvent(BaseModel):
