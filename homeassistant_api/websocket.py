@@ -277,7 +277,7 @@ class WebsocketClient(RawWebsocketClient):
         assert cast(ResultResponse, resp).result is None
         self._event_responses.pop(subcription_id)
 
-    def fire_event(self, event_type: str, include_id: bool, **event_data) -> Context:
+    def fire_event(self, event_type: str, **event_data) -> Context:
         """Fire an event."""
         params: dict[str, Any] = {"event_type": event_type}
         if event_data:
