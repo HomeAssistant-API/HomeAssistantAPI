@@ -3,8 +3,8 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import ConfigDict, BaseModel as PydanticBaseModel, PlainSerializer
-
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import ConfigDict, PlainSerializer
 
 DatetimeIsoField = Annotated[
     datetime,

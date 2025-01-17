@@ -27,6 +27,7 @@ from .errors import BadTemplateError, RequestError, RequestTimeoutError
 from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
 from .processing import AsyncResponseType, Processing
 from .rawbaseclient import RawBaseClient
+from .utils import prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import Client
@@ -144,7 +145,7 @@ class RawAsyncClient(RawBaseClient):
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
         data = await self.async_request(url, params=params)
         for entry in data:
-            yield LogbookEntry.parse_obj(entry)
+            yield LogbookEntry.model_validate(entry)
 
     async def async_get_entity_histories(
         self,
@@ -169,7 +170,7 @@ class RawAsyncClient(RawBaseClient):
             params=self.construct_params(params),
         )
         for states in data:
-            yield History.parse_obj({"states": states})
+            yield History.model_validate({"states": states})
 
     async def async_get_rendered_template(self, template: str) -> str:
         """
@@ -232,9 +233,9 @@ class RawAsyncClient(RawBaseClient):
 
     async def async_get_entity(
         self,
-        group_id: str | None = None,
-        slug: str | None = None,
-        entity_id: str | None = None,
+        group_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        entity_id: Optional[str] = None,
     ) -> Optional[Entity]:
         """
         Returns a Entity model for an :code:`entity_id`.
@@ -335,7 +336,7 @@ class RawAsyncClient(RawBaseClient):
         Fetches the state of the entity specified.
         :code:`GET /api/states/<entity_id>`
         """
-        target_entity_id = self.prepare_entity_id(
+        target_entity_id = prepare_entity_id(
             group_id=group_id,
             slug=slug,
             entity_id=entity_id,
@@ -355,7 +356,7 @@ class RawAsyncClient(RawBaseClient):
         data = await self.async_request(
             join("states", state.entity_id),
             method="POST",
-            json=json.loads(state.json()),
+            json=json.loads(state.model_dump_json()),
         )
         return State.from_json(cast(Dict[Any, Any], data))
 

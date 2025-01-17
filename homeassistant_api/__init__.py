@@ -20,6 +20,7 @@ __all__ = (
     "ParameterMissingError",
     "RequestError",
     "UnauthorizedError",
+    "WebsocketClient",
 )
 
 from .client import Client
@@ -36,6 +37,7 @@ from .errors import (
 )
 from .models import Domain, Entity, Event, Group, History, LogbookEntry, Service, State
 from .processing import Processing
+from .websocket import WebsocketClient
 
 Domain.model_rebuild()
 Entity.model_rebuild()

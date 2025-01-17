@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   server:
     image: "homeassistant/home-assistant:stable"
@@ -19,6 +17,7 @@ services:
       - server
     environment:
       HOMEASSISTANTAPI_URL: http://server:8123/api
+      HOMEASSISTANTAPI_WS_URL: ws://server:8123/api/websocket
       HOMEASSISTANTAPI_TOKEN: ${HOMEASSISTANTAPI_TOKEN}
       DELAY: 60
 

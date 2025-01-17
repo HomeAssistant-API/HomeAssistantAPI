@@ -16,7 +16,7 @@
 > However, it is not going to be deprecated according to [this comment](https://github.com/home-assistant/developers.home-assistant/pull/2150#pullrequestreview-2017433583)
 > But it is recommended to use the Websocket API for new integrations.
 
-Here is a quick example.
+### REST API Examples
 
 ```py
 from homeassistant_api import Client
@@ -25,13 +25,42 @@ with Client(
     '<API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
     '<Your Long Lived Access-Token>'
 ) as client:
-    light = client.trigger_service('light', 'turn_on', {'entity_id': 'light.living_room'})
+    light = client.trigger_service('light', 'turn_on', entity_id="light.living_room")
 ```
 
 All the methods also support async/await!
 Just prefix the method with `async_` and pass the `use_async=True` argument to the `Client` constructor.
 Then you can use the methods as coroutines
 (i.e. `await light.async_turn_on(...)`).
+
+```py
+import asyncio
+from homeassistant_api import Client
+
+async def main():
+    with Client(
+        '<REST API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
+        '<Your Long Lived Access-Token>',
+        use_async=True
+    ) as client:
+    light = await client.async_trigger_service('light', 'turn_on', entity_id="light.living_room")
+
+asyncio.run(main())
+```
+
+### Websocket API Example
+
+```py
+from homeassistant_api import WebsocketClient
+
+with WebsocketClient(
+    '<WS API Server URL>', # i.e. 'ws://homeassistant.local:8123/api/websocket'
+    '<Your Long Lived Access-Token>'
+) as ws_client:
+    light = ws_client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+```
+
+> Note: The Websocket API is not yet supported in async/await mode.
 
 ## Documentation
 

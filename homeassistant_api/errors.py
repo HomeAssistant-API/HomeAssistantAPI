@@ -1,6 +1,6 @@
 """Module for custom error classes"""
 
-from typing import Union
+from typing import Optional, Union
 
 
 class HomeassistantAPIError(Exception):
@@ -55,8 +55,8 @@ class InternalServerError(HomeassistantAPIError):
 class UnauthorizedError(HomeassistantAPIError):
     """Error raised when an invalid token in used to authenticate with homeassistant."""
 
-    def __init__(self) -> None:
-        super().__init__("Invalid authentication token")
+    def __init__(self, message: Optional[str] = None) -> None:
+        super().__init__(message or "Invalid authentication token")
 
 
 class EndpointNotFoundError(HomeassistantAPIError):
