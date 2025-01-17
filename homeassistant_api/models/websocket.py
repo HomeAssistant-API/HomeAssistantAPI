@@ -1,9 +1,9 @@
 """A module defining the responses we expect from the websocket API."""
 
 from typing import Any, Literal, Optional
+
 from .base import BaseModel
 from .states import Context, DatetimeIsoField
-
 
 __all__ = (
     "AuthRequired",
@@ -36,8 +36,8 @@ class PingResponse(BaseModel):
 
     id: int
     type: Literal["pong"]
-    start: Optional[float] = None  # added by the client
-    end: Optional[float] = None  # added by the client
+    start: Optional[int] = None  # added by the client, nanoseconds
+    end: Optional[int] = None  # added by the client, nanoseconds
 
 
 class Error(BaseModel):
