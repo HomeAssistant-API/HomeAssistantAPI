@@ -137,7 +137,7 @@ class RawWebsocketClient:
             logger.info("Received result message")
             self._result_responses[data["id"]] = ResultResponse.model_validate(data)
         elif data.get("type") == "event":
-            logger.info("Received event message %s", data["event"]["event_type"])
+            logger.info("Received event message %s", data["event"])
             self._event_responses[data["id"]].append(EventResponse.model_validate(data))
         else:
             raise ReceivingError(f"Received unexpected message type: {data}")

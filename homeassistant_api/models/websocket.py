@@ -68,9 +68,25 @@ class FiredEvent(BaseModel):
 
     event_type: str
     data: dict[str, Any]
+
     origin: Literal["LOCAL", "REMOTE"]
-    time_fired: DatetimeIsoField
+    # REMOTE if another API client or webhook fired the event
+    # LOCAL if Home Assistant (or the auth token we used) fired the event
+
+    time_fired: DatetimeIsoField  # datetime.datetime
     context: Optional[Context]
+
+
+class TemplateEvent(BaseModel):
+    result: str
+    listeners: dict[str, Any]
+
+
+class FiredTrigger(BaseModel):
+    """A model to parse the `trigger` key of fired event websocket responses."""
+
+    context: Optional[Context]
+    variables: dict[str, Any]
 
 
 class EventResponse(BaseModel):
@@ -78,4 +94,4 @@ class EventResponse(BaseModel):
 
     id: int
     type: Literal["event"]
-    event: FiredEvent
+    event: FiredEvent | FiredTrigger | TemplateEvent

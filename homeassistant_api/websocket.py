@@ -3,6 +3,7 @@ from typing import Any, Dict, Generator, Optional, Tuple, cast
 
 from homeassistant_api.models import Domain, Entity, State, Group
 from homeassistant_api.models.states import Context
+from homeassistant_api.models.websocket import EventResponse, FiredEvent, FiredTrigger, ResultResponse
 from homeassistant_api.utils import prepare_entity_id
 from .rawwebsocket import RawWebsocketClient
 
@@ -35,9 +36,10 @@ class WebsocketClient(RawWebsocketClient):
         """
         id = self.send("render_template", template=template, report_errors=True)
         first = self.recv(id)
-        assert first["result"] is None
+        assert first.result is None
         second = self.recv(id)
-        return second["event"]["result"]
+        self._unsubscribe(id)
+        return second.event.result
 
     def get_config(self) -> dict[str, Any]:
         """Get the Home Assistant configuration."""
@@ -189,12 +191,14 @@ class WebsocketClient(RawWebsocketClient):
         return data["result"]["response"]
 
     @contextlib.contextmanager
-    def subscribe_events(self, event_type: Optional[str] = None) -> None:
+    def subscribe_events(
+        self, event_type: Optional[str] = None,
+    ) -> Generator[Generator[FiredEvent, None, None], None, None]:
         """
         Subscribe to all events of a certain type and calls `unsubscribe_events` when done.
         """
         subscription = self._subscribe_events(event_type)
-        yield self._wait_for(subscription)
+        yield cast(Generator[FiredEvent, None, None], self._wait_for(subscription))
         self._unsubscribe(subscription)
 
     def _subscribe_events(self, event_type: Optional[str]) -> int:
@@ -202,23 +206,42 @@ class WebsocketClient(RawWebsocketClient):
         params = {"event_type": event_type} if event_type else {}
         return self.recv(self.send("subscribe_events", **params)).id
 
-    def subscribe_triggers(self, trigger: Optional[str] = None) -> None:
-        pass
+    @contextlib.contextmanager
+    def subscribe_trigger(self, trigger: str, **trigger_fields) -> Generator[Generator[FiredTrigger, None, None], None, None]:
+        """
+        Subscribe to a Home Assistant trigger.
+        Allows additional trigger keyword parameters with **kwargs (i.e. passing `tag_id=...` for NFC tag triggers).
 
-    def _subscribe_triggers(self, trigger: Optional[str]) -> None:
-        pass
+        Ex.
+        ```
+        - trigger: state
+          entity_id: light.kitchen
+        ``` -> `subscribe_trigger("state", entity_id="light.kitchen")`
+        """
+        subscription = self._subscribe_trigger(trigger, **trigger_fields)
+        yield cast(Generator[FiredTrigger, None, None], self._wait_for(subscription))
+        self._unsubscribe(subscription)
 
-    def _wait_for(self, subscription_id: int) -> Generator[None, None, None]:
+    def _subscribe_trigger(self, trigger: str, **trigger_fields) -> int:
+        """Return the subscription id of the trigger we subscribe to."""
+        return self.recv(
+            self.send(
+                "subscribe_trigger", trigger={"platform": trigger, **trigger_fields}
+            )
+        ).id
+
+    def _wait_for(self, subscription_id: int) -> Generator[FiredEvent | FiredTrigger, None, None]:
         """
         An iterator that waits for events of a certain type.
         """
         while True:
-            yield self.recv(subscription_id)
+            yield cast(EventResponse, self.recv(subscription_id)).event
 
     def _unsubscribe(self, subcription_id: int) -> None:
         """Unsubscribe from all events of a certain type."""
         resp = self.recv(self.send("unsubscribe_events", subscription=subcription_id))
         assert resp.result is None
+        self._event_responses.pop(subcription_id)
 
     def fire_event(self, event_type: str, **event_data) -> Context:
         """Fire an event."""
@@ -226,5 +249,8 @@ class WebsocketClient(RawWebsocketClient):
         if event_data:
             params["event_data"] = event_data
         return Context.from_json(
-            self.recv(self.send("fire_event", **params))["result"]["context"]
+            cast(
+                ResultResponse,
+                self.recv(self.send("fire_event", **params)),
+            ).result["context"]
         )
