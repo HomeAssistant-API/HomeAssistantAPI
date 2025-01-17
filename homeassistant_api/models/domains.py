@@ -103,9 +103,12 @@ class Service(BaseModel):
     description: Optional[str] = None
     fields: Optional[Dict[str, ServiceField]] = None
 
-    def trigger(
-        self, entity_id: str | None = None, **service_data
-    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]], dict[str, Any], None]:
+    def trigger(self, entity_id: Optional[str] = None, **service_data) -> Union[
+        Tuple[State, ...],
+        Tuple[Tuple[State, ...], Dict[str, Any]],
+        dict[str, Any],
+        None,
+    ]:
         """Triggers the service associated with this object."""
         if entity_id is not None:
             service_data["entity_id"] = entity_id
@@ -123,12 +126,12 @@ class Service(BaseModel):
             )
 
     async def async_trigger(
-        self, entity_id: str | None = None, **service_data
+        self, entity_id: Optional[str] = None, **service_data
     ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
         """Triggers the service associated with this object."""
         if entity_id is not None:
             service_data["entity_id"] = entity_id
-        
+
         from homeassistant_api import WebsocketClient  # prevent circular import
 
         if isinstance(self.domain._client, WebsocketClient):
@@ -148,8 +151,13 @@ class Service(BaseModel):
                 **service_data,
             )
 
-    def __call__(self, entity_id: str | None = None, **service_data) -> Union[
-        Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]], dict[str, Any], None],
+    def __call__(self, entity_id: Optional[str] = None, **service_data) -> Union[
+        Union[
+            Tuple[State, ...],
+            Tuple[Tuple[State, ...], Dict[str, Any]],
+            dict[str, Any],
+            None,
+        ],
         Coroutine[
             Any, Any, Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]
         ],

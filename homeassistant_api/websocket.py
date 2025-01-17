@@ -1,7 +1,7 @@
 import contextlib
 import logging
 import urllib.parse as urlparse
-from typing import Any, Dict, Generator, Optional, Tuple, cast
+from typing import Any, Dict, Generator, Optional, Tuple, Union, cast
 
 from homeassistant_api.models import Domain, Entity, Group, State
 from homeassistant_api.models.states import Context
@@ -105,9 +105,9 @@ class WebsocketClient(RawWebsocketClient):
 
     def get_entity(
         self,
-        group_id: str | None = None,
-        slug: str | None = None,
-        entity_id: str | None = None,
+        group_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        entity_id: Optional[str] = None,
     ) -> Optional[Entity]:
         """
         Returns an :py:class:`Entity` model for an :code:`entity_id`.
@@ -163,7 +163,7 @@ class WebsocketClient(RawWebsocketClient):
         self,
         domain: str,
         service: str,
-        entity_id: str | None = None,
+        entity_id: Optional[str] = None,
         **service_data,
     ) -> None:
         """Trigger a service."""
@@ -192,7 +192,7 @@ class WebsocketClient(RawWebsocketClient):
         self,
         domain: str,
         service: str,
-        entity_id: str | None = None,
+        entity_id: Optional[str] = None,
         **service_data,
     ) -> dict[str, Any]:
         params = {
@@ -259,14 +259,15 @@ class WebsocketClient(RawWebsocketClient):
 
     def _wait_for(
         self, subscription_id: int
-    ) -> Generator[FiredEvent | FiredTrigger, None, None]:
+    ) -> Generator[Union[FiredEvent, FiredTrigger], None, None]:
         """
         An iterator that waits for events of a certain type.
         """
         while True:
             yield cast(
-                FiredEvent
-                | FiredTrigger,  # we can cast this because TemplateEvent is only used for rendering templates
+                Union[
+                    FiredEvent, FiredTrigger
+                ],  # we can cast this because TemplateEvent is only used for rendering templates
                 cast(EventResponse, self.recv(subscription_id)).event,
             )
 

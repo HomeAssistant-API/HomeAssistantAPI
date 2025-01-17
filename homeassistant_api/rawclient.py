@@ -87,7 +87,7 @@ class RawClient(RawBaseClient):
         self,
         path: str,
         method="GET",
-        headers: Dict[str, str] | None = None,
+        headers: Optional[Dict[str, str]] = None,
         decode_bytes: bool = True,
         **kwargs,
     ) -> Any:
@@ -228,9 +228,9 @@ class RawClient(RawBaseClient):
 
     def get_entity(
         self,
-        group_id: str | None = None,
-        slug: str | None = None,
-        entity_id: str | None = None,
+        group_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        entity_id: Optional[str] = None,
     ) -> Optional[Entity]:
         """
         Returns an :py:class:`Entity` model for an :code:`entity_id`.

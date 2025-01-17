@@ -1,6 +1,6 @@
 """A module defining the responses we expect from the websocket API."""
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 from .base import BaseModel
 from .states import Context, DatetimeIsoField
@@ -94,4 +94,4 @@ class EventResponse(BaseModel):
 
     id: int
     type: Literal["event"]
-    event: FiredEvent | FiredTrigger | TemplateEvent
+    event: Union[FiredEvent, FiredTrigger, TemplateEvent]

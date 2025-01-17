@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 
 import websockets.sync.client as ws
 from pydantic import ValidationError
@@ -139,7 +139,7 @@ class RawWebsocketClient:
         else:
             raise ReceivingError(f"Received unexpected message type: {data}")
 
-    def recv(self, id: int) -> EventResponse | ResultResponse | PingResponse:
+    def recv(self, id: int) -> Union[EventResponse, ResultResponse, PingResponse]:
         """Receive a response to a message from the websocket server."""
         while True:
             ## have we received a message with the id we're looking for?

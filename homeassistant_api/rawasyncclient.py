@@ -233,9 +233,9 @@ class RawAsyncClient(RawBaseClient):
 
     async def async_get_entity(
         self,
-        group_id: str | None = None,
-        slug: str | None = None,
-        entity_id: str | None = None,
+        group_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        entity_id: Optional[str] = None,
     ) -> Optional[Entity]:
         """
         Returns a Entity model for an :code:`entity_id`.
