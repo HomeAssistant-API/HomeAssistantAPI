@@ -10,7 +10,7 @@ import pytest
 import requests
 from multidict import CIMultiDict, CIMultiDictProxy
 
-from homeassistant_api import Client, Domain, UnauthorizedError
+from homeassistant_api import Client, Domain
 from homeassistant_api.errors import (
     APIConfigurationError,
     BadTemplateError,
@@ -20,6 +20,7 @@ from homeassistant_api.errors import (
     MethodNotAllowedError,
     ProcessorNotFoundError,
     ResponseError,
+    UnauthorizedError,
     UnexpectedStatusCodeError,
 )
 from homeassistant_api.processing import Processing

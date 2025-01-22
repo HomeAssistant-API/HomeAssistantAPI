@@ -22,7 +22,6 @@ from homeassistant_api.models.websocket import (
     ResultResponse,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
