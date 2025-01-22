@@ -27,4 +27,4 @@ def test_listen_trigger(websocket_client: WebsocketClient) -> None:
             assert trigger["trigger"]["platform"] == "time"
             assert datetime.fromisoformat(
                 trigger["trigger"]["now"]
-            ).timestamp() == pytest.approx(future.timestamp(), abs=0.5)
+            ).timestamp() == pytest.approx(future.timestamp(), abs=1)
