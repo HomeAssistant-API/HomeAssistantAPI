@@ -20,6 +20,23 @@ logger = logging.getLogger(__name__)
 
 
 class WebsocketClient(RawWebsocketClient):
+    """
+    
+    The main class for interactign with the Home Assistant WebSocket API client.
+
+    Here's a quick example of how to use the :py:class:`WebsocketClient` class:
+    
+    .. code-block:: python
+
+        from homeassistant_api import WebsocketClient
+
+        with WebsocketClient(
+            '<WS API Server URL>', # i.e. 'ws://homeassistant.local:8123/api/websocket'
+            '<Your Long Lived Access-Token>'
+        ) as ws_client:
+            light = ws_client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+    """
+
     def __init__(
         self,
         api_url: str,
@@ -36,7 +53,8 @@ class WebsocketClient(RawWebsocketClient):
         """
         Renders a Jinja2 template with Home Assistant context data.
         See https://www.home-assistant.io/docs/configuration/templating.
-        :code:`"type": "render_template"`
+
+        Sends command :code:`{"type": "render_template", ...}`.
         """
         id = self.send("render_template", template=template, report_errors=True)
         first = self.recv(id)
@@ -46,7 +64,11 @@ class WebsocketClient(RawWebsocketClient):
         return cast(TemplateEvent, cast(EventResponse, second).event).result
 
     def get_config(self) -> dict[str, Any]:
-        """Get the Home Assistant configuration."""
+        """
+        Get the Home Assistant configuration.
+        
+        Sends command :code:`{"type": "get_config", ...}`.
+        """
         return cast(
             dict[str, Any],
             cast(
@@ -56,7 +78,11 @@ class WebsocketClient(RawWebsocketClient):
         )
 
     def get_states(self) -> Tuple[State, ...]:
-        """Get a list of states."""
+        """
+        Get a list of states.
+        
+        Sends command :code:`{"type": "get_states", ...}`.
+        """
         return tuple(
             State.from_json(state)
             for state in cast(
@@ -73,9 +99,10 @@ class WebsocketClient(RawWebsocketClient):
         slug: Optional[str] = None,
     ) -> State:
         """
-        Just calls the `get_states` method and filters the result.
+        Just calls the :py:meth:`get_states` method and filters the result.
 
-        Please tell home-assistant/core to add a `get_state` command to the WS API!
+        Please tell home-assistant/core to add a :code:`{"type": "get_state", ...}` command to the WS API!
+        There is a lot of disappointment and frustration in the community because this is not available.
         """
         entity_id = prepare_entity_id(
             group_id=group_id,
@@ -91,6 +118,7 @@ class WebsocketClient(RawWebsocketClient):
     def get_entities(self) -> Dict[str, Group]:
         """
         Fetches all entities from the Websocket API and returns them as a dictionary of :py:class:`Group`'s.
+        For example :code:`light.living_room` would be in the group :code:`light` (i.e. :code:`get_entities()["light"].living_room`).
         """
         entities: Dict[str, Group] = {}
         for state in self.get_states():
@@ -112,9 +140,10 @@ class WebsocketClient(RawWebsocketClient):
         """
         Returns an :py:class:`Entity` model for an :code:`entity_id`.
 
-        Calls :py:meth:`get_state` in the process.
+        Calls :py:meth:`get_states` under the hood.
 
-        Please tell home-assistant/core to add a `get_state` command to the WS API!
+        Please tell home-assistant/core to add a :code:`{"type": "get_state", ...}` command to the WS API!
+        There is a lot of disappointment and frustration in the community because this is not available.
         """
         if group_id is not None and slug is not None:
             state = self.get_state(group_id=group_id, slug=slug)
@@ -137,7 +166,13 @@ class WebsocketClient(RawWebsocketClient):
         return group.get_entity(split_slug)
 
     def get_domains(self) -> dict[str, Domain]:
-        """Get a list of (service) domains."""
+        """
+        Get a list of services that Home Assistant offers (organized into a dictionary of service domains).
+
+        For example, the service :code:`light.turn_on` would be in the domain :code:`light`.
+        
+        Sends command :code:`{"type": "get_services", ...}`.
+        """
         resp = self.recv(self.send("get_services"))
         domains = map(
             lambda item: Domain.from_json(
@@ -155,7 +190,7 @@ class WebsocketClient(RawWebsocketClient):
 
         Please tell home-assistant/core to add a `get_domain` command to the WS API!
 
-        For now, just call the `get_services` method and parsing the result.
+        For now, just call the :py:meth":`get_domains` method and parsing the result.
         """
         return self.get_domains()[domain]
 
@@ -166,7 +201,11 @@ class WebsocketClient(RawWebsocketClient):
         entity_id: Optional[str] = None,
         **service_data,
     ) -> None:
-        """Trigger a service."""
+        """
+        Trigger a service (that doesn't return a response).
+        
+        Sends command :code:`{"type": "call_service", ...}`.
+        """
         params = {
             "domain": domain,
             "service": service,
@@ -195,6 +234,11 @@ class WebsocketClient(RawWebsocketClient):
         entity_id: Optional[str] = None,
         **service_data,
     ) -> dict[str, Any]:
+        """
+        Trigger a service (that returns a response) and return the response.
+        
+        Sends command :code:`{"type": "call_service", ...}`.
+        """
         params = {
             "domain": domain,
             "service": service,
@@ -209,35 +253,64 @@ class WebsocketClient(RawWebsocketClient):
         return cast(dict[str, Any], cast(ResultResponse, data).result)["response"]
 
     @contextlib.contextmanager
-    def subscribe_events(
+    def listen_events(
         self,
         event_type: Optional[str] = None,
     ) -> Generator[Generator[FiredEvent, None, None], None, None]:
         """
-        Subscribe to all events of a certain type and calls `unsubscribe_events` when done.
+        Listen for all events of a certain type.
+
+        For example, to listen for all events of type `test_event`:
+        
+        .. code-block:: python
+
+            with ws_client.listen_events("test_event") as events:
+                for i, event in zip(range(2), events):  # to only wait for two events to be received
+                    print(event)
         """
         subscription = self._subscribe_events(event_type)
         yield cast(Generator[FiredEvent, None, None], self._wait_for(subscription))
         self._unsubscribe(subscription)
 
     def _subscribe_events(self, event_type: Optional[str]) -> int:
-        """Subscribe to all events of a certain type."""
+        """
+        Subscribe to all events of a certain type.
+        
+
+        Sends command :code:`{"type": "subscribe_events", ...}`.
+        """
         params = {"event_type": event_type} if event_type else {}
         return self.recv(self.send("subscribe_events", include_id=True, **params)).id
 
     @contextlib.contextmanager
-    def subscribe_trigger(
+    def listen_trigger(
         self, trigger: str, **trigger_fields
     ) -> Generator[Generator[dict[str, Any], None, None], None, None]:
         """
-        Subscribe to a Home Assistant trigger.
-        Allows additional trigger keyword parameters with **kwargs (i.e. passing `tag_id=...` for NFC tag triggers).
+        Listen to a Home Assistant trigger.
+        Allows additional trigger keyword parameters with :code:`**kwargs` (i.e. passing :code:`tag_id=...` for NFC tag triggers).
 
-        Ex.
-        ```
-        - trigger: state
-          entity_id: light.kitchen
-        ``` -> `subscribe_trigger("state", entity_id="light.kitchen")`
+        For example, in Home Assistant Automations we can subscribe to a state trigger for a light entity with YAML:
+
+        .. code-block:: yaml 
+            
+            triggers:
+            # ...
+            - trigger: state
+              entity_id: light.kitchen
+
+        To subscribe to that same state trigger with :py:class:`WebsocketClient` instead
+        
+        .. code-block:: python
+
+            with ws_client.listen_trigger("state", entity_id="light.kitchen") as trigger:
+                for event in trigger:  # will iterate until we manually break out of the loop
+                    print(event)
+                    if <some_condition>:
+                        break
+                # exiting the context manager unsubscribes from the trigger
+        
+        Woohoo! We can now listen to triggers in Python code!
         """
         subscription = self._subscribe_trigger(trigger, **trigger_fields)
         yield (
@@ -250,7 +323,11 @@ class WebsocketClient(RawWebsocketClient):
         self._unsubscribe(subscription)
 
     def _subscribe_trigger(self, trigger: str, **trigger_fields) -> int:
-        """Return the subscription id of the trigger we subscribe to."""
+        """
+        Return the subscription id of the trigger we subscribe to.
+        
+        Sends command :code:`{"type": "subscribe_trigger", ...}`.
+        """
         return self.recv(
             self.send(
                 "subscribe_trigger", trigger={"platform": trigger, **trigger_fields}
@@ -272,13 +349,21 @@ class WebsocketClient(RawWebsocketClient):
             )
 
     def _unsubscribe(self, subcription_id: int) -> None:
-        """Unsubscribe from all events of a certain type."""
+        """
+        Unsubscribe from all events of a certain type.
+        
+        Sends command :code:`{"type": "unsubscribe_events", ...}`.
+        """
         resp = self.recv(self.send("unsubscribe_events", subscription=subcription_id))
         assert cast(ResultResponse, resp).result is None
         self._event_responses.pop(subcription_id)
 
     def fire_event(self, event_type: str, **event_data) -> Context:
-        """Fire an event."""
+        """
+        Fire an event.
+        
+        Sends command :code:`{"type": "fire_event", ...}`.
+        """
         params: dict[str, Any] = {"event_type": event_type}
         if event_data:
             params["event_data"] = event_data
