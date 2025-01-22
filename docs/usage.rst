@@ -182,7 +182,7 @@ Async Entities
     # <State "My new state" entity_id="cover.garage_door">
 
 
-Listening for Events
+Using Events (Listening and Firing)
 ************************
 
 .. code-block:: python
@@ -193,8 +193,56 @@ Listening for Events
     TOKEN = '<LONG LIVED ACCESS TOKEN>'
 
     with WebsocketClient(WS_URL, TOKEN) as ws_client:
+        with ws_client.listen_events() as events:
+            for event in events:
+                print(event)
         
+        # Or if you want to listen for a specific event type until dinner time.
+        with ws_client.listen_events('state_changed') as events:
+            for event in events:
+                print(event)
+                if event.data.entity_id == 'myalarmclock.dinner_time' and event.data.new_state.state == 'now':
+                    break
 
+        # Or if you want to listen for just 10 events.
+        with ws_client.listen_events("my_event") as events:
+            for _, event in zip(range(10), events):
+                print(event)
+        
+        # Alternatively for just one event.
+        with ws_client.listen_events("my_event") as events:
+            event = next(events)
+            print(event)
+
+        # Now to fire an event.
+        ws_client.fire_event("my_event", my_arg="my_value")
+
+
+Listening for Triggers
+**************************
+
+.. code-block:: python
+
+    from homeassistant_api import WebsocketClient
+
+    with WebsocketClient(WS_URL, TOKEN) as ws_client:
+        with ws_client.listen_triggers() as triggers:  # see WebsocketClient.listen_triggers for more info.
+            for trigger in triggers:
+                print(trigger)
+        
+        # Another more specific example, listening for event triggers.
+        with ws_client.listen_triggers("event", event_type="my_event") as triggers:
+            ws_client.fire_event("my_event", my_arg="my_value")
+
+            for trigger in triggers:
+                print(trigger.variables.my_arg)  # This is the value of my_arg from the event fired above.
+
+        # Another one, listening for time triggers.
+        future = ws_client.get_rendered_template(
+            "{{ (now() + timedelta(seconds=1)).strftime('%H:%M:%S') }}"
+        )
+        with ws_client.listen_trigger("time", at=future) as triggers:  # `at` can be HH:MM or HH:MM:SS
+            print(next(triggers))
 
 What's Next?
 #############
