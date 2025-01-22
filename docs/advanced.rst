@@ -12,7 +12,7 @@ Rather than the default behavior, which is saving the cache to memory or not at 
 If you want to persist your requests cache you can pass your own custom cached session to :py:class:`Client`'s init method.
 You can pass a variety of options to your cached session like how fast to expire the cache, where to cache it (the cache backend), and what to do when the cache is expired.
 
-Depending on whether you are using this in an async of sync project you will want to use either :py:class:`aiohttp_client_cache.backends.CachedSession` or :py:class:`requests_cache.CachedSession` respectively.
+Depending on whether you are using this in an async or sync project you will want to use either :py:class:`aiohttp_client_cache.backends.CachedSession` or :py:class:`requests_cache.CachedSession` respectively.
 See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/latest/>`__ and `aiohttp_client_cache <https://aiohttp-client-cache.readthedocs.io/en/latest/>`__ for how to implement these backends, options, and much more.
 
 You can simply pass them to your client like so.
