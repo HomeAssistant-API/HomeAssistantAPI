@@ -183,7 +183,7 @@ Async Entities
 
 
 Using Events (Listening and Firing)
-************************
+*****************************************
 
 .. code-block:: python
 
