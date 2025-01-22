@@ -9,8 +9,8 @@
 Welcome to Homeassistant API!
 =============================
 
-Homeassistant API is a pythonic module that interacts with `Homeassistant's REST API integration <https://developers.home-assistant.io/docs/api/rest>`_.
-You can use it to remotely control your Home Assistant like getting entity states, triggering services, etc.
+Homeassistant API is a pythonic module that interacts with `Homeassistant's REST API integration <https://developers.home-assistant.io/docs/api/rest>`_ and Homeassistant's `Websocket API <https://developers.home-assistant.io/docs/api/websocket>`_.
+You can use it to remotely control your Home Assistant to do things like turn on lights, change the temperature, or listen for when the garage door opens.
 
 Index
 ----------
@@ -30,6 +30,7 @@ Features
 ----------
 
 - Full consumption of the Home Assistant REST API endpoints.
+- Full consumption of the Home Assistant Websocket API (all of the documented commands and some undocumented ones)
 - Convenient Pydantic Models for data validation.
 - Syncrononous and Asynchronous support for integrating with all applications and/or libraries.
 - Modular design for intuitive readability.
