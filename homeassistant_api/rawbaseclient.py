@@ -1,8 +1,9 @@
 """Module for parent RawWrapper class"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from posixpath import join
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from urllib.parse import quote_plus
 
 from .models import Entity
 
