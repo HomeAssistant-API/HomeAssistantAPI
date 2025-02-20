@@ -73,18 +73,33 @@ class RawBaseClient:
         end_timestamp: Optional[datetime] = None,
         significant_changes_only: bool = False,
     ) -> Tuple[Dict[str, Optional[str]], str]:
-        """Pre-logic for `Client.get_entity_histories` and `Client.async_get_entity_histories`."""
+        """
+        Pre-logic for `Client.get_entity_histories` and `Client.async_get_entity_histories`.
+
+        Ensure timestamps
+        * use second resolution
+        * are timezone-aware
+        * are URL-encoded (as construct_params(params) is used instead of request's default parameter encoding)
+        """
         params: Dict[str, Optional[str]] = {}
         if entities is not None:
             params["filter_entity_id"] = ",".join([ent.entity_id for ent in entities])
         if end_timestamp is not None:
-            params["end_time"] = (
-                end_timestamp.isoformat()
-            )  # Params are automatically URL encoded
+            end_timestamp = end_timestamp.replace(microsecond=0) + timedelta(seconds=1)
+            if end_timestamp.tzinfo is None:
+                end_timestamp = end_timestamp.astimezone()
+            end_timestamp = end_timestamp.isoformat()
+            end_timestamp = quote_plus(end_timestamp)
+            params["end_time"] = end_timestamp
         if significant_changes_only:
             params["significant_changes_only"] = None
         if start_timestamp is not None:
-            url = join("history/period/", start_timestamp.isoformat())
+            start_timestamp = start_timestamp.replace(microsecond=0)
+            if start_timestamp.tzinfo is None:
+                start_timestamp = start_timestamp.astimezone()
+            start_timestamp = start_timestamp.isoformat()
+            start_timestamp = quote_plus(start_timestamp)
+            url = join("history/period/", start_timestamp)
         else:
             url = "history/period"
         return params, url
