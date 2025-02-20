@@ -89,18 +89,18 @@ class RawBaseClient:
             end_timestamp = end_timestamp.replace(microsecond=0) + timedelta(seconds=1)
             if end_timestamp.tzinfo is None:
                 end_timestamp = end_timestamp.astimezone()
-            end_timestamp = end_timestamp.isoformat()
-            end_timestamp = quote_plus(end_timestamp)
-            params["end_time"] = end_timestamp
+            end_time = end_timestamp.isoformat()
+            end_time = quote_plus(end_time)
+            params["end_time"] = end_time
         if significant_changes_only:
             params["significant_changes_only"] = None
         if start_timestamp is not None:
             start_timestamp = start_timestamp.replace(microsecond=0)
             if start_timestamp.tzinfo is None:
                 start_timestamp = start_timestamp.astimezone()
-            start_timestamp = start_timestamp.isoformat()
-            start_timestamp = quote_plus(start_timestamp)
-            url = join("history/period/", start_timestamp)
+            start_time = start_timestamp.isoformat()
+            start_time = quote_plus(start_time)
+            url = join("history/period/", start_time)
         else:
             url = "history/period"
         return params, url
