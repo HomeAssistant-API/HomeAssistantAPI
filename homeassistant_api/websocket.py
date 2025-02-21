@@ -21,11 +21,11 @@ logger = logging.getLogger(__name__)
 
 class WebsocketClient(RawWebsocketClient):
     """
-    
+
     The main class for interactign with the Home Assistant WebSocket API client.
 
     Here's a quick example of how to use the :py:class:`WebsocketClient` class:
-    
+
     .. code-block:: python
 
         from homeassistant_api import WebsocketClient
@@ -66,7 +66,7 @@ class WebsocketClient(RawWebsocketClient):
     def get_config(self) -> dict[str, Any]:
         """
         Get the Home Assistant configuration.
-        
+
         Sends command :code:`{"type": "get_config", ...}`.
         """
         return cast(
@@ -80,7 +80,7 @@ class WebsocketClient(RawWebsocketClient):
     def get_states(self) -> Tuple[State, ...]:
         """
         Get a list of states.
-        
+
         Sends command :code:`{"type": "get_states", ...}`.
         """
         return tuple(
@@ -170,7 +170,7 @@ class WebsocketClient(RawWebsocketClient):
         Get a list of services that Home Assistant offers (organized into a dictionary of service domains).
 
         For example, the service :code:`light.turn_on` would be in the domain :code:`light`.
-        
+
         Sends command :code:`{"type": "get_services", ...}`.
         """
         resp = self.recv(self.send("get_services"))
@@ -203,7 +203,7 @@ class WebsocketClient(RawWebsocketClient):
     ) -> None:
         """
         Trigger a service (that doesn't return a response).
-        
+
         Sends command :code:`{"type": "call_service", ...}`.
         """
         params = {
@@ -236,7 +236,7 @@ class WebsocketClient(RawWebsocketClient):
     ) -> dict[str, Any]:
         """
         Trigger a service (that returns a response) and return the response.
-        
+
         Sends command :code:`{"type": "call_service", ...}`.
         """
         params = {
@@ -261,7 +261,7 @@ class WebsocketClient(RawWebsocketClient):
         Listen for all events of a certain type.
 
         For example, to listen for all events of type `test_event`:
-        
+
         .. code-block:: python
 
             with ws_client.listen_events("test_event") as events:
@@ -275,7 +275,7 @@ class WebsocketClient(RawWebsocketClient):
     def _subscribe_events(self, event_type: Optional[str]) -> int:
         """
         Subscribe to all events of a certain type.
-        
+
 
         Sends command :code:`{"type": "subscribe_events", ...}`.
         """
@@ -292,15 +292,15 @@ class WebsocketClient(RawWebsocketClient):
 
         For example, in Home Assistant Automations we can subscribe to a state trigger for a light entity with YAML:
 
-        .. code-block:: yaml 
-            
+        .. code-block:: yaml
+
             triggers:
             # ...
             - trigger: state
               entity_id: light.kitchen
 
         To subscribe to that same state trigger with :py:class:`WebsocketClient` instead
-        
+
         .. code-block:: python
 
             with ws_client.listen_trigger("state", entity_id="light.kitchen") as trigger:
@@ -309,7 +309,7 @@ class WebsocketClient(RawWebsocketClient):
                     if <some_condition>:
                         break
                 # exiting the context manager unsubscribes from the trigger
-        
+
         Woohoo! We can now listen to triggers in Python code!
         """
         subscription = self._subscribe_trigger(trigger, **trigger_fields)
@@ -325,7 +325,7 @@ class WebsocketClient(RawWebsocketClient):
     def _subscribe_trigger(self, trigger: str, **trigger_fields) -> int:
         """
         Return the subscription id of the trigger we subscribe to.
-        
+
         Sends command :code:`{"type": "subscribe_trigger", ...}`.
         """
         return self.recv(
@@ -351,7 +351,7 @@ class WebsocketClient(RawWebsocketClient):
     def _unsubscribe(self, subcription_id: int) -> None:
         """
         Unsubscribe from all events of a certain type.
-        
+
         Sends command :code:`{"type": "unsubscribe_events", ...}`.
         """
         resp = self.recv(self.send("unsubscribe_events", subscription=subcription_id))
@@ -361,7 +361,7 @@ class WebsocketClient(RawWebsocketClient):
     def fire_event(self, event_type: str, **event_data) -> Context:
         """
         Fire an event.
-        
+
         Sends command :code:`{"type": "fire_event", ...}`.
         """
         params: dict[str, Any] = {"event_type": event_type}
