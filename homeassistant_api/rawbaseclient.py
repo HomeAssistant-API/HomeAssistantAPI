@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 from posixpath import join
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
-from urllib.parse import quote_plus
 
 from .models import Entity
 
@@ -63,7 +62,13 @@ class RawBaseClient:
 
     @staticmethod
     def construct_params(params: Dict[str, Optional[str]]) -> str:
-        """Custom method for constructing non-standard query strings"""
+        """
+        Custom method for constructing non-standard query strings.
+
+        For keys with corresponding None values, the query string will be key only (i.e. :code:`?key1&key2`).
+        For keys with corresponding non-None values, the query string will be key-value pairs (i.e. :code:`?key1=value1&key2=value2`).
+        To have an empty value use an empty string :code:`""` (i.e. :code:`?key1=&key2=value2`).
+        """
         return "&".join([k if v is None else f"{k}={v}" for k, v in params.items()])
 
     @staticmethod
@@ -75,34 +80,31 @@ class RawBaseClient:
         significant_changes_only: bool = False,
     ) -> Tuple[Dict[str, Optional[str]], str]:
         """
-        Pre-logic for `Client.get_entity_histories` and `Client.async_get_entity_histories`.
+        Pre-logic for :py:meth:`Client.get_entity_histories` and :py:meth:`Client.async_get_entity_histories`.
 
         Ensure timestamps
-        * use second resolution
+
+        * use second resolution (microseconds are truncated)
         * are timezone-aware
-        * are URL-encoded (as construct_params(params) is used instead of request's default parameter encoding)
+        * are URL-encoded (as :py:meth:`construct_params` is used instead of request's default parameter encoding)
         """
         params: Dict[str, Optional[str]] = {}
         if entities is not None:
             params["filter_entity_id"] = ",".join([ent.entity_id for ent in entities])
-        if end_timestamp is not None:
-            end_timestamp = end_timestamp.replace(microsecond=0) + timedelta(seconds=1)
-            if end_timestamp.tzinfo is None:
-                end_timestamp = end_timestamp.astimezone()
-            end_time = end_timestamp.isoformat()
-            end_time = quote_plus(end_time)
-            params["end_time"] = end_time
-        if significant_changes_only:
-            params["significant_changes_only"] = None
         if start_timestamp is not None:
             start_timestamp = start_timestamp.replace(microsecond=0)
             if start_timestamp.tzinfo is None:
                 start_timestamp = start_timestamp.astimezone()
-            start_time = start_timestamp.isoformat()
-            start_time = quote_plus(start_time)
-            url = join("history/period/", start_time)
+            url = join("history/period/", start_timestamp.isoformat())
         else:
             url = "history/period"
+        if end_timestamp is not None:
+            end_timestamp = end_timestamp.replace(microsecond=0) + timedelta(seconds=1)
+            if end_timestamp.tzinfo is None:
+                end_timestamp = end_timestamp.astimezone()
+            params["end_time"] = end_timestamp.isoformat()
+        if significant_changes_only:
+            params["significant_changes_only"] = None
         return params, url
 
     @staticmethod
