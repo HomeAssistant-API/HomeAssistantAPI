@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from posixpath import join
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
-from urllib.parse import quote_plus, urlencode
+from urllib.parse import quote_plus
 
 from .models import Entity
 
