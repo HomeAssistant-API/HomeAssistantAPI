@@ -70,7 +70,9 @@ class RawBaseClient:
         For keys with corresponding non-None values, the query string will be key-value pairs (i.e. :code:`?key1=value1&key2=value2`).
         To have an empty value use an empty string :code:`""` (i.e. :code:`?key1=&key2=value2`).
         """
-        return "&".join([k if v is None else f"{k}={quote_plus(v)}" for k, v in params.items()])
+        return "&".join(
+            [k if v is None else f"{k}={quote_plus(v)}" for k, v in params.items()]
+        )
 
     @staticmethod
     def prepare_get_entity_histories_params(

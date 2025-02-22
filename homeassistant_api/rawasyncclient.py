@@ -112,7 +112,8 @@ class RawAsyncClient(RawBaseClient):
             )
         except asyncio.exceptions.TimeoutError as err:
             raise RequestTimeoutError(
-                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)'
+                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
+                self.endpoint(path) + f"?{params}" * bool(params),
             ) from err
 
     @staticmethod
@@ -145,7 +146,9 @@ class RawAsyncClient(RawBaseClient):
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
-        data = await self.async_request(url, params=params)
+        data = await self.async_request(
+            url, params=self.construct_params(cast(Dict[str, Optional[str]], params))
+        )
         for entry in data:
             yield LogbookEntry.model_validate(entry)
 

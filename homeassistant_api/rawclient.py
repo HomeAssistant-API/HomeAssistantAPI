@@ -107,7 +107,8 @@ class RawClient(RawBaseClient):
                 )
         except requests.exceptions.Timeout as err:
             raise RequestTimeoutError(
-                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)'
+                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
+                url=self.endpoint(path) + f"?{params}" * bool(params),
             ) from err
         return self.response_logic(response=resp, decode_bytes=decode_bytes)
 
@@ -141,7 +142,9 @@ class RawClient(RawBaseClient):
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
-        data = self.request(url, params=params)
+        data = self.request(
+            url, params=self.construct_params(cast(Dict[str, Optional[str]], params))
+        )
         for entry in data:
             yield LogbookEntry.model_validate(entry)
 
