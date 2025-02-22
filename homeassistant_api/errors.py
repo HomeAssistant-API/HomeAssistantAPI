@@ -10,7 +10,7 @@ class HomeassistantAPIError(Exception):
 class RequestError(HomeassistantAPIError):
     """Error raised when an issue occurs when requesting to Homeassistant."""
 
-    def __init__(self, data: str, url: str) -> None:
+    def __init__(self, data: str, /, url: str) -> None:
         if data is None:
             super().__init__(f"An error occurred while making the request to {url!r}")
         else:

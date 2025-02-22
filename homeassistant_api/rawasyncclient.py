@@ -92,6 +92,8 @@ class RawAsyncClient(RawBaseClient):
     async def async_request(
         self,
         path: str,
+        *,
+        params: str = "",  # should be a string of query parameters from construct_params()
         method: str = "GET",
         headers: Optional[Dict[str, str]] = None,
         **kwargs,
@@ -103,7 +105,7 @@ class RawAsyncClient(RawBaseClient):
             return await self.async_response_logic(
                 await self.async_cache_session.request(
                     method,
-                    self.endpoint(path),
+                    self.endpoint(path) + f"?{params}" * bool(params),
                     headers=self.prepare_headers(headers),
                     **kwargs,
                 )

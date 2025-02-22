@@ -86,6 +86,8 @@ class RawClient(RawBaseClient):
     def request(
         self,
         path: str,
+        *,
+        params: str = "",  # should be a string of query parameters from construct_params()
         method="GET",
         headers: Optional[Dict[str, str]] = None,
         decode_bytes: bool = True,
@@ -99,7 +101,7 @@ class RawClient(RawBaseClient):
             if self.cache_session:
                 resp = self.cache_session.request(
                     method,
-                    self.endpoint(path),
+                    self.endpoint(path) + f"?{params}" * bool(params),
                     headers=self.prepare_headers(headers),
                     **kwargs,
                 )
