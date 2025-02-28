@@ -44,7 +44,11 @@ def test_get_logbook_entries(cached_client: Client) -> None:
 
 async def test_async_get_logbook_entries(async_cached_client: Client) -> None:
     """Tests the `GET /api/logbook/<timestamp>` endpoint."""
-    async for entry in async_cached_client.async_get_logbook_entries():
+    async for entry in async_cached_client.async_get_logbook_entries(
+        filter_entities="sun.sun",
+        start_timestamp=datetime(2020, 1, 1),
+        end_timestamp=datetime.now(),
+    ):
         assert entry
 
 
@@ -64,12 +68,18 @@ def test_get_entity_histories(cached_client: Client) -> None:
     assert sun is not None
     for history in cached_client.get_entity_histories(
         (sun,),
-        end_timestamp=datetime(2023, 1, 1),
+        end_timestamp=datetime.now(),  # test for microsecond truncation
         start_timestamp=datetime(2020, 1, 1),
         significant_changes_only=True,
     ):
         for state in history.states:
             assert isinstance(state, State)
+            break
+        else:
+            raise AssertionError("No states in entity history found.")
+        break
+    else:
+        raise AssertionError("No history found.")
 
 
 async def test_async_get_entity_histories(async_cached_client: Client) -> None:
@@ -79,6 +89,12 @@ async def test_async_get_entity_histories(async_cached_client: Client) -> None:
     async for history in async_cached_client.async_get_entity_histories((sun,)):
         for state in history.states:
             assert isinstance(state, State)
+            break
+        else:
+            raise AssertionError("No states in entity history found.")
+        break
+    else:
+        raise AssertionError("No history found.")
 
 
 def test_get_rendered_template(cached_client: Client) -> None:

@@ -92,6 +92,8 @@ class RawAsyncClient(RawBaseClient):
     async def async_request(
         self,
         path: str,
+        *,
+        params: str = "",  # should be a string of query parameters from construct_params()
         method: str = "GET",
         headers: Optional[Dict[str, str]] = None,
         **kwargs,
@@ -103,14 +105,15 @@ class RawAsyncClient(RawBaseClient):
             return await self.async_response_logic(
                 await self.async_cache_session.request(
                     method,
-                    self.endpoint(path),
+                    self.endpoint(path) + f"?{params}" * bool(params),
                     headers=self.prepare_headers(headers),
                     **kwargs,
                 )
             )
         except asyncio.exceptions.TimeoutError as err:
             raise RequestTimeoutError(
-                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)'
+                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
+                self.endpoint(path) + f"?{params}" * bool(params),
             ) from err
 
     @staticmethod
@@ -143,7 +146,9 @@ class RawAsyncClient(RawBaseClient):
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
-        data = await self.async_request(url, params=params)
+        data = await self.async_request(
+            url, params=self.construct_params(cast(Dict[str, Optional[str]], params))
+        )
         for entry in data:
             yield LogbookEntry.model_validate(entry)
 

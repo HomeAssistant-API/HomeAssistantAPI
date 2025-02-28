@@ -8,6 +8,8 @@ import pytest_asyncio
 
 from homeassistant_api import Client, WebsocketClient
 
+logging.basicConfig(level=logging.INFO)
+
 TIMEOUT = 300
 
 

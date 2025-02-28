@@ -10,9 +10,28 @@ class HomeassistantAPIError(Exception):
 class RequestError(HomeassistantAPIError):
     """Error raised when an issue occurs when requesting to Homeassistant."""
 
+    def __init__(
+        self, data: Optional[str], /, url: str, message: Optional[str] = None
+    ) -> None:
+        if message is not None:
+            super().__init__(
+                message
+                + f" {url!r}"
+                + (f" with data: {data!r}" if data is not None else "")
+            )
+        elif data is None:
+            super().__init__(f"An error occurred while making the request to {url!r}")
+        else:
+            super().__init__(
+                f"An error occurred while making the request to {url!r} with data: {data!r}"
+            )
+
 
 class RequestTimeoutError(RequestError):
     """Error raised when a request times out."""
+
+    def __init__(self, message: str, url: str) -> None:
+        super().__init__(None, url, message)
 
 
 class ResponseError(HomeassistantAPIError):
