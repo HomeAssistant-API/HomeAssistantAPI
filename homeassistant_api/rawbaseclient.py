@@ -25,7 +25,7 @@ class RawBaseClient:
         if global_request_kwargs is None:
             global_request_kwargs = {}
         self.api_url = api_url
-        self.token = token
+        self.token = token.strip()
         self.global_request_kwargs = global_request_kwargs
 
         if not api_url.endswith("/"):
