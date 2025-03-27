@@ -1,9 +1,9 @@
 """Module for parent RawWrapper class"""
 
-import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from posixpath import join
-from typing import Dict, Iterable, Optional, Tuple, Union, Any
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from urllib.parse import quote_plus
 
 from .models import Entity
 
@@ -63,38 +63,16 @@ class RawBaseClient:
 
     @staticmethod
     def construct_params(params: Dict[str, Optional[str]]) -> str:
-        """Custom method for constructing non-standard query strings"""
-        return "&".join([k if v is None else f"{k}={v}" for k, v in params.items()])
-
-    @staticmethod
-    def format_entity_id(entity_id: str) -> str:
-        """Takes in a string and formats it into valid snake_case."""
-        entity_id = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", entity_id)
-        entity_id = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", entity_id)
-        entity_id = entity_id.replace("-", "_")
-        return entity_id.lower()
-
-    def prepare_entity_id(
-        self,
-        *,
-        group_id: Optional[str] = None,
-        slug: Optional[str] = None,
-        entity_id: Optional[str] = None,
-    ) -> str:
         """
-        Combines optional :code:`group` and :code:`slug` into an :code:`entity_id` if provided.
-        Favors :code:`entity_id` over :code:`group` or :code:`slug`.
+        Custom method for constructing non-standard query strings.
+
+        For keys with corresponding None values, the query string will be key only (i.e. :code:`?key1&key2`).
+        For keys with corresponding non-None values, the query string will be key-value pairs (i.e. :code:`?key1=value1&key2=value2`).
+        To have an empty value use an empty string :code:`""` (i.e. :code:`?key1=&key2=value2`).
         """
-        if (group_id is None or slug is None) and entity_id is None:
-            raise ValueError(
-                "To use group or slug you need to pass both, not just one. "
-                "Otherwise pass entity_id. "
-                "Also make sure you are using keyword arguments."
-            )
-        if group_id is not None and slug is not None:
-            entity_id = f"{group_id}.{slug}"
-        assert entity_id is not None
-        return self.format_entity_id(entity_id)
+        return "&".join(
+            [k if v is None else f"{k}={quote_plus(v)}" for k, v in params.items()]
+        )
 
     @staticmethod
     def prepare_get_entity_histories_params(
@@ -104,21 +82,32 @@ class RawBaseClient:
         end_timestamp: Optional[datetime] = None,
         significant_changes_only: bool = False,
     ) -> Tuple[Dict[str, Optional[str]], str]:
+        """
+        Pre-logic for :py:meth:`Client.get_entity_histories` and :py:meth:`Client.async_get_entity_histories`.
 
-        """Pre-logic for `Client.get_entity_histories` and `Client.async_get_entity_histories`."""
+        Ensure timestamps
+
+        * use second resolution (microseconds are truncated)
+        * are timezone-aware
+        * are URL-encoded (as :py:meth:`construct_params` is used instead of request's default parameter encoding)
+        """
         params: Dict[str, Optional[str]] = {}
         if entities is not None:
             params["filter_entity_id"] = ",".join([ent.entity_id for ent in entities])
-        if end_timestamp is not None:
-            params[
-                "end_time"
-            ] = end_timestamp.isoformat()  # Params are automatically URL encoded
-        if significant_changes_only:
-            params["significant_changes_only"] = None
         if start_timestamp is not None:
+            start_timestamp = start_timestamp.replace(microsecond=0)
+            if start_timestamp.tzinfo is None:
+                start_timestamp = start_timestamp.astimezone()
             url = join("history/period/", start_timestamp.isoformat())
         else:
             url = "history/period"
+        if end_timestamp is not None:
+            end_timestamp = end_timestamp.replace(microsecond=0) + timedelta(seconds=1)
+            if end_timestamp.tzinfo is None:
+                end_timestamp = end_timestamp.astimezone()
+            params["end_time"] = end_timestamp.isoformat()
+        if significant_changes_only:
+            params["significant_changes_only"] = None
         return params, url
 
     @staticmethod
@@ -134,9 +123,11 @@ class RawBaseClient:
         if filter_entities is not None:
             params.update(
                 {
-                    "entity": filter_entities
-                    if isinstance(filter_entities, str)
-                    else ",".join(filter_entities)
+                    "entity": (
+                        filter_entities
+                        if isinstance(filter_entities, str)
+                        else ",".join(filter_entities)
+                    )
                 }
             )
         if end_timestamp is not None:

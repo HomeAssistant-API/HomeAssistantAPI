@@ -1,5 +1,7 @@
 """Module containing the primary Client class."""
+
 import logging
+import urllib.parse as urlparse
 from typing import Any
 
 from .rawasyncclient import RawAsyncClient
@@ -21,12 +23,22 @@ class Client(RawClient, RawAsyncClient):
 
     def __init__(
         self,
-        *args: Any,
+        api_url: str,
+        token: str,
         use_async: bool = False,
         verify_ssl: bool = True,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
-        if use_async:
-            RawAsyncClient.__init__(self, *args, verify_ssl=verify_ssl, **kwargs)
+        parsed = urlparse.urlparse(api_url)
+
+        if parsed.scheme in {"http", "https"}:
+            if use_async:
+                RawAsyncClient.__init__(
+                    self, api_url, token, verify_ssl=verify_ssl, **kwargs
+                )
+            else:
+                RawClient.__init__(
+                    self, api_url, token, verify_ssl=verify_ssl, **kwargs
+                )
         else:
-            RawClient.__init__(self, *args, verify_ssl=verify_ssl, **kwargs)
+            raise ValueError(f"Unknown scheme {parsed.scheme} in {api_url}")

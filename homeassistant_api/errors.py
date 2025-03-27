@@ -1,18 +1,37 @@
 """Module for custom error classes"""
 
-from typing import Union
+from typing import Optional, Union
 
 
-class HomeassistantAPIError(BaseException):
+class HomeassistantAPIError(Exception):
     """Base class for custom errors"""
 
 
 class RequestError(HomeassistantAPIError):
     """Error raised when an issue occurs when requesting to Homeassistant."""
 
+    def __init__(
+        self, data: Optional[str], /, url: str, message: Optional[str] = None
+    ) -> None:
+        if message is not None:
+            super().__init__(
+                message
+                + f" {url!r}"
+                + (f" with data: {data!r}" if data is not None else "")
+            )
+        elif data is None:
+            super().__init__(f"An error occurred while making the request to {url!r}")
+        else:
+            super().__init__(
+                f"An error occurred while making the request to {url!r} with data: {data!r}"
+            )
+
 
 class RequestTimeoutError(RequestError):
     """Error raised when a request times out."""
+
+    def __init__(self, message: str, url: str) -> None:
+        super().__init__(None, url, message)
 
 
 class ResponseError(HomeassistantAPIError):
@@ -55,8 +74,8 @@ class InternalServerError(HomeassistantAPIError):
 class UnauthorizedError(HomeassistantAPIError):
     """Error raised when an invalid token in used to authenticate with homeassistant."""
 
-    def __init__(self) -> None:
-        super().__init__("Invalid authentication token")
+    def __init__(self, message: Optional[str] = None) -> None:
+        super().__init__(message or "Invalid authentication token")
 
 
 class EndpointNotFoundError(HomeassistantAPIError):
@@ -84,3 +103,11 @@ class UnexpectedStatusCodeError(ResponseError):
 
     def __init__(self, status_code: int) -> None:
         super().__init__(f"Response has unexpected status code: {status_code!r}")
+
+
+class WebsocketError(HomeassistantAPIError):
+    """Error raised when an issue occurs with the websocket connection."""
+
+
+class ReceivingError(WebsocketError):
+    """Error raised when an issue occurs when receiving a message from the websocket server."""

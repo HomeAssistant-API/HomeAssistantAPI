@@ -1,10 +1,12 @@
 """Module for making sure endpoints that should succeed, do indeed succeed."""
 
+import logging
 from datetime import datetime
 
 from homeassistant_api import Client
 from homeassistant_api.models.events import Event
 from homeassistant_api.models.states import State
+from homeassistant_api.websocket import WebsocketClient
 
 
 def test_get_error_log(cached_client: Client) -> None:
@@ -42,7 +44,11 @@ def test_get_logbook_entries(cached_client: Client) -> None:
 
 async def test_async_get_logbook_entries(async_cached_client: Client) -> None:
     """Tests the `GET /api/logbook/<timestamp>` endpoint."""
-    async for entry in async_cached_client.async_get_logbook_entries():
+    async for entry in async_cached_client.async_get_logbook_entries(
+        filter_entities="sun.sun",
+        start_timestamp=datetime(2020, 1, 1),
+        end_timestamp=datetime.now(),
+    ):
         assert entry
 
 
@@ -62,12 +68,18 @@ def test_get_entity_histories(cached_client: Client) -> None:
     assert sun is not None
     for history in cached_client.get_entity_histories(
         (sun,),
-        end_timestamp=datetime(2023, 1, 1),
+        end_timestamp=datetime.now(),  # test for microsecond truncation
         start_timestamp=datetime(2020, 1, 1),
         significant_changes_only=True,
     ):
         for state in history.states:
             assert isinstance(state, State)
+            break
+        else:
+            raise AssertionError("No states in entity history found.")
+        break
+    else:
+        raise AssertionError("No history found.")
 
 
 async def test_async_get_entity_histories(async_cached_client: Client) -> None:
@@ -77,6 +89,12 @@ async def test_async_get_entity_histories(async_cached_client: Client) -> None:
     async for history in async_cached_client.async_get_entity_histories((sun,)):
         for state in history.states:
             assert isinstance(state, State)
+            break
+        else:
+            raise AssertionError("No states in entity history found.")
+        break
+    else:
+        raise AssertionError("No history found.")
 
 
 def test_get_rendered_template(cached_client: Client) -> None:
@@ -93,6 +111,17 @@ def test_get_rendered_template(cached_client: Client) -> None:
 async def test_async_get_rendered_template(async_cached_client: Client) -> None:
     """Tests the `POST /api/template` endpoint."""
     rendered_template = await async_cached_client.async_get_rendered_template(
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+    )
+    assert rendered_template in {
+        "The sun is above the horizon.",
+        "The sun is below the horizon.",
+    }
+
+
+def test_websocket_get_rendered_template(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "render_template"` websocket command."""
+    rendered_template = websocket_client.get_rendered_template(
         'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
     )
     assert rendered_template in {
@@ -123,6 +152,12 @@ async def test_async_get_entities(async_cached_client: Client) -> None:
     assert "sun" in entities
 
 
+def test_websocket_get_entities(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "get_entities"` websocket command."""
+    entities = websocket_client.get_entities()
+    assert "sun" in entities
+
+
 def test_get_domains(cached_client: Client) -> None:
     """Tests the `GET /api/services` endpoint."""
     domains = cached_client.get_domains()
@@ -132,6 +167,12 @@ def test_get_domains(cached_client: Client) -> None:
 async def test_async_get_domains(async_cached_client: Client) -> None:
     """Tests the `GET /api/services` endpoint."""
     domains = await async_cached_client.async_get_domains()
+    assert "homeassistant" in domains
+
+
+def test_websocket_get_domains(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "get_domains"` websocket command."""
+    domains = websocket_client.get_domains()
     assert "homeassistant" in domains
 
 
@@ -149,6 +190,13 @@ async def test_async_get_domain(async_cached_client: Client) -> None:
     assert domain.services
 
 
+def test_websocket_get_domain(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "get_domain"` websocket command."""
+    domain = websocket_client.get_domain("homeassistant")
+    assert domain is not None
+    assert domain.services
+
+
 def test_trigger_service(cached_client: Client) -> None:
     """Tests the `POST /api/services/<domain>/<service>` endpoint."""
     notify = cached_client.get_domain("notify")
@@ -157,6 +205,7 @@ def test_trigger_service(cached_client: Client) -> None:
         message="Your API Test Suite just said hello!",
         title="Test Suite Notifcation",
     )
+    logging.info(resp)
     assert isinstance(resp, tuple)
 
 
@@ -171,6 +220,53 @@ async def test_async_trigger_service(async_cached_client: Client) -> None:
     assert isinstance(resp, tuple)
 
 
+def test_websocket_trigger_service(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "trigger_service"` websocket command."""
+    notify = websocket_client.get_domain("notify")
+    assert notify is not None
+    resp = notify.persistent_notification(
+        message="Your API Test Suite just said hello!", title="Test Suite Notifcation"
+    )
+    # Websocket API doesnt return changed states so we check for None
+    assert resp is None
+
+
+def test_trigger_service_with_response(cached_client: Client) -> None:
+    """Tests the `POST /api/services/<domain>/<service>?return_response` endpoint."""
+    weather = cached_client.get_domain("weather")
+    assert weather is not None
+    changed_states, data = weather.get_forecasts(
+        entity_id="weather.forecast_home",
+        type="hourly",
+    )
+    assert data is not None
+
+
+async def test_async_trigger_service_with_response(async_cached_client: Client) -> None:
+    """Tests the `POST /api/services/<domain>/<service>?return_response` endpoint."""
+    weather = await async_cached_client.async_get_domain("weather")
+    assert weather is not None
+    changed_states, data = await weather.get_forecasts(
+        entity_id="weather.forecast_home",
+        type="hourly",
+    )
+    assert data is not None
+
+
+def test_websocket_trigger_service_with_response(
+    websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "trigger_service_with_response"` websocket command."""
+    weather = websocket_client.get_domain("weather")
+    assert weather is not None
+    data = weather.get_forecasts(
+        entity_id="weather.forecast_home",
+        type="hourly",
+    )
+    # Websocket API doesnt return changed states so we check data is not None because we expect a response
+    assert data is not None
+
+
 def test_get_states(cached_client: Client) -> None:
     """Tests the `GET /api/states` endpoint."""
     states = cached_client.get_states()
@@ -181,6 +277,13 @@ def test_get_states(cached_client: Client) -> None:
 async def test_async_get_states(async_cached_client: Client) -> None:
     """Tests the `GET /api/states` endpoint."""
     states = await async_cached_client.async_get_states()
+    for state in states:
+        assert isinstance(state, State)
+
+
+def test_websocket_get_states(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "get_states"` websocket command."""
+    states = websocket_client.get_states()
     for state in states:
         assert isinstance(state, State)
 

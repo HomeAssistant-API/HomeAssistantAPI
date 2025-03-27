@@ -12,6 +12,7 @@ trace:
 counter:
 tag:
 notify:
+weather:
 
 logger:
   default: info

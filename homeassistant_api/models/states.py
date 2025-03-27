@@ -1,4 +1,5 @@
 """Module for the Entity State model."""
+
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -11,9 +12,22 @@ class Context(BaseModel):
     """Model for entity state contexts."""
 
     id: str = Field(
-        max_length=128,
+        max_length=128,  # arbitrary limit
         description="Unique string identifying the context.",
     )
+    parent_id: Optional[str] = Field(
+        max_length=128,
+        description="Unique string identifying the parent context.",
+    )
+    user_id: Optional[str] = Field(
+        max_length=128,
+        description="Unique string identifying the user.",
+    )
+
+    @classmethod
+    def from_json(cls, json: Dict[str, Any]) -> "Context":
+        """Constructs Context model from json data"""
+        return cls.model_validate(json)
 
 
 class State(BaseModel):

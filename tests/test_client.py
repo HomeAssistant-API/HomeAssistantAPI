@@ -3,7 +3,7 @@ import os
 import aiohttp_client_cache
 import requests_cache
 
-from homeassistant_api import Client
+from homeassistant_api import Client, WebsocketClient
 
 
 def test_custom_cached_session() -> None:
@@ -47,3 +47,11 @@ async def test_default_async_session() -> None:
         use_async=True,
     ):
         pass
+
+
+def test_websocket_client_ping() -> None:
+    with WebsocketClient(
+        os.environ["HOMEASSISTANTAPI_WS_URL"],
+        os.environ["HOMEASSISTANTAPI_TOKEN"],
+    ) as client:
+        assert client.ping_latency() > 0

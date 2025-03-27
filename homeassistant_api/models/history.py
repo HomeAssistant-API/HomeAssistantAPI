@@ -1,4 +1,5 @@
 """Module for the History model."""
+
 from typing import Tuple
 
 from pydantic import Field

@@ -1,4 +1,5 @@
 """Module for all interaction with homeassistant."""
+
 from __future__ import annotations
 
 import json
@@ -21,6 +22,8 @@ from typing import (
 import requests
 import requests_cache
 
+from homeassistant_api.utils import prepare_entity_id
+
 from .errors import BadTemplateError, RequestError, RequestTimeoutError
 from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
 from .processing import Processing, ResponseType
@@ -37,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 class RawClient(RawBaseClient):
     """
-    The base object for interacting with Homeassistant.
+    The base object for interacting with Homeassistant via the REST API.
 
     :param api_url: The location of the api endpoint. e.g. :code:`http://localhost:8123/api` Required.
     :param token: The refresh or long lived access token to authenticate your requests. Required.
@@ -83,8 +86,10 @@ class RawClient(RawBaseClient):
     def request(
         self,
         path: str,
+        *,
+        params: str = "",  # should be a string of query parameters from construct_params()
         method="GET",
-        headers: Dict[str, str] | None = None,
+        headers: Optional[Dict[str, str]] = None,
         decode_bytes: bool = True,
         **kwargs,
     ) -> Any:
@@ -96,13 +101,14 @@ class RawClient(RawBaseClient):
             if self.cache_session:
                 resp = self.cache_session.request(
                     method,
-                    self.endpoint(path),
+                    self.endpoint(path) + f"?{params}" * bool(params),
                     headers=self.prepare_headers(headers),
                     **kwargs,
                 )
         except requests.exceptions.Timeout as err:
             raise RequestTimeoutError(
-                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)'
+                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
+                url=self.endpoint(path) + f"?{params}" * bool(params),
             ) from err
         return self.response_logic(response=resp, decode_bytes=decode_bytes)
 
@@ -136,9 +142,11 @@ class RawClient(RawBaseClient):
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
-        data = self.request(url, params=params)
+        data = self.request(
+            url, params=self.construct_params(cast(Dict[str, Optional[str]], params))
+        )
         for entry in data:
-            yield LogbookEntry.parse_obj(entry)
+            yield LogbookEntry.model_validate(entry)
 
     def get_entity_histories(
         self,
@@ -163,7 +171,7 @@ class RawClient(RawBaseClient):
             params=self.construct_params(params),
         )
         for states in data:
-            yield History.parse_obj({"states": states})
+            yield History.model_validate({"states": states})
 
     def get_rendered_template(self, template: str) -> str:
         """
@@ -225,9 +233,9 @@ class RawClient(RawBaseClient):
 
     def get_entity(
         self,
-        group_id: str | None = None,
-        slug: str | None = None,
-        entity_id: str | None = None,
+        group_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        entity_id: Optional[str] = None,
     ) -> Optional[Entity]:
         """
         Returns an :py:class:`Entity` model for an :code:`entity_id`.
@@ -290,6 +298,34 @@ class RawClient(RawBaseClient):
         )
         return tuple(map(State.from_json, cast(List[Dict[str, Any]], data)))
 
+    def trigger_service_with_response(
+        self,
+        domain: str,
+        service: str,
+        **service_data,
+    ) -> tuple[tuple[State, ...], dict[str, Any]]:
+        """
+        Tells Home Assistant to trigger a service, returns the response from the service call.
+        :code:`POST /api/services/<domain>/<service>`
+
+        Returns a list of the states changed and the response from the service call.
+        """
+        data = cast(
+            dict[str, Any],
+            self.request(
+                join("services", domain, service) + "?return_response",
+                method="POST",
+                json=service_data,
+            ),
+        )
+        states = tuple(
+            map(
+                State.from_json,
+                cast(List[Dict[Any, Any]], data.get("changed_states", [])),
+            )
+        )
+        return states, data.get("service_response", {})
+
     # EntityState methods
     def get_state(  # pylint: disable=duplicate-code
         self,
@@ -302,7 +338,7 @@ class RawClient(RawBaseClient):
         Fetches the state of the entity specified.
         :code:`GET /api/states/<entity_id>`
         """
-        entity_id = self.prepare_entity_id(
+        entity_id = prepare_entity_id(
             group_id=group_id,
             slug=slug,
             entity_id=entity_id,
@@ -322,7 +358,7 @@ class RawClient(RawBaseClient):
         data = self.request(
             join("states", state.entity_id),
             method="POST",
-            json=json.loads(state.json()),
+            json=json.loads(state.model_dump_json()),
         )
         return State.from_json(cast(Dict[str, Any], data))
 

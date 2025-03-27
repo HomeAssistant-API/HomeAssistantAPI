@@ -17,6 +17,9 @@ venv/
 .replit
 .breakpoints
 
+# Informal testing
+main.py
+
 # Cache files
 *.sqlite
 

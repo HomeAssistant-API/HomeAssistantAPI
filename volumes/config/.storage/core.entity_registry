@@ -1,34 +1,21 @@
 {
   "version": 1,
-  "minor_version": 8,
+  "minor_version": 15,
   "key": "core.entity_registry",
   "data": {
     "entities": [
-      {
-        "area_id": null,
-        "capabilities": null,
-        "config_entry_id": null,
-        "device_class": null,
-        "device_id": null,
-        "disabled_by": null,
-        "entity_category": null,
-        "entity_id": "person.test_user",
-        "hidden_by": null,
-        "icon": null,
-        "id": "e6de57e591560fad68f1c3b52bf0b295",
-        "has_entity_name": false,
-        "name": null,
-        "options": {},
-        "original_device_class": null,
-        "original_icon": null,
-        "original_name": "Test User",
-        "platform": "person",
-        "supported_features": 0,
-        "unique_id": "test_user",
-        "unit_of_measurement": null,
-        "translation_key": null,
-        "aliases": []
-      }
-    ]
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":null,"created_at":"1970-01-01T00:00:00+00:00","device_class":null,"device_id":null,"disabled_by":null,"entity_category":null,"entity_id":"person.test_user","hidden_by":null,"icon":null,"id":"e6de57e591560fad68f1c3b52bf0b295","has_entity_name":false,"labels":[],"modified_at":"1970-01-01T00:00:00+00:00","name":null,"options":{},"original_device_class":null,"original_icon":null,"original_name":"Test User","platform":"person","supported_features":0,"translation_key":null,"unique_id":"test_user","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.780004+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":null,"entity_category":"diagnostic","entity_id":"sensor.sun_next_dawn","hidden_by":null,"icon":null,"id":"d7e14c775a20078d98703325848bd203","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.780072+00:00","name":null,"options":{},"original_device_class":"timestamp","original_icon":null,"original_name":"Next dawn","platform":"sun","supported_features":0,"translation_key":"next_dawn","unique_id":"5f8426fa502435857743f302651753c9-next_dawn","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.780360+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":null,"entity_category":"diagnostic","entity_id":"sensor.sun_next_dusk","hidden_by":null,"icon":null,"id":"e1a35874a09227109783c6d1301a10cf","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.780404+00:00","name":null,"options":{},"original_device_class":"timestamp","original_icon":null,"original_name":"Next dusk","platform":"sun","supported_features":0,"translation_key":"next_dusk","unique_id":"5f8426fa502435857743f302651753c9-next_dusk","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.780603+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":null,"entity_category":"diagnostic","entity_id":"sensor.sun_next_midnight","hidden_by":null,"icon":null,"id":"9ec059b13886380e2d5d4a9002e89879","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.780633+00:00","name":null,"options":{},"original_device_class":"timestamp","original_icon":null,"original_name":"Next midnight","platform":"sun","supported_features":0,"translation_key":"next_midnight","unique_id":"5f8426fa502435857743f302651753c9-next_midnight","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.780796+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":null,"entity_category":"diagnostic","entity_id":"sensor.sun_next_noon","hidden_by":null,"icon":null,"id":"04bc6ee0081da1191cb27e2ee5842148","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.780832+00:00","name":null,"options":{},"original_device_class":"timestamp","original_icon":null,"original_name":"Next noon","platform":"sun","supported_features":0,"translation_key":"next_noon","unique_id":"5f8426fa502435857743f302651753c9-next_noon","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.780976+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":null,"entity_category":"diagnostic","entity_id":"sensor.sun_next_rising","hidden_by":null,"icon":null,"id":"ec87eec8ebe365ec0cd1119962627570","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.781008+00:00","name":null,"options":{},"original_device_class":"timestamp","original_icon":null,"original_name":"Next rising","platform":"sun","supported_features":0,"translation_key":"next_rising","unique_id":"5f8426fa502435857743f302651753c9-next_rising","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.781147+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":null,"entity_category":"diagnostic","entity_id":"sensor.sun_next_setting","hidden_by":null,"icon":null,"id":"594acbedee290ea279f1d63cf6efbb3b","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.781172+00:00","name":null,"options":{},"original_device_class":"timestamp","original_icon":null,"original_name":"Next setting","platform":"sun","supported_features":0,"translation_key":"next_setting","unique_id":"5f8426fa502435857743f302651753c9-next_setting","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":{"state_class":"measurement"},"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.781300+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":"integration","entity_category":"diagnostic","entity_id":"sensor.sun_solar_elevation","hidden_by":null,"icon":null,"id":"0df1d222a5fedd8d5e62a2ff2be79094","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.781322+00:00","name":null,"options":{},"original_device_class":null,"original_icon":null,"original_name":"Solar elevation","platform":"sun","supported_features":0,"translation_key":"solar_elevation","unique_id":"5f8426fa502435857743f302651753c9-solar_elevation","previous_unique_id":null,"unit_of_measurement":"°"},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":{"state_class":"measurement"},"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.781397+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":"integration","entity_category":"diagnostic","entity_id":"sensor.sun_solar_azimuth","hidden_by":null,"icon":null,"id":"104de75b64e950af398ec4fe9998338c","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.781417+00:00","name":null,"options":{},"original_device_class":null,"original_icon":null,"original_name":"Solar azimuth","platform":"sun","supported_features":0,"translation_key":"solar_azimuth","unique_id":"5f8426fa502435857743f302651753c9-solar_azimuth","previous_unique_id":null,"unit_of_measurement":"°"},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"5f8426fa502435857743f302651753c9","created_at":"2024-12-17T01:58:48.781483+00:00","device_class":null,"device_id":"b3d3fadee11d077d99d948c173631abc","disabled_by":"integration","entity_category":"diagnostic","entity_id":"sensor.sun_solar_rising","hidden_by":null,"icon":null,"id":"888993d87923ff452ad1e53f6b3a943f","has_entity_name":true,"labels":[],"modified_at":"2024-12-17T01:58:48.781506+00:00","name":null,"options":{},"original_device_class":null,"original_icon":null,"original_name":"Solar rising","platform":"sun","supported_features":0,"translation_key":"solar_rising","unique_id":"5f8426fa502435857743f302651753c9-solar_rising","previous_unique_id":null,"unit_of_measurement":null},
+      {"aliases":[],"area_id":null,"categories":{},"capabilities":null,"config_entry_id":"01JFJGH76SD417XC4YJTG8QJWB","created_at":"2024-12-20T17:06:07.780994+00:00","device_class":null,"device_id":"6586dbdeb10a88ae4603b47e600c6124","disabled_by":null,"entity_category":null,"entity_id":"weather.forecast_home","hidden_by":null,"icon":null,"id":"6ae588672696a2601b0152f22ee235f3","has_entity_name":true,"labels":[],"modified_at":"2024-12-20T17:06:07.781055+00:00","name":null,"options":{},"original_device_class":null,"original_icon":null,"original_name":"Home","platform":"met","supported_features":3,"translation_key":null,"unique_id":"52.3731339-4.8903147","previous_unique_id":null,"unit_of_measurement":null}
+    ],
+    "deleted_entities": []
   }
 }

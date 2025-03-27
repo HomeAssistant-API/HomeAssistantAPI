@@ -1,4 +1,5 @@
 """Module for interacting with Home Assistant asyncronously."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,6 +27,7 @@ from .errors import BadTemplateError, RequestError, RequestTimeoutError
 from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
 from .processing import AsyncResponseType, Processing
 from .rawbaseclient import RawBaseClient
+from .utils import prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import Client
@@ -90,6 +92,8 @@ class RawAsyncClient(RawBaseClient):
     async def async_request(
         self,
         path: str,
+        *,
+        params: str = "",  # should be a string of query parameters from construct_params()
         method: str = "GET",
         headers: Optional[Dict[str, str]] = None,
         **kwargs,
@@ -101,14 +105,15 @@ class RawAsyncClient(RawBaseClient):
             return await self.async_response_logic(
                 await self.async_cache_session.request(
                     method,
-                    self.endpoint(path),
+                    self.endpoint(path) + f"?{params}" * bool(params),
                     headers=self.prepare_headers(headers),
                     **kwargs,
                 )
             )
         except asyncio.exceptions.TimeoutError as err:
             raise RequestTimeoutError(
-                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)'
+                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
+                self.endpoint(path) + f"?{params}" * bool(params),
             ) from err
 
     @staticmethod
@@ -141,9 +146,11 @@ class RawAsyncClient(RawBaseClient):
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
-        data = await self.async_request(url, params=params)
+        data = await self.async_request(
+            url, params=self.construct_params(cast(Dict[str, Optional[str]], params))
+        )
         for entry in data:
-            yield LogbookEntry.parse_obj(entry)
+            yield LogbookEntry.model_validate(entry)
 
     async def async_get_entity_histories(
         self,
@@ -168,7 +175,7 @@ class RawAsyncClient(RawBaseClient):
             params=self.construct_params(params),
         )
         for states in data:
-            yield History.parse_obj({"states": states})
+            yield History.model_validate({"states": states})
 
     async def async_get_rendered_template(self, template: str) -> str:
         """
@@ -176,11 +183,14 @@ class RawAsyncClient(RawBaseClient):
         :code:`POST /api/template`
         """
         try:
-            return cast(str, await self.async_request(
-                "template",
-                json=dict(template=template),
-                method="POST",
-            ))
+            return cast(
+                str,
+                await self.async_request(
+                    "template",
+                    json=dict(template=template),
+                    method="POST",
+                ),
+            )
         except RequestError as err:
             raise BadTemplateError(
                 "Your template is invalid. "
@@ -228,9 +238,9 @@ class RawAsyncClient(RawBaseClient):
 
     async def async_get_entity(
         self,
-        group_id: str | None = None,
-        slug: str | None = None,
-        entity_id: str | None = None,
+        group_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        entity_id: Optional[str] = None,
     ) -> Optional[Entity]:
         """
         Returns a Entity model for an :code:`entity_id`.
@@ -291,6 +301,34 @@ class RawAsyncClient(RawBaseClient):
         )
         return tuple(map(State.from_json, cast(List[Dict[Any, Any]], data)))
 
+    async def async_trigger_service_with_response(
+        self,
+        domain: str,
+        service: str,
+        **service_data: Union[Dict[str, Any], List[Any], str],
+    ) -> tuple[tuple[State, ...], dict[str, Any]]:
+        """
+        Tells Home Assistant to trigger a service, returns the response from the service call.
+        :code:`POST /api/services/<domain>/<service>`
+
+        Returns a list of the states changed and the response from the service call.
+        """
+        data = cast(
+            dict[str, Any],
+            await self.async_request(
+                join("services", domain, service) + "?return_response",
+                method="POST",
+                json=service_data,
+            ),
+        )
+        states = tuple(
+            map(
+                State.from_json,
+                cast(List[Dict[Any, Any]], data.get("changed_states", [])),
+            )
+        )
+        return states, data.get("service_response", {})
+
     # EntityState methods
     async def async_get_state(  # pylint: disable=duplicate-code
         self,
@@ -303,7 +341,7 @@ class RawAsyncClient(RawBaseClient):
         Fetches the state of the entity specified.
         :code:`GET /api/states/<entity_id>`
         """
-        target_entity_id = self.prepare_entity_id(
+        target_entity_id = prepare_entity_id(
             group_id=group_id,
             slug=slug,
             entity_id=entity_id,
@@ -323,7 +361,7 @@ class RawAsyncClient(RawBaseClient):
         data = await self.async_request(
             join("states", state.entity_id),
             method="POST",
-            json=json.loads(state.json()),
+            json=json.loads(state.model_dump_json()),
         )
         return State.from_json(cast(Dict[Any, Any], data))
 

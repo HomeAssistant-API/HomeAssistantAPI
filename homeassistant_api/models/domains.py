@@ -1,27 +1,35 @@
 """File for Service and Domain data models"""
+
 import gc
 import inspect
 from typing import TYPE_CHECKING, Any, Coroutine, Dict, Optional, Tuple, Union, cast
 
 from pydantic import Field
 
+from homeassistant_api.errors import RequestError
+
 from .base import BaseModel
 from .states import State
 
 if TYPE_CHECKING:
-    from homeassistant_api import Client
+    from homeassistant_api import Client, WebsocketClient
 
 
 class Domain(BaseModel):
     """Model representing the domain that services belong to."""
 
-    def __init__(self, *args, _client: Optional["Client"] = None, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        _client: Optional[Union["Client", "WebsocketClient"]] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         if _client is None:
             raise ValueError("No client passed.")
         object.__setattr__(self, "_client", _client)
 
-    _client: "Client"
+    _client: Union["Client", "WebsocketClient"]
     domain_id: str = Field(
         ...,
         description="The name of the domain that services belong to. "
@@ -33,12 +41,12 @@ class Domain(BaseModel):
     )
 
     @classmethod
-    def from_json(cls, json: Dict[str, Any], client: "Client") -> "Domain":
+    def from_json(
+        cls, json: Dict[str, Any], client: Union["Client", "WebsocketClient"]
+    ) -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
-            raise ValueError(
-                "Missing services or attribute attribute in json argument."
-            )
+            raise ValueError("Missing services or domain attribute in json argument.")
         domain = cls(domain_id=cast(str, json.get("domain")), _client=client)
         services = json.get("services")
         assert isinstance(services, dict)
@@ -67,7 +75,13 @@ class Domain(BaseModel):
         """Allows services accessible as attributes"""
         if attr in self.services:
             return self.get_service(attr)
-        return super().__getattribute__(attr)
+        try:
+            return super().__getattribute__(attr)
+        except AttributeError as err:
+            try:
+                return object.__getattribute__(self, attr)
+            except AttributeError as e:
+                raise e from err
 
 
 class ServiceField(BaseModel):
@@ -89,33 +103,75 @@ class Service(BaseModel):
     description: Optional[str] = None
     fields: Optional[Dict[str, ServiceField]] = None
 
-    def trigger(self, **service_data) -> Tuple[State, ...]:
+    def trigger(self, entity_id: Optional[str] = None, **service_data) -> Union[
+        Tuple[State, ...],
+        Tuple[Tuple[State, ...], Dict[str, Any]],
+        dict[str, Any],
+        None,
+    ]:
         """Triggers the service associated with this object."""
-        return self.domain._client.trigger_service(
-            self.domain.domain_id,
-            self.service_id,
-            **service_data,
-        )
+        if entity_id is not None:
+            service_data["entity_id"] = entity_id
+        try:
+            return self.domain._client.trigger_service_with_response(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+        except RequestError:
+            return self.domain._client.trigger_service(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
 
-    async def async_trigger(self, **service_data) -> Tuple[State, ...]:
+    async def async_trigger(
+        self, entity_id: Optional[str] = None, **service_data
+    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
         """Triggers the service associated with this object."""
-        return await self.domain._client.async_trigger_service(
-            self.domain.domain_id,
-            self.service_id,
-            **service_data,
-        )
+        if entity_id is not None:
+            service_data["entity_id"] = entity_id
 
-    def __call__(
-        self, **service_data
-    ) -> Union[Tuple[State, ...], Coroutine[Any, Any, Tuple[State, ...]]]:
-        """Triggers the service associated with this object."""
+        from homeassistant_api import WebsocketClient  # prevent circular import
+
+        if isinstance(self.domain._client, WebsocketClient):
+            raise NotImplementedError(
+                "WebsocketClient does not support async/await syntax."
+            )
+        try:
+            return await self.domain._client.async_trigger_service_with_response(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+        except RequestError:
+            return await self.domain._client.async_trigger_service(
+                self.domain.domain_id,
+                self.service_id,
+                **service_data,
+            )
+
+    def __call__(self, entity_id: Optional[str] = None, **service_data) -> Union[
+        Union[
+            Tuple[State, ...],
+            Tuple[Tuple[State, ...], Dict[str, Any]],
+            dict[str, Any],
+            None,
+        ],
+        Coroutine[
+            Any, Any, Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]
+        ],
+    ]:
+        """
+        Triggers the service associated with this object.
+        """
         assert (frame := inspect.currentframe()) is not None
         assert (parent_frame := frame.f_back) is not None
         try:
             if inspect.iscoroutinefunction(
                 caller := gc.get_referrers(parent_frame.f_code)[0]
             ) or inspect.iscoroutine(caller):
-                return self.async_trigger(**service_data)
+                return self.async_trigger(entity_id=entity_id, **service_data)
         except IndexError:  # pragma: no cover
             pass
-        return self.trigger(**service_data)
+        return self.trigger(entity_id=entity_id, **service_data)

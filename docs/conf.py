@@ -1,4 +1,5 @@
 """Configuration file for the Sphinx documentation builder."""
+
 #
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
@@ -20,8 +21,8 @@ sys.path.append(os.path.abspath("extensions"))
 # -- Project information -----------------------------------------------------
 
 project = "Homeassistant API"
-copyright = "2024, Nathan Larsen"  # pylint: disable=redefined-builtin
-author = "Nate Larsen"
+copyright = "2023-2025, Nathan Larsen"  # pylint: disable=redefined-builtin
+author = "Nathan Larsen"
 
 # The full version, including alpha/beta/rc tags
 with open("../pyproject.toml") as f:

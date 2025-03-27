@@ -88,7 +88,7 @@ class Processing:
         if status_code in (200, 201):
             return self.process_content(async_=async_)
         if status_code == 400:
-            raise RequestError(content)
+            raise RequestError(content, url=self._response.url)  # type: ignore
         if status_code == 401:
             raise UnauthorizedError()
         if status_code == 404:
