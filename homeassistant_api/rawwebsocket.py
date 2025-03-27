@@ -36,7 +36,7 @@ class RawWebsocketClient:
         token: str,
     ) -> None:
         self.api_url = api_url
-        self.token = token
+        self.token = token.strip()
         self._conn = None
 
         self._id_counter = 0
