@@ -47,6 +47,9 @@ class State(BaseModel):
     last_updated: Optional[DatetimeIsoField] = Field(
         default_factory=datetime.utcnow, description="The last time the state updated."
     )
+    last_reported: Optional[DatetimeIsoField] = Field(
+        default_factory=datetime.utcnow, description="The last time the state was reported."
+    )
     context: Optional[Context] = Field(
         None, description="Provides information about the context of the state."
     )
