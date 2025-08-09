@@ -2,7 +2,7 @@
 
 import gc
 import inspect
-from typing import TYPE_CHECKING, Any, Coroutine, Dict, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Coroutine, Dict, Optional, Tuple, Union, cast, List
 
 from pydantic import Field
 
