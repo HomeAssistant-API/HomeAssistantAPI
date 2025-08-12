@@ -1,6 +1,6 @@
 """Module for the Entity State model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from pydantic import Field
@@ -41,14 +41,15 @@ class State(BaseModel):
         {}, description="A dictionary of extra attributes of the state."
     )
     last_changed: DatetimeIsoField = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         description="The last time the state was changed.",
     )
     last_updated: Optional[DatetimeIsoField] = Field(
-        default_factory=datetime.utcnow, description="The last time the state updated."
+        default_factory=lambda: datetime.now(timezone.utc), description="The last time the state updated.",
     )
     last_reported: Optional[DatetimeIsoField] = Field(
-        default_factory=datetime.utcnow, description="The last time the state was reported."
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="The last time the state was reported to the server. Only used by some integrations.",
     )
     context: Optional[Context] = Field(
         None, description="Provides information about the context of the state."
