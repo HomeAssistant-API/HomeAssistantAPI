@@ -98,13 +98,12 @@ class RawClient(RawBaseClient):
             if self.global_request_kwargs is not None:
                 kwargs.update(self.global_request_kwargs)
             logger.debug("%s request to %s", method, self.endpoint(path))
-            if self.cache_session:
-                resp = self.cache_session.request(
-                    method,
-                    self.endpoint(path) + f"?{params}" * bool(params),
-                    headers=self.prepare_headers(headers),
-                    **kwargs,
-                )
+            resp = self.cache_session.request(
+                method,
+                self.endpoint(path) + f"?{params}" * bool(params),
+                headers=self.prepare_headers(headers),
+                **kwargs,
+            )
         except requests.exceptions.Timeout as err:
             raise RequestTimeoutError(
                 f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
@@ -268,6 +267,8 @@ class RawClient(RawBaseClient):
         :code:`GET /api/services`
         """
         data = self.request("services")
+        import pprint
+        pprint.pprint(*(domain for domain in data if domain["domain"] == "light"))
         domains = map(
             lambda json: Domain.from_json(json, client=cast(Client, self)),
             cast(Tuple[Dict[str, Any], ...], data),

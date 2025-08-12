@@ -82,9 +82,12 @@ class Processing:
         elif isinstance(self._response, (Response, CachedResponse)):
             status_code = self._response.status_code
             content = self._response.content
+        else:
+            raise TypeError(
+                f"Unsupported response type: {type(self._response).__name__}"
+            )
         if self._decode_bytes and isinstance(content, bytes):
             content = content.decode()
-
         if status_code in (200, 201):
             return self.process_content(async_=async_)
         if status_code == 400:
@@ -117,7 +120,7 @@ def process_json(response: ResponseType) -> dict[str, Any]:
 
 
 @Processing.processor("text/plain")  # type: ignore[arg-type]
-@Processing.processor("application/octet-stream")
+@Processing.processor("application/octet-stream") # pyright: ignore[reportArgumentType]
 def process_text(response: ResponseType) -> str:
     """Returns the plaintext of the reponse."""
     return response.text
@@ -135,7 +138,7 @@ async def async_process_json(response: AsyncResponseType) -> dict[str, Any]:
 
 
 @Processing.processor("text/plain")  # type: ignore[arg-type]
-@Processing.processor("application/octet-stream")
+@Processing.processor("application/octet-stream") # pyright: ignore[reportArgumentType]
 async def async_process_text(response: AsyncResponseType) -> str:
     """Returns the plaintext of the reponse."""
     return await response.text()
