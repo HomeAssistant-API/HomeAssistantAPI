@@ -89,9 +89,9 @@ class ServiceFieldSelectorText(BaseModel):
 
 class ServiceFieldSelectorNumber(BaseModel):
     mode: Optional[str] = None
-    step: Optional[str | float | int] = None
-    min: Optional[float | int] = None
-    max: Optional[float | int] = None
+    step: Optional[Union[str, float, int]] = None
+    min: Optional[Union[float, int]] = None
+    max: Optional[Union[float, int]] = None
     unit_of_measurement: Optional[str] = None
     unit: Optional[str] = None
 
@@ -147,8 +147,8 @@ class ServiceFieldSelector(BaseModel):
 '''
 
 class ServiceFieldFilter(BaseModel):
-    supported_features: Optional[List[int] | int] = None # Bitset (any needs to be supported)
-    attribute: Optional[Dict[str, List[str] | str]] = None
+    supported_features: Optional[Union[List[int], int]] = None # Bitset (any needs to be supported)
+    attribute: Optional[Dict[str, Union[List[str], str]]] = None
 
 class ServiceField(BaseModel):
     """Model for service parameters/fields."""
@@ -171,7 +171,7 @@ class ServiceTargetDevice(BaseModel):
 
 class ServiceTargetEntity(BaseModel):
     domain: Optional[List[str]] = None
-    supported_features: Optional[List[int] | int] = None # Bitset flags
+    supported_features: Optional[Union[List[int], int]] = None # Bitset flags
     integration: Optional[str] = None
     # `area_id``, `device_id``, `entity_id`, `label_id` can be passed as a target
 
@@ -189,7 +189,7 @@ class Service(BaseModel):
     domain: Domain = Field(exclude=True, repr=False)
     name: Optional[str] = None
     description: Optional[str] = None
-    fields: Optional[Dict[str, ServiceField | ServiceFieldCollection]] = None
+    fields: Optional[Dict[str, Union[ServiceField, ServiceFieldCollection]]] = None
     target: Optional[ServiceTarget] = None
     response: Optional[ServiceResponse] = None
 
