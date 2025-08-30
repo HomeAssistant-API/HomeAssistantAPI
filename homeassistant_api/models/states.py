@@ -45,7 +45,8 @@ class State(BaseModel):
         description="The last time the state was changed.",
     )
     last_updated: Optional[DatetimeIsoField] = Field(
-        default_factory=lambda: datetime.now(timezone.utc), description="The last time the state updated.",
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="The last time the state updated.",
     )
     last_reported: Optional[DatetimeIsoField] = Field(
         default_factory=lambda: datetime.now(timezone.utc),

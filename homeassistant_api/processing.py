@@ -120,7 +120,7 @@ def process_json(response: ResponseType) -> dict[str, Any]:
 
 
 @Processing.processor("text/plain")  # type: ignore[arg-type]
-@Processing.processor("application/octet-stream") # pyright: ignore[reportArgumentType]
+@Processing.processor("application/octet-stream")  # pyright: ignore[reportArgumentType]
 def process_text(response: ResponseType) -> str:
     """Returns the plaintext of the reponse."""
     return response.text
@@ -138,7 +138,7 @@ async def async_process_json(response: AsyncResponseType) -> dict[str, Any]:
 
 
 @Processing.processor("text/plain")  # type: ignore[arg-type]
-@Processing.processor("application/octet-stream") # pyright: ignore[reportArgumentType]
+@Processing.processor("application/octet-stream")  # pyright: ignore[reportArgumentType]
 async def async_process_text(response: AsyncResponseType) -> str:
     """Returns the plaintext of the reponse."""
     return await response.text()

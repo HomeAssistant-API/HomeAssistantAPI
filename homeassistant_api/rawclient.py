@@ -268,6 +268,7 @@ class RawClient(RawBaseClient):
         """
         data = self.request("services")
         import pprint
+
         pprint.pprint(*(domain for domain in data if domain["domain"] == "light"))
         domains = map(
             lambda json: Domain.from_json(json, client=cast(Client, self)),
