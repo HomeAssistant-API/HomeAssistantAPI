@@ -25,7 +25,15 @@ import requests_cache
 from homeassistant_api.utils import JSONType, prepare_entity_id
 
 from homeassistant_api.errors import BadTemplateError, RequestError, RequestTimeoutError
-from homeassistant_api.models import Domain, Entity, Event, Group, History, LogbookEntry, State
+from homeassistant_api.models import (
+    Domain,
+    Entity,
+    Event,
+    Group,
+    History,
+    LogbookEntry,
+    State,
+)
 from homeassistant_api.processing import Processing, ResponseType
 from homeassistant_api.rawbaseclient import RawBaseClient
 
@@ -267,9 +275,6 @@ class RawClient(RawBaseClient):
         :code:`GET /api/services`
         """
         data = self.request("services")
-        import pprint
-
-        pprint.pprint(*(domain for domain in data if domain["domain"] == "light"))
         domains = map(
             lambda json: Domain.from_json(json, client=cast(Client, self)),
             cast(Tuple[dict[str, JSONType], ...], data),

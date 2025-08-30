@@ -563,7 +563,7 @@ class ServiceField(BaseModel):
     filter: Optional[ServiceFieldFilter] = None
 
 
-class ServiceFieldCollection(BaseModel, extra="forbid"):
+class ServiceFieldCollection(BaseModel):
     collapsed: Optional[bool] = None
     fields: Dict[str, ServiceField]
 

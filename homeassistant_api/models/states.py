@@ -7,7 +7,7 @@ from pydantic import Field
 
 from homeassistant_api.utils import JSONType
 
-from homeassistant_api.base import BaseModel, DatetimeIsoField
+from homeassistant_api.models.base import BaseModel, DatetimeIsoField
 
 
 class Context(BaseModel):
