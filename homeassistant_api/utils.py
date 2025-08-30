@@ -1,6 +1,8 @@
 import re
 from typing import Optional
 
+JSONType = int | float | str | bool | list["JSONType"] | dict[str, "JSONType"]
+
 
 def format_entity_id(entity_id: str) -> str:
     """Takes in a string and formats it into valid snake_case."""

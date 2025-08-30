@@ -11,7 +11,9 @@ from aiohttp_client_cache.response import CachedResponse as AsyncCachedResponse
 from requests import Response
 from requests_cache.models.response import CachedResponse
 
-from .errors import (
+from homeassistant_api.utils import JSONType
+
+from homeassistant_api.errors import (
     EndpointNotFoundError,
     InternalServerError,
     MalformedDataError,
@@ -109,10 +111,10 @@ class Processing:
 
 # List of default processors
 @Processing.processor("application/json")  # type: ignore[arg-type]
-def process_json(response: ResponseType) -> dict[str, Any]:
+def process_json(response: ResponseType) -> dict[str, JSONType]:
     """Returns the json dict content of the response."""
     try:
-        return cast(dict[str, Any], response.json())
+        return cast(dict[str, JSONType], response.json())
     except (json.JSONDecodeError, simplejson.JSONDecodeError) as err:
         raise MalformedDataError(
             f"Home Assistant responded with non-json response: {repr(response.text)}"
@@ -127,10 +129,10 @@ def process_text(response: ResponseType) -> str:
 
 
 @Processing.processor("application/json")  # type: ignore[arg-type]
-async def async_process_json(response: AsyncResponseType) -> dict[str, Any]:
+async def async_process_json(response: AsyncResponseType) -> dict[str, JSONType]:
     """Returns the json dict content of the response."""
     try:
-        return cast(dict[str, Any], await response.json())
+        return cast(dict[str, JSONType], await response.json())
     except (json.JSONDecodeError, simplejson.JSONDecodeError) as err:
         raise MalformedDataError(
             f"Home Assistant responded with non-json response: {repr(await response.text())}"

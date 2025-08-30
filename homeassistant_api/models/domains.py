@@ -20,6 +20,7 @@ from typing import (
 from pydantic import Field
 
 from homeassistant_api.errors import RequestError
+from homeassistant_api.utils import JSONType
 
 from .base import BaseModel
 from .states import State
@@ -55,13 +56,13 @@ class Domain(BaseModel):
 
     @classmethod
     def from_json(
-        cls, json: Dict[str, Any], client: Union["Client", "WebsocketClient"]
+        cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient"]
     ) -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
             raise ValueError("Missing services or domain attribute in json argument.")
         domain = cls(domain_id=cast(str, json.get("domain")), _client=client)
-        services = json.get("services")
+        services = cast(dict[str, dict[str, JSONType]], json.get("services"))
         assert isinstance(services, dict)
         for service_id, data in services.items():
             domain._add_service(service_id, **data)
@@ -103,8 +104,6 @@ class Domain(BaseModel):
 # https://github.com/home-assistant/frontend/blob/dev/src/data/selector.ts
 # https://github.com/home-assistant/home-assistant-js-websocket/blob/master/lib/types.ts
 
-number = Union[int, float]
-
 
 # Helpers
 class ServiceFieldSelectorEntityFilter(BaseModel):
@@ -124,8 +123,8 @@ class ServiceFieldSelectorDeviceFilter(BaseModel):
 class CropOptions(BaseModel):
     round: bool
     type: Optional[str]  # "image/jpeg" / "image/png"
-    quality: Optional[number] = None
-    aspectRatio: Optional[number] = None
+    quality: Optional[int | float] = None
+    aspectRatio: Optional[int | float] = None
 
 
 class SelectBoxOptionImage(BaseModel):
@@ -226,10 +225,10 @@ class ServiceFieldSelectorColorRGB(BaseModel):
 
 class ServiceFieldSelectorColorTemp(BaseModel):
     unit: Optional[str] = None
-    min: Optional[number] = None
-    max: Optional[number] = None
-    min_mireds: Optional[number] = None
-    max_mireds: Optional[number] = None
+    min: Optional[int | float] = None
+    max: Optional[int | float] = None
+    min_mireds: Optional[int | float] = None
+    max_mireds: Optional[int | float] = None
 
 
 class ServiceFieldSelectorCondition(BaseModel):
@@ -242,7 +241,7 @@ class ServiceFieldSelectorConfigEntry(BaseModel):
 
 class ServiceFieldSelectorConstant(BaseModel):
     label: Optional[str] = None
-    value: Union[str, number, bool]
+    value: Union[str, int, float, bool]
     translation_key: Optional[str] = None
 
 
@@ -349,9 +348,9 @@ class ServiceFieldSelectorNavigation(BaseModel):
 
 
 class ServiceFieldSelectorNumber(BaseModel):
-    min: Optional[number] = None
-    max: Optional[number] = None
-    step: Optional[Union[number, str]] = None
+    min: Optional[int | float] = None
+    max: Optional[int | float] = None
+    step: Optional[Union[int | float, str]] = None
     unit_of_measurement: Optional[str] = None
     mode: Optional[ServiceFieldSelectorNumberMode] = None
     slider_ticks: Optional[bool] = None
@@ -374,7 +373,7 @@ class ServiceFieldSelectorObject(BaseModel):
 
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
-    scale: Optional[number] = None
+    scale: Optional[int | float] = None
     error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
         None
     )
@@ -555,14 +554,12 @@ class ServiceField(BaseModel):
     """Model for service parameters/fields."""
 
     description: Optional[str] = None
-    example: Optional[Union[str, number, bool, List[str], Dict]] = None
-    default: Optional[Union[str, number, bool, List[str], Dict]] = None
+    example: Optional[JSONType] = None
+    default: Optional[JSONType] = None
     name: Optional[str] = None
     required: Optional[bool] = None
     advanced: Optional[bool] = None
-    selector: Optional[Dict[str, Any]] = (
-        None  # TODO: I believe it would be beneficial to parse it the way I do
-    )
+    selector: Optional[ServiceFieldSelector] = None
     filter: Optional[ServiceFieldFilter] = None
 
 
@@ -588,8 +585,8 @@ class Service(BaseModel):
 
     def trigger(self, entity_id: Optional[str] = None, **service_data) -> Union[
         Tuple[State, ...],
-        Tuple[Tuple[State, ...], Dict[str, Any]],
-        dict[str, Any],
+        Tuple[Tuple[State, ...], dict[str, JSONType]],
+        dict[str, JSONType],
         None,
     ]:
         """Triggers the service associated with this object."""
@@ -612,7 +609,7 @@ class Service(BaseModel):
 
     async def async_trigger(
         self, entity_id: Optional[str] = None, **service_data
-    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]:
+    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]]:
         """Triggers the service associated with this object."""
         if entity_id is not None:
             service_data["entity_id"] = entity_id
@@ -639,12 +636,14 @@ class Service(BaseModel):
     def __call__(self, entity_id: Optional[str] = None, **service_data) -> Union[
         Union[
             Tuple[State, ...],
-            Tuple[Tuple[State, ...], Dict[str, Any]],
-            dict[str, Any],
+            Tuple[Tuple[State, ...], dict[str, JSONType]],
+            dict[str, JSONType],
             None,
         ],
         Coroutine[
-            Any, Any, Union[Tuple[State, ...], Tuple[Tuple[State, ...], Dict[str, Any]]]
+            Any,
+            Any,
+            Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]],
         ],
     ]:
         """

@@ -2,8 +2,10 @@
 
 from datetime import datetime, timedelta
 from posixpath import join
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
 from urllib.parse import quote_plus
+
+from homeassistant_api.utils import JSONType
 
 from .models import Entity
 
@@ -13,20 +15,20 @@ class RawBaseClient:
 
     api_url: str
     token: str
-    global_request_kwargs: Dict[str, Any]
+    global_request_kwargs: dict[str, JSONType]
 
     def __init__(
         self,
         api_url: str,
         token: str,
         *,
-        global_request_kwargs: Optional[Dict[str, str]] = None,
+        global_request_kwargs: Optional[Mapping[str, str]] = None,
     ) -> None:
         if global_request_kwargs is None:
             global_request_kwargs = {}
         self.api_url = api_url
         self.token = token.strip()
-        self.global_request_kwargs = global_request_kwargs
+        self.global_request_kwargs = dict(global_request_kwargs)
 
         if not api_url.endswith("/"):
             self.api_url += "/"
@@ -136,8 +138,14 @@ class RawBaseClient:
                 # Parameters are already URL encoded automatically.
             params.update(end_time=end_timestamp)
         if start_timestamp is not None:
-            if isinstance(start_timestamp, datetime):
-                url = join("logbook/", start_timestamp.isoformat())
+            url = join(
+                "logbook/",
+                (
+                    start_timestamp.isoformat()
+                    if isinstance(start_timestamp, datetime)
+                    else start_timestamp
+                ),
+            )
         else:
             url = "logbook"
         return params, url

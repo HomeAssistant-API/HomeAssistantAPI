@@ -21,6 +21,7 @@ from homeassistant_api.models.websocket import (
     PingResponse,
     ResultResponse,
 )
+from homeassistant_api.utils import JSONType
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ class RawWebsocketClient:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if not self._conn:
+            raise ReceivingError("Connection is not open!")
         self._conn.__exit__(exc_type, exc_value, traceback)
         self._conn = None
 
@@ -68,14 +71,14 @@ class RawWebsocketClient:
         self._id_counter += 1
         return self._id_counter
 
-    def _send(self, data: dict[str, Any]) -> None:
+    def _send(self, data: dict[str, JSONType]) -> None:
         """Send a message to the websocket server."""
         logger.debug(f"Sending message: {data}")
         if self._conn is None:
             raise ReceivingError("Connection is not open!")
         self._conn.send(json.dumps(data))
 
-    def _recv(self) -> dict[str, Any]:
+    def _recv(self) -> dict[str, JSONType]:
         """Receive a message from the websocket server."""
         if self._conn is None:
             raise ReceivingError("Connection is not open!")
@@ -108,7 +111,7 @@ class RawWebsocketClient:
             return data["id"]
         return -1  # non-command messages don't have an id
 
-    def check_success(self, data: dict[str, Any]) -> None:
+    def check_success(self, data: dict[str, JSONType]) -> None:
         """Check if a command message was successful."""
         try:
             error_resp = ErrorResponse.model_validate(data)
@@ -116,7 +119,7 @@ class RawWebsocketClient:
         except ValidationError:
             pass
 
-    def handle_recv(self, data: dict[str, Any]) -> None:
+    def handle_recv(self, data: dict[str, JSONType]) -> None:
         """Handle a received message."""
         if "id" not in data:
             raise ReceivingError(
@@ -125,16 +128,17 @@ class RawWebsocketClient:
         self.check_success(data)
         self.parse_response(data)
 
-    def parse_response(self, data: dict[str, Any]) -> None:
+    def parse_response(self, data: dict[str, JSONType]) -> None:
+        data_id = cast(int, data["id"])
         if data.get("type") == "pong":
             logger.info("Received pong message")
-            self._ping_responses[data["id"]].end = time.perf_counter_ns()
+            self._ping_responses[data_id].end = time.perf_counter_ns()
         elif data.get("type") == "result":
             logger.info("Received result message")
-            self._result_responses[data["id"]] = ResultResponse.model_validate(data)
+            self._result_responses[data_id] = ResultResponse.model_validate(data)
         elif data.get("type") == "event":
             logger.info("Received event message %s", data["event"])
-            self._event_responses[data["id"]].append(EventResponse.model_validate(data))
+            self._event_responses[data_id].append(EventResponse.model_validate(data))
         else:
             raise ReceivingError(f"Received unexpected message type: {data}")
 

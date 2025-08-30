@@ -1,11 +1,13 @@
 """Module for the Entity State model."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from pydantic import Field
 
-from .base import BaseModel, DatetimeIsoField
+from homeassistant_api.utils import JSONType
+
+from homeassistant_api.base import BaseModel, DatetimeIsoField
 
 
 class Context(BaseModel):
@@ -25,7 +27,7 @@ class Context(BaseModel):
     )
 
     @classmethod
-    def from_json(cls, json: Dict[str, Any]) -> "Context":
+    def from_json(cls, json: dict[str, JSONType]) -> "Context":
         """Constructs Context model from json data"""
         return cls.model_validate(json)
 
@@ -37,7 +39,7 @@ class State(BaseModel):
     state: str = Field(
         ..., description="The string representation of the state of the entity."
     )
-    attributes: Dict[str, Any] = Field(
+    attributes: dict[str, JSONType] = Field(
         {}, description="A dictionary of extra attributes of the state."
     )
     last_changed: DatetimeIsoField = Field(
@@ -57,6 +59,6 @@ class State(BaseModel):
     )
 
     @classmethod
-    def from_json(cls, json: Dict[str, Any]) -> "State":
+    def from_json(cls, json: dict[str, JSONType]) -> "State":
         """Constructs State model from json data"""
         return cls.model_validate(json)

@@ -1,7 +1,7 @@
 import contextlib
 import logging
 import urllib.parse as urlparse
-from typing import Any, Dict, Generator, Optional, Tuple, Union, cast
+from typing import Dict, Generator, Optional, Tuple, Union, cast
 
 from homeassistant_api.models import Domain, Entity, Group, State
 from homeassistant_api.models.states import Context
@@ -12,7 +12,7 @@ from homeassistant_api.models.websocket import (
     ResultResponse,
     TemplateEvent,
 )
-from homeassistant_api.utils import prepare_entity_id
+from homeassistant_api.utils import JSONType, prepare_entity_id
 
 from .rawwebsocket import RawWebsocketClient
 
@@ -63,14 +63,14 @@ class WebsocketClient(RawWebsocketClient):
         self._unsubscribe(id)
         return cast(TemplateEvent, cast(EventResponse, second).event).result
 
-    def get_config(self) -> dict[str, Any]:
+    def get_config(self) -> dict[str, JSONType]:
         """
         Get the Home Assistant configuration.
 
         Sends command :code:`{"type": "get_config", ...}`.
         """
         return cast(
-            dict[str, Any],
+            dict[str, JSONType],
             cast(
                 ResultResponse,
                 self.recv(self.send("get_config")),
@@ -86,7 +86,7 @@ class WebsocketClient(RawWebsocketClient):
         return tuple(
             State.from_json(state)
             for state in cast(
-                list[dict[str, Any]],
+                list[dict[str, JSONType]],
                 cast(ResultResponse, self.recv(self.send("get_states"))).result,
             )
         )
@@ -179,7 +179,7 @@ class WebsocketClient(RawWebsocketClient):
                 {"domain": item[0], "services": item[1]},
                 client=self,
             ),
-            cast(dict[str, Any], cast(ResultResponse, resp).result).items(),
+            cast(dict[str, JSONType], cast(ResultResponse, resp).result).items(),
         )
         return {domain.domain_id: domain for domain in domains}
 
@@ -221,7 +221,7 @@ class WebsocketClient(RawWebsocketClient):
 
         assert (
             cast(
-                dict[str, Any],
+                dict[str, JSONType],
                 cast(ResultResponse, data).result,
             ).get("response")
             is None
@@ -233,7 +233,7 @@ class WebsocketClient(RawWebsocketClient):
         service: str,
         entity_id: Optional[str] = None,
         **service_data,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JSONType]:
         """
         Trigger a service (that returns a response) and return the response.
 
@@ -250,7 +250,9 @@ class WebsocketClient(RawWebsocketClient):
 
         data = self.recv(self.send("call_service", include_id=True, **params))
 
-        return cast(dict[str, Any], cast(ResultResponse, data).result)["response"]
+        return cast(dict[str, dict[str, JSONType]], cast(ResultResponse, data).result)[
+            "response"
+        ]
 
     @contextlib.contextmanager
     def listen_events(
@@ -285,7 +287,7 @@ class WebsocketClient(RawWebsocketClient):
     @contextlib.contextmanager
     def listen_trigger(
         self, trigger: str, **trigger_fields
-    ) -> Generator[Generator[dict[str, Any], None, None], None, None]:
+    ) -> Generator[Generator[dict[str, JSONType], None, None], None, None]:
         """
         Listen to a Home Assistant trigger.
         Allows additional trigger keyword parameters with :code:`**kwargs` (i.e. passing :code:`tag_id=...` for NFC tag triggers).
@@ -364,12 +366,12 @@ class WebsocketClient(RawWebsocketClient):
 
         Sends command :code:`{"type": "fire_event", ...}`.
         """
-        params: dict[str, Any] = {"event_type": event_type}
+        params: dict[str, JSONType] = {"event_type": event_type}
         if event_data:
             params["event_data"] = event_data
         return Context.from_json(
             cast(
-                dict[str, dict[str, Any]],
+                dict[str, dict[str, JSONType]],
                 cast(
                     ResultResponse,
                     self.recv(self.send("fire_event", include_id=True, **params)),

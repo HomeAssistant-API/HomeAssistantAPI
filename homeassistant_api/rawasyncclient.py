@@ -21,13 +21,13 @@ from typing import (
 )
 
 import aiohttp
-import aiohttp_client_cache
+import aiohttp_client_cache.session
 
 from .errors import BadTemplateError, RequestError, RequestTimeoutError
 from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
 from .processing import AsyncResponseType, Processing
 from .rawbaseclient import RawBaseClient
-from .utils import prepare_entity_id
+from .utils import JSONType, prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import Client
@@ -47,14 +47,14 @@ class RawAsyncClient(RawBaseClient):
     """  # pylint: disable=line-too-long
 
     async_cache_session: Union[
-        aiohttp_client_cache.CachedSession, aiohttp.ClientSession
+        aiohttp_client_cache.session.CachedSession, aiohttp.ClientSession
     ]
 
     def __init__(
         self,
         *args,
         async_cache_session: Union[
-            aiohttp_client_cache.CachedSession,
+            aiohttp_client_cache.session.CachedSession,
             Literal[False],
             Literal[None],
         ] = None,  # Explicitly disable cache with async_cache_session=False
@@ -129,12 +129,12 @@ class RawAsyncClient(RawBaseClient):
         """
         return cast(str, await self.async_request("error_log"))
 
-    async def async_get_config(self) -> Dict[str, Any]:
+    async def async_get_config(self) -> dict[str, JSONType]:
         """
         Returns the yaml configuration of homeassistant.
         :code:`GET /api/config`
         """
-        return cast(Dict[str, Any], await self.async_request("config"))
+        return cast(dict[str, JSONType], await self.async_request("config"))
 
     async def async_get_logbook_entries(
         self,
@@ -272,7 +272,7 @@ class RawAsyncClient(RawBaseClient):
         data = await self.async_request("services")
         domains = map(
             lambda json: Domain.from_json(json, client=cast(Client, self)),
-            cast(Tuple[Dict[str, Any], ...], data),
+            cast(Tuple[dict[str, JSONType], ...], data),
         )
         return {domain.domain_id: domain for domain in domains}
 
@@ -288,7 +288,7 @@ class RawAsyncClient(RawBaseClient):
         self,
         domain: str,
         service: str,
-        **service_data: Union[Dict[str, Any], List[Any], str],
+        **service_data: Union[dict[str, JSONType], List[Any], str],
     ) -> Tuple[State, ...]:
         """
         Tells Home Assistant to trigger a service, returns all states changed while in the process of being called.
@@ -305,8 +305,8 @@ class RawAsyncClient(RawBaseClient):
         self,
         domain: str,
         service: str,
-        **service_data: Union[Dict[str, Any], List[Any], str],
-    ) -> tuple[tuple[State, ...], dict[str, Any]]:
+        **service_data: Union[dict[str, JSONType], List[Any], str],
+    ) -> tuple[tuple[State, ...], dict[str, JSONType]]:
         """
         Tells Home Assistant to trigger a service, returns the response from the service call.
         :code:`POST /api/services/<domain>/<service>`
@@ -314,7 +314,7 @@ class RawAsyncClient(RawBaseClient):
         Returns a list of the states changed and the response from the service call.
         """
         data = cast(
-            dict[str, Any],
+            dict[str, dict[str, JSONType]],
             await self.async_request(
                 join("services", domain, service) + "?return_response",
                 method="POST",
@@ -383,7 +383,7 @@ class RawAsyncClient(RawBaseClient):
         return tuple(
             map(
                 lambda json: Event.from_json(json, client=cast(Client, self)),
-                cast(List[Dict[str, Any]], data),
+                cast(List[dict[str, JSONType]], data),
             )
         )
 

@@ -1,8 +1,10 @@
 """Event Model File"""
 
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
 from pydantic import Field
+
+from homeassistant_api.utils import JSONType
 
 from .base import BaseModel
 
@@ -38,6 +40,6 @@ class Event(BaseModel):
         return await self._client.async_fire_event(self.event, **event_data)
 
     @classmethod
-    def from_json(cls, json: Dict[str, Any], client: "Client") -> "Event":
+    def from_json(cls, json: dict[str, JSONType], client: "Client") -> "Event":
         """Constructs Event model from json data"""
         return cls(**json, _client=client)
