@@ -61,7 +61,7 @@ class Processing:
         calls the processor with the response.
         """
 
-        mimetype_header = self._response.headers.get(  # type: ignore [arg-type]
+        mimetype_header = self._response.headers.get(
             "content-type",
             "text/plain",
         )

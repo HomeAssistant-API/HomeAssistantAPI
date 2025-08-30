@@ -1,7 +1,7 @@
 import re
-from typing import Optional
+from typing import Optional, TypeAlias, Union
 
-JSONType = int | float | str | bool | list["JSONType"] | dict[str, "JSONType"]
+JSONType: TypeAlias = Union[int, float, str, bool, list["JSONType"], dict[str, "JSONType"]]
 
 
 def format_entity_id(entity_id: str) -> str:

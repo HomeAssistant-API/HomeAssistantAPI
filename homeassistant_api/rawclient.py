@@ -73,7 +73,7 @@ class RawClient(RawBaseClient):
         if cache_session is False:
             self.cache_session = requests.Session()
         elif cache_session is None:
-            self.cache_session = requests_cache.CachedSession(  # type: ignore[attr-defined]
+            self.cache_session = requests_cache.CachedSession(
                 cache_name="default_cache",
                 backend="memory",
                 expire_after=300,

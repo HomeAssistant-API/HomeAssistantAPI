@@ -84,7 +84,7 @@ class RawWebsocketClient:
             raise ReceivingError("Connection is not open!")
         _bytes = self._conn.recv()
         logger.debug("Received message: %s", _bytes)
-        return json.loads(_bytes)
+        return cast(dict[str, JSONType], json.loads(_bytes))
 
     def send(self, type: str, include_id: bool = True, **data: Any) -> int:
         """
@@ -95,7 +95,7 @@ class RawWebsocketClient:
         if include_id:  # auth messages don't have an id
             data["id"] = self._request_id()
         data["type"] = type
-
+        assert isinstance(data["id"], int)
         self._send(data)
 
         if "id" in data:

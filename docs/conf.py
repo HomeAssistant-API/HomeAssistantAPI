@@ -27,7 +27,9 @@ author = "Nathan Larsen"
 # The full version, including alpha/beta/rc tags
 with open("../pyproject.toml") as f:
     pyproject = f.read()
-    release = version = re.search('version = "(.+?)"', pyproject).group(1)
+    search_result = re.search('version = "(.+?)"', pyproject)
+    assert search_result is not None
+    release = version = search_result.group(1)
 
 # -- General configuration ---------------------------------------------------
 
