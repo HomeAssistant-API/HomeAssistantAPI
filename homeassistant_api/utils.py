@@ -1,5 +1,7 @@
 import re
-from typing import Optional, TypeAlias, Union
+from typing import Optional, Union
+from typing_extensions import TypeAlias
+
 
 JSONType: TypeAlias = Union[int, float, str, bool, list["JSONType"], dict[str, "JSONType"]]
 
