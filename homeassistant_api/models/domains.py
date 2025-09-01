@@ -122,7 +122,7 @@ class ServiceFieldSelectorDeviceFilter(BaseModel):
 
 class CropOptions(BaseModel):
     round: bool
-    type: Optional[str]  # "image/jpeg" / "image/png"
+    type: Optional[str] = None  # "image/jpeg" / "image/png"
     quality: Optional[Union[int, float]] = None
     aspectRatio: Optional[Union[int, float]] = None
 
@@ -215,8 +215,8 @@ class ServiceFieldSelectorBoolean(BaseModel):
 
 class ServiceFieldSelectorButtonToggle(BaseModel):
     options: List[Union[str, ServiceFieldSelectorSelectOption]]
-    translation_key: Optional[str]
-    sort: Optional[bool]
+    translation_key: Optional[str] = None
+    sort: Optional[bool] = None
 
 
 class ServiceFieldSelectorColorRGB(BaseModel):
@@ -250,7 +250,7 @@ class ServiceFieldSelectorConversationAgent(BaseModel):
 
 
 class ServiceFieldSelectorCountry(BaseModel):
-    countries: Optional[List[str]] = None
+    countries: List[str]
     no_sort: Optional[bool] = None
 
 
@@ -367,7 +367,7 @@ class ServiceFieldSelectorObject(BaseModel):
     label_field: Optional[str] = None
     description_field: Optional[str] = None
     translation_key: Optional[str] = None
-    fields: Optional[Dict[str, ServiceFieldSelectorObjectField]] = None
+    fields: Dict[str, ServiceFieldSelectorObjectField]
     multiple: Optional[bool] = None
 
 
@@ -392,7 +392,7 @@ class ServiceFieldSelectorSelect(BaseModel):
     multiple: Optional[bool] = None
     custom_value: Optional[bool] = None
     mode: Optional[ServiceFieldSelectorSelectMode] = None
-    options: Optional[List[Union[str, ServiceFieldSelectorSelectOption]]] = None
+    options: List[Union[str, ServiceFieldSelectorSelectOption]]
     translation_key: Optional[str] = None
     sort: Optional[bool] = None
     reorder: Optional[bool] = None
@@ -409,8 +409,8 @@ class ServiceFieldSelectorStateOption(BaseModel):
 
 
 class ServiceFieldSelectorState(BaseModel):
-    extra_options: Optional[List[ServiceFieldSelectorStateOption]]
-    entity_id: Optional[Union[str, List[str]]]
+    extra_options: Optional[List[ServiceFieldSelectorStateOption]] = None
+    entity_id: Optional[Union[str, List[str]]] = None
     attribute: Optional[str] = None
     hide_states: Optional[List[str]] = None
     multiple: Optional[bool] = None
