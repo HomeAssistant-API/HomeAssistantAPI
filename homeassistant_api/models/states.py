@@ -5,9 +5,8 @@ from typing import Optional
 
 from pydantic import Field
 
-from homeassistant_api.utils import JSONType
-
 from homeassistant_api.models.base import BaseModel, DatetimeIsoField
+from homeassistant_api.utils import JSONType
 
 __all__ = (
     "Context",

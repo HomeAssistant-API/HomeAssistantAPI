@@ -24,4 +24,5 @@ class BaseModel(PydanticBaseModel):
         arbitrary_types_allowed=True,
         validate_assignment=True,
         extra="forbid",
+        protected_namespaces=(),
     )

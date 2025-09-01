@@ -48,7 +48,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
 ]
 
-autodoc_pydantic_model_show_json_error_strategy = 'coerce'
+autodoc_pydantic_model_show_json = False
 
 resource_links = {
     "repo": "https://github.com/GrandMoff100/HomeassistantAPI/",

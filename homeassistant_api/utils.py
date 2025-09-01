@@ -1,9 +1,14 @@
 import re
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
+
 from typing_extensions import TypeAlias
 
-
-JSONType: TypeAlias = Union[int, float, str, bool, list["JSONType"], dict[str, "JSONType"]]
+if TYPE_CHECKING:
+    JSONType: TypeAlias = Union[
+        int, float, str, bool, list["JSONType"], dict[str, "JSONType"]
+    ]
+else:
+    JSONType = type("JSONType", (object,), {})
 
 
 def format_entity_id(entity_id: str) -> str:

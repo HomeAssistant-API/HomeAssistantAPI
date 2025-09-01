@@ -22,8 +22,6 @@ from typing import (
 import requests
 import requests_cache
 
-from homeassistant_api.utils import JSONType, prepare_entity_id
-
 from homeassistant_api.errors import BadTemplateError, RequestError, RequestTimeoutError
 from homeassistant_api.models import (
     Domain,
@@ -36,6 +34,7 @@ from homeassistant_api.models import (
 )
 from homeassistant_api.processing import Processing, ResponseType
 from homeassistant_api.rawbaseclient import RawBaseClient
+from homeassistant_api.utils import JSONType, prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import Client

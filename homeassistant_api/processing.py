@@ -11,8 +11,6 @@ from aiohttp_client_cache.response import CachedResponse as AsyncCachedResponse
 from requests import Response
 from requests_cache.models.response import CachedResponse
 
-from homeassistant_api.utils import JSONType
-
 from homeassistant_api.errors import (
     EndpointNotFoundError,
     InternalServerError,
@@ -23,6 +21,7 @@ from homeassistant_api.errors import (
     UnauthorizedError,
     UnexpectedStatusCodeError,
 )
+from homeassistant_api.utils import JSONType
 
 logger = logging.getLogger(__name__)
 
