@@ -1,6 +1,6 @@
-import re
 import os
-from typing import TYPE_CHECKING, Optional, Union
+import re
+from typing import TYPE_CHECKING, Optional, Union  # noqa: F401
 
 from typing_extensions import TypeAliasType
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING or os.getenv("DOCUMENTATION_MODE") != "true":
     )
 else:
     JSONType = type("JSONType", (object,), {})
-    
+
 
 def format_entity_id(entity_id: str) -> str:
     """Takes in a string and formats it into valid snake_case."""
