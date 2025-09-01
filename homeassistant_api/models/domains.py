@@ -123,8 +123,8 @@ class ServiceFieldSelectorDeviceFilter(BaseModel):
 class CropOptions(BaseModel):
     round: bool
     type: Optional[str]  # "image/jpeg" / "image/png"
-    quality: Optional[int | float] = None
-    aspectRatio: Optional[int | float] = None
+    quality: Optional[Union[int, float]] = None
+    aspectRatio: Optional[Union[int, float]] = None
 
 
 class SelectBoxOptionImage(BaseModel):
@@ -225,10 +225,10 @@ class ServiceFieldSelectorColorRGB(BaseModel):
 
 class ServiceFieldSelectorColorTemp(BaseModel):
     unit: Optional[str] = None
-    min: Optional[int | float] = None
-    max: Optional[int | float] = None
-    min_mireds: Optional[int | float] = None
-    max_mireds: Optional[int | float] = None
+    min: Optional[Union[int, float]] = None
+    max: Optional[Union[int, float]] = None
+    min_mireds: Optional[Union[int, float]] = None
+    max_mireds: Optional[Union[int, float]] = None
 
 
 class ServiceFieldSelectorCondition(BaseModel):
@@ -348,9 +348,9 @@ class ServiceFieldSelectorNavigation(BaseModel):
 
 
 class ServiceFieldSelectorNumber(BaseModel):
-    min: Optional[int | float] = None
-    max: Optional[int | float] = None
-    step: Optional[Union[int | float, str]] = None
+    min: Optional[Union[int, float]] = None
+    max: Optional[Union[int, float]] = None
+    step: Optional[Union[Union[int, float], str]] = None
     unit_of_measurement: Optional[str] = None
     mode: Optional[ServiceFieldSelectorNumberMode] = None
     slider_ticks: Optional[bool] = None
@@ -373,7 +373,7 @@ class ServiceFieldSelectorObject(BaseModel):
 
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
-    scale: Optional[int | float] = None
+    scale: Optional[Union[int, float]] = None
     error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
         None
     )
