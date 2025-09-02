@@ -367,7 +367,7 @@ class ServiceFieldSelectorObject(BaseModel):
     label_field: Optional[str] = None
     description_field: Optional[str] = None
     translation_key: Optional[str] = None
-    fields: Dict[str, ServiceFieldSelectorObjectField]
+    fields: Optional[Dict[str, ServiceFieldSelectorObjectField]] = None
     multiple: Optional[bool] = None
 
 
