@@ -45,6 +45,9 @@ class PingResponse(BaseModel):
 class Error(BaseModel):
     code: str
     message: str
+    translation_key: str
+    translation_placeholders: dict[str, str]
+    translation_domain: str
 
 
 class ErrorResponse(BaseModel):

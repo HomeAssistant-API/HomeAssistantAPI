@@ -136,7 +136,11 @@ class RawWebsocketClient:
             self._ping_responses[data_id].end = time.perf_counter_ns()
         elif data.get("type") == "result":
             logger.info("Received result message")
-            self._result_responses[data_id] = ResultResponse.model_validate(data)
+            if data.get("success"):
+                self._result_responses[data_id] = ResultResponse.model_validate(data)
+            else:
+                error_resp = ErrorResponse.model_validate(data)
+                raise RequestError(error_resp.error.code, error_resp.error.message)
         elif data.get("type") == "event":
             logger.info("Received event message %s", data["event"])
             self._event_responses[data_id].append(EventResponse.model_validate(data))
