@@ -94,11 +94,12 @@ class RawWebsocketClient:
         """
         if include_id:  # auth messages don't have an id
             data["id"] = self._request_id()
+
         data["type"] = type
-        assert isinstance(data["id"], int)
         self._send(data)
 
         if "id" in data:
+            assert isinstance(data["id"], int)
             if data["type"] == "ping":
                 self._ping_responses[data["id"]] = PingResponse(
                     start=time.perf_counter_ns(),
