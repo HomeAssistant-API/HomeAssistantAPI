@@ -583,17 +583,13 @@ class Service(BaseModel):
     target: Optional[ServiceFieldSelectorTarget] = None
     response: Optional[ServiceResponse] = None
 
-    def trigger(self, entity_id: Optional[str] = None, **service_data) -> Union[
+    def trigger(self, **service_data) -> Union[
         Tuple[State, ...],
         Tuple[Tuple[State, ...], dict[str, JSONType]],
         dict[str, JSONType],
         None,
     ]:
         """Triggers the service associated with this object."""
-        if entity_id is not None:
-            service_data["entity_id"] = (
-                entity_id  # TODO: I believe the function should not enforce the target to be `entity_id` as it can be one of the following: `area_id`, `device_id`, `floor_id`, `entity_id`, `label_id`
-            )
         try:
             return self.domain._client.trigger_service_with_response(
                 self.domain.domain_id,
@@ -608,12 +604,9 @@ class Service(BaseModel):
             )
 
     async def async_trigger(
-        self, entity_id: Optional[str] = None, **service_data
+        self, **service_data
     ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]]:
         """Triggers the service associated with this object."""
-        if entity_id is not None:
-            service_data["entity_id"] = entity_id
-
         from homeassistant_api import WebsocketClient  # prevent circular import
 
         if isinstance(self.domain._client, WebsocketClient):
