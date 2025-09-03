@@ -626,7 +626,7 @@ class Service(BaseModel):
                 **service_data,
             )
 
-    def __call__(self, entity_id: Optional[str] = None, **service_data) -> Union[
+    def __call__(self, **service_data) -> Union[
         Union[
             Tuple[State, ...],
             Tuple[Tuple[State, ...], dict[str, JSONType]],
@@ -648,7 +648,7 @@ class Service(BaseModel):
             if inspect.iscoroutinefunction(
                 caller := gc.get_referrers(parent_frame.f_code)[0]
             ) or inspect.iscoroutine(caller):
-                return self.async_trigger(entity_id=entity_id, **service_data)
+                return self.async_trigger(**service_data)
         except IndexError:  # pragma: no cover
             pass
-        return self.trigger(entity_id=entity_id, **service_data)
+        return self.trigger(**service_data)
