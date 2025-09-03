@@ -5,7 +5,7 @@ repos:
         additional_dependencies:
           - types-requests
           - types-simplejson
-    rev: "v0.931"
+    rev: "v1.17.1"
   - repo: https://github.com/pre-commit/pre-commit-hooks
     hooks:
       - id: trailing-whitespace

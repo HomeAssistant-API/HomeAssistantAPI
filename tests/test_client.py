@@ -1,6 +1,6 @@
 import os
 
-import aiohttp_client_cache
+import aiohttp_client_cache.session
 import requests_cache
 
 from homeassistant_api import Client, WebsocketClient
@@ -28,7 +28,7 @@ async def test_custom_async_cached_session() -> None:
     async with Client(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        async_cache_session=aiohttp_client_cache.CachedSession(
+        async_cache_session=aiohttp_client_cache.session.CachedSession(
             cache=aiohttp_client_cache.SQLiteBackend(
                 cache_name="test_custom_async_cached_session.sqlite",
                 expire_after=10,

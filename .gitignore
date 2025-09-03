@@ -18,7 +18,7 @@ venv/
 .breakpoints
 
 # Informal testing
-main.py
+main*.py
 
 # Cache files
 *.sqlite
@@ -87,6 +87,7 @@ instance/
 
 # Scrapy stuff:
 .scrapy
+
 
 # Sphinx documentation
 docs/_build/

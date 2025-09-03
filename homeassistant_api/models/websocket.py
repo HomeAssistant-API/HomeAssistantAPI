@@ -2,8 +2,10 @@
 
 from typing import Any, Literal, Optional, Union
 
-from .base import BaseModel
-from .states import Context, DatetimeIsoField
+from homeassistant_api.utils import JSONType
+
+from .base import BaseModel, DatetimeIsoField
+from .states import Context
 
 __all__ = (
     "AuthRequired",
@@ -43,6 +45,9 @@ class PingResponse(BaseModel):
 class Error(BaseModel):
     code: str
     message: str
+    translation_key: str
+    translation_placeholders: dict[str, str]
+    translation_domain: str
 
 
 class ErrorResponse(BaseModel):
@@ -67,7 +72,7 @@ class FiredEvent(BaseModel):
     """A model to parse the `event` key of fired event websocket responses."""
 
     event_type: str
-    data: dict[str, Any]
+    data: dict[str, JSONType]
 
     origin: Literal["LOCAL", "REMOTE"]
     # REMOTE if another API client or webhook fired the event
@@ -79,14 +84,14 @@ class FiredEvent(BaseModel):
 
 class TemplateEvent(BaseModel):
     result: str
-    listeners: dict[str, Any]
+    listeners: dict[str, JSONType]
 
 
 class FiredTrigger(BaseModel):
     """A model to parse the `trigger` key of fired event websocket responses."""
 
     context: Optional[Context]
-    variables: dict[str, Any]
+    variables: dict[str, JSONType]
 
 
 class EventResponse(BaseModel):

@@ -22,12 +22,19 @@ from typing import (
 import requests
 import requests_cache
 
-from homeassistant_api.utils import prepare_entity_id
-
-from .errors import BadTemplateError, RequestError, RequestTimeoutError
-from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
-from .processing import Processing, ResponseType
-from .rawbaseclient import RawBaseClient
+from homeassistant_api.errors import BadTemplateError, RequestError, RequestTimeoutError
+from homeassistant_api.models import (
+    Domain,
+    Entity,
+    Event,
+    Group,
+    History,
+    LogbookEntry,
+    State,
+)
+from homeassistant_api.processing import Processing, ResponseType
+from homeassistant_api.rawbaseclient import RawBaseClient
+from homeassistant_api.utils import JSONType, prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import Client
@@ -65,7 +72,7 @@ class RawClient(RawBaseClient):
         if cache_session is False:
             self.cache_session = requests.Session()
         elif cache_session is None:
-            self.cache_session = requests_cache.CachedSession(  # type: ignore[attr-defined]
+            self.cache_session = requests_cache.CachedSession(
                 cache_name="default_cache",
                 backend="memory",
                 expire_after=300,
@@ -98,13 +105,12 @@ class RawClient(RawBaseClient):
             if self.global_request_kwargs is not None:
                 kwargs.update(self.global_request_kwargs)
             logger.debug("%s request to %s", method, self.endpoint(path))
-            if self.cache_session:
-                resp = self.cache_session.request(
-                    method,
-                    self.endpoint(path) + f"?{params}" * bool(params),
-                    headers=self.prepare_headers(headers),
-                    **kwargs,
-                )
+            resp = self.cache_session.request(
+                method,
+                self.endpoint(path) + f"?{params}" * bool(params),
+                headers=self.prepare_headers(headers),
+                **kwargs,
+            )
         except requests.exceptions.Timeout as err:
             raise RequestTimeoutError(
                 f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
@@ -125,12 +131,12 @@ class RawClient(RawBaseClient):
         """
         return cast(str, self.request("error_log"))
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, JSONType]:
         """
         Returns the yaml configuration of homeassistant.
         :code:`GET /api/config`
         """
-        return cast(Dict[str, Any], self.request("config"))
+        return cast(dict[str, JSONType], self.request("config"))
 
     def get_logbook_entries(
         self,
@@ -201,7 +207,7 @@ class RawClient(RawBaseClient):
         :code:`POST /api/config/core/check_config`
         """
         res = cast(
-            Dict[str, Any], self.request("config/core/check_config", method="POST")
+            dict[str, str], self.request("config/core/check_config", method="POST")
         )
         valid = {"valid": True, "invalid": False}.get(res["result"], False)
         return valid
@@ -212,7 +218,7 @@ class RawClient(RawBaseClient):
         :code:`GET /api/`
         """
         res = self.request("")
-        return cast(Dict[str, Any], res).get("message") == "API running."
+        return cast(dict[str, JSONType], res).get("message") == "API running."
 
     # Entity methods
     def get_entities(self) -> Dict[str, Group]:
@@ -270,7 +276,7 @@ class RawClient(RawBaseClient):
         data = self.request("services")
         domains = map(
             lambda json: Domain.from_json(json, client=cast(Client, self)),
-            cast(Tuple[Dict[str, Any], ...], data),
+            cast(Tuple[dict[str, JSONType], ...], data),
         )
         return {domain.domain_id: domain for domain in domains}
 
@@ -296,14 +302,14 @@ class RawClient(RawBaseClient):
             method="POST",
             json=service_data,
         )
-        return tuple(map(State.from_json, cast(List[Dict[str, Any]], data)))
+        return tuple(map(State.from_json, cast(List[dict[str, JSONType]], data)))
 
     def trigger_service_with_response(
         self,
         domain: str,
         service: str,
         **service_data,
-    ) -> tuple[tuple[State, ...], dict[str, Any]]:
+    ) -> tuple[tuple[State, ...], dict[str, JSONType]]:
         """
         Tells Home Assistant to trigger a service, returns the response from the service call.
         :code:`POST /api/services/<domain>/<service>`
@@ -311,7 +317,7 @@ class RawClient(RawBaseClient):
         Returns a list of the states changed and the response from the service call.
         """
         data = cast(
-            dict[str, Any],
+            dict[str, dict[str, JSONType]],
             self.request(
                 join("services", domain, service) + "?return_response",
                 method="POST",
@@ -344,7 +350,7 @@ class RawClient(RawBaseClient):
             entity_id=entity_id,
         )
         data = self.request(join("states", entity_id))
-        return State.from_json(cast(Dict[str, Any], data))
+        return State.from_json(cast(dict[str, JSONType], data))
 
     def set_state(  # pylint: disable=duplicate-code
         self,
@@ -360,7 +366,7 @@ class RawClient(RawBaseClient):
             method="POST",
             json=json.loads(state.model_dump_json()),
         )
-        return State.from_json(cast(Dict[str, Any], data))
+        return State.from_json(cast(dict[str, JSONType], data))
 
     def get_states(self) -> Tuple[State, ...]:
         """
@@ -368,7 +374,7 @@ class RawClient(RawBaseClient):
         :code:`GET /api/states`
         """
         data = self.request("states")
-        states = map(State.from_json, cast(List[Dict[str, Any]], data))
+        states = map(State.from_json, cast(List[dict[str, JSONType]], data))
         return tuple(states)
 
     # Event methods
@@ -381,7 +387,7 @@ class RawClient(RawBaseClient):
         return tuple(
             map(
                 lambda json: Event.from_json(json, client=cast(Client, self)),
-                cast(List[Dict[str, Any]], data),
+                cast(List[dict[str, JSONType]], data),
             )
         )
 
@@ -405,7 +411,7 @@ class RawClient(RawBaseClient):
             method="POST",
             json=event_data,
         )
-        return cast(dict[str, Any], data).get("message")
+        return cast(dict[str, str], data).get("message")
 
     def get_components(self) -> Tuple[str, ...]:
         """

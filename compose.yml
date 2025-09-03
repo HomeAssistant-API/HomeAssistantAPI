@@ -19,7 +19,7 @@ services:
       HOMEASSISTANTAPI_URL: http://server:8123/api
       HOMEASSISTANTAPI_WS_URL: ws://server:8123/api/websocket
       HOMEASSISTANTAPI_TOKEN: ${HOMEASSISTANTAPI_TOKEN}
-      DELAY: 60
+      DELAY: 10
 
 networks:
   default:

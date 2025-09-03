@@ -11,7 +11,7 @@ from aiohttp_client_cache.response import CachedResponse as AsyncCachedResponse
 from requests import Response
 from requests_cache.models.response import CachedResponse
 
-from .errors import (
+from homeassistant_api.errors import (
     EndpointNotFoundError,
     InternalServerError,
     MalformedDataError,
@@ -21,6 +21,7 @@ from .errors import (
     UnauthorizedError,
     UnexpectedStatusCodeError,
 )
+from homeassistant_api.utils import JSONType
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class Processing:
         calls the processor with the response.
         """
 
-        mimetype_header = self._response.headers.get(  # type: ignore [arg-type]
+        mimetype_header = self._response.headers.get(
             "content-type",
             "text/plain",
         )
@@ -82,9 +83,12 @@ class Processing:
         elif isinstance(self._response, (Response, CachedResponse)):
             status_code = self._response.status_code
             content = self._response.content
+        else:
+            raise TypeError(
+                f"Unsupported response type: {type(self._response).__name__}"
+            )
         if self._decode_bytes and isinstance(content, bytes):
             content = content.decode()
-
         if status_code in (200, 201):
             return self.process_content(async_=async_)
         if status_code == 400:
@@ -106,10 +110,10 @@ class Processing:
 
 # List of default processors
 @Processing.processor("application/json")  # type: ignore[arg-type]
-def process_json(response: ResponseType) -> dict[str, Any]:
+def process_json(response: ResponseType) -> dict[str, JSONType]:
     """Returns the json dict content of the response."""
     try:
-        return cast(dict[str, Any], response.json())
+        return cast(dict[str, JSONType], response.json())
     except (json.JSONDecodeError, simplejson.JSONDecodeError) as err:
         raise MalformedDataError(
             f"Home Assistant responded with non-json response: {repr(response.text)}"
@@ -117,17 +121,17 @@ def process_json(response: ResponseType) -> dict[str, Any]:
 
 
 @Processing.processor("text/plain")  # type: ignore[arg-type]
-@Processing.processor("application/octet-stream")
+@Processing.processor("application/octet-stream")  # type: ignore[arg-type]
 def process_text(response: ResponseType) -> str:
     """Returns the plaintext of the reponse."""
     return response.text
 
 
 @Processing.processor("application/json")  # type: ignore[arg-type]
-async def async_process_json(response: AsyncResponseType) -> dict[str, Any]:
+async def async_process_json(response: AsyncResponseType) -> dict[str, JSONType]:
     """Returns the json dict content of the response."""
     try:
-        return cast(dict[str, Any], await response.json())
+        return cast(dict[str, JSONType], await response.json())
     except (json.JSONDecodeError, simplejson.JSONDecodeError) as err:
         raise MalformedDataError(
             f"Home Assistant responded with non-json response: {repr(await response.text())}"
@@ -135,7 +139,7 @@ async def async_process_json(response: AsyncResponseType) -> dict[str, Any]:
 
 
 @Processing.processor("text/plain")  # type: ignore[arg-type]
-@Processing.processor("application/octet-stream")
+@Processing.processor("application/octet-stream")  # type: ignore[arg-type]
 async def async_process_text(response: AsyncResponseType) -> str:
     """Returns the plaintext of the reponse."""
     return await response.text()

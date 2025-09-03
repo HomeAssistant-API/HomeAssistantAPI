@@ -1,5 +1,15 @@
+import os
 import re
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, Union  # noqa: F401
+
+from typing_extensions import TypeAliasType
+
+if TYPE_CHECKING or os.getenv("DOCUMENTATION_MODE") != "true":
+    JSONType = TypeAliasType(
+        "JSONType", "Optional[Union[int, float, str, bool, list[JSONType], dict[str, JSONType]]]"
+    )
+else:
+    JSONType = type("JSONType", (object,), {})
 
 
 def format_entity_id(entity_id: str) -> str:
