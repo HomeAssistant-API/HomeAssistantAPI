@@ -8,7 +8,6 @@ from pydantic import ValidationError
 
 from homeassistant_api.errors import (
     ReceivingError,
-    RequestError,
     ResponseError,
     UnauthorizedError,
 )
@@ -16,17 +15,17 @@ from homeassistant_api.models.websocket import (
     AuthInvalid,
     AuthOk,
     AuthRequired,
-    ErrorResponse,
     EventResponse,
     PingResponse,
     ResultResponse,
 )
+from homeassistant_api.rawbasewebsocket import RawBaseWebsocketClient
 from homeassistant_api.utils import JSONType
 
 logger = logging.getLogger(__name__)
 
 
-class RawWebsocketClient:
+class RawWebsocketClient(RawBaseWebsocketClient):
     api_url: str
     token: str
     _conn: Optional[ws.ClientConnection]
@@ -36,8 +35,7 @@ class RawWebsocketClient:
         api_url: str,
         token: str,
     ) -> None:
-        self.api_url = api_url
-        self.token = token.strip()
+        super().__init__(api_url, token)
         self._conn = None
 
         self._id_counter = 0
@@ -65,11 +63,6 @@ class RawWebsocketClient:
             raise ReceivingError("Connection is not open!")
         self._conn.__exit__(exc_type, exc_value, traceback)
         self._conn = None
-
-    def _request_id(self) -> int:
-        """Get a unique id for a message."""
-        self._id_counter += 1
-        return self._id_counter
 
     def _send(self, data: dict[str, JSONType]) -> None:
         """Send a message to the websocket server."""
@@ -111,41 +104,6 @@ class RawWebsocketClient:
                 self._result_responses[data["id"]] = None
             return data["id"]
         return -1  # non-command messages don't have an id
-
-    def check_success(self, data: dict[str, JSONType]) -> None:
-        """Check if a command message was successful."""
-        try:
-            error_resp = ErrorResponse.model_validate(data)
-            raise RequestError(error_resp.error.code, error_resp.error.message)
-        except ValidationError:
-            pass
-
-    def handle_recv(self, data: dict[str, JSONType]) -> None:
-        """Handle a received message."""
-        if "id" not in data:
-            raise ReceivingError(
-                "Received a message without an id outside the auth phase."
-            )
-        self.check_success(data)
-        self.parse_response(data)
-
-    def parse_response(self, data: dict[str, JSONType]) -> None:
-        data_id = cast(int, data["id"])
-        if data.get("type") == "pong":
-            logger.info("Received pong message")
-            self._ping_responses[data_id].end = time.perf_counter_ns()
-        elif data.get("type") == "result":
-            logger.info("Received result message")
-            if data.get("success"):
-                self._result_responses[data_id] = ResultResponse.model_validate(data)
-            else:
-                error_resp = ErrorResponse.model_validate(data)
-                raise RequestError(error_resp.error.code, error_resp.error.message)
-        elif data.get("type") == "event":
-            logger.info("Received event message %s", data["event"])
-            self._event_responses[data_id].append(EventResponse.model_validate(data))
-        else:
-            raise ReceivingError(f"Received unexpected message type: {data}")
 
     def recv(self, id: int) -> Union[EventResponse, ResultResponse, PingResponse]:
         """Receive a response to a message from the websocket server."""

@@ -23,9 +23,8 @@ from homeassistant_api.models.websocket import (
     ResultResponse,
     TemplateEvent,
 )
+from homeassistant_api.rawwebsocket import RawWebsocketClient
 from homeassistant_api.utils import JSONType, prepare_entity_id
-
-from .rawwebsocket import RawWebsocketClient
 
 logger = logging.getLogger(__name__)
 
