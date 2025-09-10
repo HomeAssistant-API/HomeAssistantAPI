@@ -12,6 +12,7 @@ __all__ = (
     "Event",
     "LogbookEntry",
     "WebsocketClient",
+    "AsyncWebsocketClient",
     "AuthInvalid",
     "AuthOk",
     "AuthRequired",
@@ -21,6 +22,7 @@ __all__ = (
     "EventResponse",
 )
 
+from .asyncwebsocket import AsyncWebsocketClient
 from .client import Client
 from .models.domains import Domain, Service
 from .models.entity import Entity, Group

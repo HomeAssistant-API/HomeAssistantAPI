@@ -27,7 +27,7 @@ from .base import BaseModel
 from .states import State
 
 if TYPE_CHECKING:
-    from homeassistant_api import Client, WebsocketClient
+    from homeassistant_api import Client, WebsocketClient, AsyncWebsocketClient
 
 
 class Domain(BaseModel):
@@ -36,7 +36,7 @@ class Domain(BaseModel):
     def __init__(
         self,
         *args,
-        _client: Optional[Union["Client", "WebsocketClient"]] = None,
+        _client: Optional[Union["Client", "WebsocketClient", "AsyncWebsocketClient"]] = None,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -44,7 +44,7 @@ class Domain(BaseModel):
             raise ValueError("No client passed.")
         object.__setattr__(self, "_client", _client)
 
-    _client: Union["Client", "WebsocketClient"]
+    _client: Union["Client", "WebsocketClient", "AsyncWebsocketClient"]
     domain_id: str = Field(
         ...,
         description="The name of the domain that services belong to. "
@@ -65,6 +65,8 @@ class Domain(BaseModel):
     @classmethod
     def from_json_with_client(
         cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient"]
+    def from_json(
+        cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient", "AsyncWebsocketClient"]
     ) -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
