@@ -4,6 +4,7 @@ import urllib.parse as urlparse
 from typing import Dict, Generator, Optional, Tuple, Union, cast
 
 from homeassistant_api.models import (
+    DisableEnableResult,
     Domain,
     Entity,
     FlowResult,
@@ -212,6 +213,32 @@ class WebsocketClient(RawWebsocketClient):
                     ResultResponse, self.recv(self.send("config_entries/flow/progress"))
                 ).result,
             )
+        )
+
+    def disable_config_entry(self, entry_id: str) -> DisableEnableResult:
+        """Disable a config entry."""
+        return DisableEnableResult.from_json(
+            cast(
+                ResultResponse,
+                self.recv(
+                    self.send(
+                        "config_entries/disable", entry_id=entry_id, disabled_by="user"
+                    )
+                ),
+            ).result,
+        )
+
+    def enable_config_entry(self, entry_id: str) -> DisableEnableResult:
+        """Enable a config entry."""
+        return DisableEnableResult.from_json(
+            cast(
+                ResultResponse,
+                self.recv(
+                    self.send(
+                        "config_entries/disable", entry_id=entry_id, disabled_by=None
+                    )
+                ),
+            ).result,
         )
 
     def trigger_service(

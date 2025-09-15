@@ -72,3 +72,9 @@ class FlowResult(BaseModel):
     translation_domain: str | None = None
     type: FlowResultType | None = None
     url: str | None = None
+
+
+class DisableEnableResult(BaseModel):
+    """Result from a disable/enable config entry call."""
+
+    require_restart: bool
