@@ -3,6 +3,7 @@
 from .base import BaseModel
 from .config_entries import (
     ConfigFlowContext,
+    DisableEnableResult,
     DiscoveryKey,
     FlowContext,
     FlowResult,
@@ -28,6 +29,7 @@ __all__ = (
     "History",
     "LogbookEntry",
     "State",
+    "DisableEnableResult",
     "DiscoveryKey",
     "FlowContext",
     "ConfigFlowContext",
