@@ -18,6 +18,7 @@ from typing import (
 )
 
 from pydantic import Field
+from typing_extensions import Self, override
 
 from homeassistant_api.errors import RequestError
 from homeassistant_api.utils import JSONType
@@ -55,7 +56,14 @@ class Domain(BaseModel):
     )
 
     @classmethod
-    def from_json(
+    @override
+    def from_json(cls, json: Union[dict[str, JSONType], Any, None], **kwargs) -> Self:
+        raise ValueError(
+            f"`{cls.__name__}` does not support `from_json()`. Use `from_json_with_client()`"
+        )
+
+    @classmethod
+    def from_json_with_client(
         cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient"]
     ) -> "Domain":
         """Constructs Domain and Service models from json data."""
@@ -374,9 +382,9 @@ class ServiceFieldSelectorObject(BaseModel):
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
     scale: Optional[Union[int, float]] = None
-    error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
-        None
-    )
+    error_correction_level: Optional[
+        ServiceFieldSelectorQRCodeErrorCorrectionLevel
+    ] = None
     center_image: Optional[str] = None
 
 
@@ -583,7 +591,9 @@ class Service(BaseModel):
     target: Optional[ServiceFieldSelectorTarget] = None
     response: Optional[ServiceResponse] = None
 
-    def trigger(self, **service_data) -> Union[
+    def trigger(
+        self, **service_data
+    ) -> Union[
         Tuple[State, ...],
         Tuple[Tuple[State, ...], dict[str, JSONType]],
         dict[str, JSONType],
@@ -626,7 +636,9 @@ class Service(BaseModel):
                 **service_data,
             )
 
-    def __call__(self, **service_data) -> Union[
+    def __call__(
+        self, **service_data
+    ) -> Union[
         Union[
             Tuple[State, ...],
             Tuple[Tuple[State, ...], dict[str, JSONType]],
