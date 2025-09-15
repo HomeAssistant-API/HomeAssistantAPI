@@ -3,7 +3,13 @@ import logging
 import urllib.parse as urlparse
 from typing import Dict, Generator, Optional, Tuple, Union, cast
 
-from homeassistant_api.models import Domain, Entity, Group, State
+from homeassistant_api.models import (
+    Domain,
+    Entity,
+    FlowResult,
+    Group,
+    State,
+)
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import (
     EventResponse,
@@ -193,6 +199,20 @@ class WebsocketClient(RawWebsocketClient):
         For now, just call the :py:meth":`get_domains` method and parsing the result.
         """
         return self.get_domains()[domain]
+
+    # config_entries.py
+
+    def get_nonuser_flows_in_progress(self) -> None:
+        """Get config entries that are in progress but not initiated by a user."""
+        return tuple(
+            FlowResult.from_json(flow_result)
+            for flow_result in cast(
+                list[dict[str, JSONType]],
+                cast(
+                    ResultResponse, self.recv(self.send("config_entries/flow/progress"))
+                ).result,
+            )
+        )
 
     def trigger_service(
         self,
