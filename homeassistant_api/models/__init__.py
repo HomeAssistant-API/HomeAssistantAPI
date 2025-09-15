@@ -2,12 +2,16 @@
 
 from .base import BaseModel
 from .config_entries import (
+    ConfigEntry,
+    ConfigEntryDisabler,
+    ConfigEntryState,
     ConfigFlowContext,
     DisableEnableResult,
     DiscoveryKey,
     FlowContext,
     FlowResult,
     FlowResultType,
+    IntegrationTypes,
 )
 from .domains import Domain, Service, ServiceField
 from .entity import Entity, Group
@@ -35,4 +39,8 @@ __all__ = (
     "ConfigFlowContext",
     "FlowResult",
     "FlowResultType",
+    "IntegrationTypes",
+    "ConfigEntryDisabler",
+    "ConfigEntryState",
+    "ConfigEntry",
 )

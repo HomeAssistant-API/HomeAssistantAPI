@@ -1,14 +1,16 @@
 import contextlib
 import logging
 import urllib.parse as urlparse
-from typing import Dict, Generator, Optional, Tuple, Union, cast
+from typing import Dict, Generator, List, Optional, Tuple, Union, cast
 
 from homeassistant_api.models import (
+    ConfigEntry,
     DisableEnableResult,
     Domain,
     Entity,
     FlowResult,
     Group,
+    IntegrationTypes,
     State,
 )
 from homeassistant_api.models.states import Context
@@ -203,7 +205,7 @@ class WebsocketClient(RawWebsocketClient):
 
     # config_entries.py
 
-    def get_nonuser_flows_in_progress(self) -> None:
+    def get_nonuser_flows_in_progress(self) -> Tuple[FlowResult, ...]:
         """Get config entries that are in progress but not initiated by a user."""
         return tuple(
             FlowResult.from_json(flow_result)
@@ -244,6 +246,25 @@ class WebsocketClient(RawWebsocketClient):
     def ignore_config_flow(self, flow_id: str, title: str) -> None:
         """Ignore an active config flow."""
         self.recv(self.send("config_entries/ignore_flow", flow_id=flow_id, title=title))
+
+    def get_config_entries(
+        self, type_filter: List[IntegrationTypes] = [], domain: str = ""
+    ) -> Tuple[ConfigEntry, ...]:
+        """Get filtered config entries."""
+        return tuple(
+            ConfigEntry.from_json(config_entry)
+            for config_entry in cast(
+                list[dict[str, JSONType]],
+                cast(
+                    ResultResponse,
+                    self.recv(
+                        self.send(
+                            "config_entries/get", type_filter=type_filter, domain=domain
+                        )
+                    ),
+                ).result,
+            )
+        )
 
     def trigger_service(
         self,
