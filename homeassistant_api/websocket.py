@@ -5,6 +5,7 @@ from typing import Dict, Generator, List, Optional, Tuple, Union, cast
 
 from homeassistant_api.models import (
     ConfigEntry,
+    ConfigSubEntry,
     DisableEnableResult,
     Domain,
     Entity,
@@ -261,6 +262,24 @@ class WebsocketClient(RawWebsocketClient):
                         self.send(
                             "config_entries/get", type_filter=type_filter, domain=domain
                         )
+                    ),
+                ).result,
+            )
+        )
+
+    # TODO: config_entries/subscribe
+
+    # UNTESTED
+    def get_entry_subentries(self, entry_id: str) -> Tuple[ConfigSubEntry, ...]:
+        """Get an entry's sub-entries."""
+        return tuple(
+            ConfigSubEntry.from_json(sub_entry)
+            for sub_entry in cast(
+                list[dict[str, JSONType]],
+                cast(
+                    ResultResponse,
+                    self.recv(
+                        self.send("config_entries/subentries/list", entry_id=entry_id)
                     ),
                 ).result,
             )

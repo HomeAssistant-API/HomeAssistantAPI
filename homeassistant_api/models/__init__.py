@@ -6,6 +6,7 @@ from .config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
     ConfigFlowContext,
+    ConfigSubEntry,
     DisableEnableResult,
     DiscoveryKey,
     FlowContext,
@@ -43,4 +44,5 @@ __all__ = (
     "ConfigEntryDisabler",
     "ConfigEntryState",
     "ConfigEntry",
+    "ConfigSubEntry",
 )
