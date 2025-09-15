@@ -1,8 +1,9 @@
 """Event Model File"""
 
-from typing import TYPE_CHECKING, Optional
-
+from typing import TYPE_CHECKING, Any, Optional, Union
+from typing_extensions import Self
 from pydantic import Field
+from typing_extensions import override
 
 from homeassistant_api.utils import JSONType
 
@@ -40,6 +41,15 @@ class Event(BaseModel):
         return await self._client.async_fire_event(self.event, **event_data)
 
     @classmethod
-    def from_json(cls, json: dict[str, JSONType], client: "Client") -> "Event":
+    @override
+    def from_json(cls, json: Union[dict[str, JSONType], Any, None], **kwargs) -> Self:
+        raise ValueError(
+            f"`{cls.__name__}` does not support `from_json()`. Use `from_json_with_client()`"
+        )
+
+    @classmethod
+    def from_json_with_client(
+        cls, json: dict[str, JSONType], client: "Client"
+    ) -> "Event":
         """Constructs Event model from json data"""
         return cls(**json, _client=client)

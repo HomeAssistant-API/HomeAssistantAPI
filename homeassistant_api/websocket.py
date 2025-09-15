@@ -175,7 +175,7 @@ class WebsocketClient(RawWebsocketClient):
         """
         resp = self.recv(self.send("get_services"))
         domains = map(
-            lambda item: Domain.from_json(
+            lambda item: Domain.from_json_with_client(
                 {"domain": item[0], "services": item[1]},
                 client=self,
             ),
