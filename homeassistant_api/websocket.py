@@ -285,6 +285,17 @@ class WebsocketClient(RawWebsocketClient):
             )
         )
 
+    # UNTESTED
+    def delete_entry_subentry(self, entry_id: str, subentry_id: str) -> None:
+        """Delete an entry's sub-entry."""
+        self.recv(
+            self.send(
+                "config_entries/subentries/delete",
+                entry_id=entry_id,
+                subentry_id=subentry_id,
+            )
+        )
+
     def trigger_service(
         self,
         domain: str,
