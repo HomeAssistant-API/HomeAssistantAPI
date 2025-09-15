@@ -241,6 +241,10 @@ class WebsocketClient(RawWebsocketClient):
             ).result,
         )
 
+    def ignore_config_flow(self, flow_id: str, title: str) -> None:
+        """Ignore an active config flow."""
+        self.recv(self.send("config_entries/ignore_flow", flow_id=flow_id, title=title))
+
     def trigger_service(
         self,
         domain: str,
