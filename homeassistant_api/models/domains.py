@@ -27,7 +27,7 @@ from .base import BaseModel
 from .states import State
 
 if TYPE_CHECKING:
-    from homeassistant_api import Client, WebsocketClient, AsyncWebsocketClient
+    from homeassistant_api import Client, WebsocketClient
 
 
 class Domain(BaseModel):
@@ -36,7 +36,7 @@ class Domain(BaseModel):
     def __init__(
         self,
         *args,
-        _client: Optional[Union["Client", "WebsocketClient", "AsyncWebsocketClient"]] = None,
+        _client: Optional[Union["Client", "WebsocketClient"]] = None,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -44,7 +44,7 @@ class Domain(BaseModel):
             raise ValueError("No client passed.")
         object.__setattr__(self, "_client", _client)
 
-    _client: Union["Client", "WebsocketClient", "AsyncWebsocketClient"]
+    _client: Union["Client", "WebsocketClient"]
     domain_id: str = Field(
         ...,
         description="The name of the domain that services belong to. "
@@ -66,7 +66,9 @@ class Domain(BaseModel):
     def from_json_with_client(
         cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient"]
     def from_json(
-        cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient", "AsyncWebsocketClient"]
+        cls,
+        json: Dict[str, JSONType],
+        client: Union["Client", "WebsocketClient"],
     ) -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
@@ -616,14 +618,13 @@ class Service(BaseModel):
 
     async def async_trigger(
         self, **service_data
-    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]]:
+    ) -> Union[
+        Tuple[State, ...],
+        None,
+        dict[str, JSONType],
+        tuple[tuple[State, ...], dict[str, JSONType]],
+    ]:
         """Triggers the service associated with this object."""
-        from homeassistant_api import WebsocketClient  # prevent circular import
-
-        if isinstance(self.domain._client, WebsocketClient):
-            raise NotImplementedError(
-                "WebsocketClient does not support async/await syntax."
-            )
         try:
             return await self.domain._client.async_trigger_service_with_response(
                 self.domain.domain_id,
@@ -649,7 +650,12 @@ class Service(BaseModel):
         Coroutine[
             Any,
             Any,
-            Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]],
+            Union[
+                Tuple[State, ...],
+                Tuple[Tuple[State, ...], dict[str, JSONType]],
+                dict[str, JSONType],
+                None,
+            ],
         ],
     ]:
         """
