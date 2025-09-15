@@ -2,7 +2,7 @@
 
 import asyncio
 from enum import Enum
-from typing import Any, Container, Dict, Tuple, Union
+from typing import Any, Container, Dict, Optional, Tuple, Union
 
 from .base import BaseModel
 
@@ -134,3 +134,12 @@ class ConfigEntry(BaseModel):
     error_reason_translation_key: str | None
     error_reason_translation_placeholders: dict[str, Any] | None
     num_subentries: int
+
+
+class ConfigSubEntry(BaseModel):
+    """A configuration sub-entry. This is the model that Home Assistant returns, but not what is used internally."""
+
+    subentry_id: str
+    subentry_type: str
+    title: str
+    unique_id: Optional[str]
