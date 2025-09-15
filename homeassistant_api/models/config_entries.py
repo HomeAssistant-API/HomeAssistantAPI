@@ -78,3 +78,59 @@ class DisableEnableResult(BaseModel):
     """Result from a disable/enable config entry call."""
 
     require_restart: bool
+
+
+class IntegrationTypes(Enum):
+    """Types of integrations."""
+
+    ENTITY = "entity"
+    DEVICE = "device"
+    HARDWARE = "hardware"
+    HELPER = "helper"
+    HUB = "hub"
+    SERVICE = "service"
+    SYSTEM = "system"
+    VIRTUAL = "virtual"
+
+
+class ConfigEntryState(str, Enum):
+    """Config entry state."""
+
+    LOADED = "loaded"
+    SETUP_ERROR = "setup_error"
+    MIGRATION_ERROR = "migration_error"
+    SETUP_RETRY = "setup_retry"
+    NOT_LOADED = "not_loaded"
+    FAILED_UNLOAD = "failed_unload"
+    SETUP_IN_PROGRESS = "setup_in_progress"
+    UNLOAD_IN_PROGRESS = "unload_in_progress"
+
+
+class ConfigEntryDisabler(Enum):
+    """What disabled a config entry."""
+
+    USER = "user"
+
+
+class ConfigEntry(BaseModel):
+    """A configuration entry. This is the model that Home Assistant returns, but not what is used internally."""
+
+    created_at: float
+    entry_id: str
+    domain: str
+    modified_at: float
+    title: str
+    source: str
+    state: ConfigEntryState
+    supports_options: bool
+    supports_remove_device: bool
+    supports_unload: bool
+    supports_reconfigure: bool
+    supported_subentry_types: Dict[str, Dict[str, bool]]
+    pref_disable_new_entities: bool
+    pref_disable_polling: bool
+    disabled_by: ConfigEntryDisabler | None
+    reason: str | None
+    error_reason_translation_key: str | None
+    error_reason_translation_placeholders: dict[str, Any] | None
+    num_subentries: int
