@@ -39,6 +39,8 @@ from homeassistant_api.utils import JSONType, prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import WebsocketClient
+else:
+    WebsocketClient = None  # pylint: disable=invalid-name
 
 logger = logging.getLogger(__name__)
 

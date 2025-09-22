@@ -30,6 +30,8 @@ from homeassistant_api.utils import JSONType, prepare_entity_id
 
 if TYPE_CHECKING:
     from homeassistant_api import WebsocketClient
+else:
+    WebsocketClient = None  # pylint: disable=invalid-name
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +295,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         Sends command :code:`{"type": "get_services", ...}`.
         """
         resp = self.recv(self.send("get_services"))
+        print(resp)
         domains = map(
             lambda item: Domain.from_json(
                 {"domain": item[0], "services": item[1]},
