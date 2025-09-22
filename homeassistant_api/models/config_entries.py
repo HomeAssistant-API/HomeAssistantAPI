@@ -38,40 +38,40 @@ class FlowContext(BaseModel):
 class ConfigFlowContext(FlowContext):
     """Context for config flow."""
 
-    alternative_domain: str | None = None
-    configuration_url: str | None = None
-    confirm_only: bool | None = None
+    alternative_domain: Optional[str] = None
+    configuration_url: Optional[str] = None
+    confirm_only: Optional[bool] = None
     discovery_key: DiscoveryKey
-    entry_id: str | None = None
-    title_placeholders: Dict[str, str] | None = None
-    unique_id: str | None = None
+    entry_id: Optional[str] = None
+    title_placeholders: Optional[Dict[str, str]] = None
+    unique_id: Optional[str] = None
 
 
 class FlowResult(BaseModel):
     """Base flow result ."""
 
     context: ConfigFlowContext
-    data_schema: Any | None | None = None
-    data: Dict[str, Any] | None = None
-    description_placeholders: Dict[str, str] | None = None
-    description: str | None = None
-    errors: dict[str, str] | None = None
-    extra: str | None = None
+    data_schema: Optional[Any] = None
+    data: Optional[Dict[str, Any]] = None
+    description_placeholders: Optional[Dict[str, str]] = None
+    description: Optional[str] = None
+    errors: Optional[Dict[str, str]] = None
+    extra: Optional[str] = None
     flow_id: str
     handler: str
-    last_step: bool | None = None
-    menu_options: Container[str] | None = None
-    preview: str | None = None
-    progress_action: str | None = None
-    progress_task: asyncio.Task[Any] | None = None
-    reason: str | None = None
-    required: bool | None = None
-    result: Any | None = None
-    step_id: str | None = None
-    title: str | None = None
-    translation_domain: str | None = None
-    type: FlowResultType | None = None
-    url: str | None = None
+    last_step: Optional[bool] = None
+    menu_options: Optional[Container[str]] = None
+    preview: Optional[str] = None
+    progress_action: Optional[str] = None
+    progress_task: Optional[asyncio.Task[Any]] = None
+    reason: Optional[str] = None
+    required: Optional[bool] = None
+    result: Optional[Any] = None
+    step_id: Optional[str] = None
+    title: Optional[str] = None
+    translation_domain: Optional[str] = None
+    type: Optional[FlowResultType] = None
+    url: Optional[str] = None
 
 
 class DisableEnableResult(BaseModel):
@@ -129,10 +129,10 @@ class ConfigEntry(BaseModel):
     supported_subentry_types: Dict[str, Dict[str, bool]]
     pref_disable_new_entities: bool
     pref_disable_polling: bool
-    disabled_by: ConfigEntryDisabler | None
-    reason: str | None
-    error_reason_translation_key: str | None
-    error_reason_translation_placeholders: dict[str, Any] | None
+    disabled_by: Optional[ConfigEntryDisabler]
+    reason: Optional[str]
+    error_reason_translation_key: Optional[str]
+    error_reason_translation_placeholders: Optional[Dict[str, Any]]
     num_subentries: int
 
 
