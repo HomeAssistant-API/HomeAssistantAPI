@@ -207,7 +207,11 @@ class WebsocketClient(RawWebsocketClient):
     # config_entries.py
 
     def get_nonuser_flows_in_progress(self) -> Tuple[FlowResult, ...]:
-        """Get config entries that are in progress but not initiated by a user."""
+        """
+        Get config entries that are in progress but not initiated by a user.
+
+        Sends command :code:`{"type": "config_entries/flow/progress"}`.
+        """
         return tuple(
             FlowResult.from_json(flow_result)
             for flow_result in cast(
@@ -219,7 +223,11 @@ class WebsocketClient(RawWebsocketClient):
         )
 
     def disable_config_entry(self, entry_id: str) -> DisableEnableResult:
-        """Disable a config entry."""
+        """
+        Disable a config entry.
+
+        Sends command :code:`{"type": "config_entries/disable", disabled_by="user",  ...}`.
+        """
         return DisableEnableResult.from_json(
             cast(
                 ResultResponse,
@@ -232,7 +240,11 @@ class WebsocketClient(RawWebsocketClient):
         )
 
     def enable_config_entry(self, entry_id: str) -> DisableEnableResult:
-        """Enable a config entry."""
+        """Enable a config entry.
+
+        Sends command :code:`{"type": "config_entries/disable", disabled_by=None, ...}`.
+
+        """
         return DisableEnableResult.from_json(
             cast(
                 ResultResponse,
@@ -245,13 +257,21 @@ class WebsocketClient(RawWebsocketClient):
         )
 
     def ignore_config_flow(self, flow_id: str, title: str) -> None:
-        """Ignore an active config flow."""
+        """
+        Ignore an active config flow.
+
+        Sends command :code:`{"type": "config_entries/ignore_flow", ...}`.
+        """
         self.recv(self.send("config_entries/ignore_flow", flow_id=flow_id, title=title))
 
     def get_config_entries(
         self, type_filter: List[IntegrationTypes] = [], domain: str = ""
     ) -> Tuple[ConfigEntry, ...]:
-        """Get filtered config entries."""
+        """
+        Get filtered config entries.
+
+        Sends command :code:`{"type": "config_entries/get", ...}`.
+        """
         return tuple(
             ConfigEntry.from_json(config_entry)
             for config_entry in cast(
@@ -271,7 +291,11 @@ class WebsocketClient(RawWebsocketClient):
 
     # UNTESTED
     def get_entry_subentries(self, entry_id: str) -> Tuple[ConfigSubEntry, ...]:
-        """Get an entry's sub-entries."""
+        """
+        Get an entry's sub-entries.
+
+        Sends command :code:`{"type": "config_entries/subentries/list", ...}`.
+        """
         return tuple(
             ConfigSubEntry.from_json(sub_entry)
             for sub_entry in cast(
@@ -287,7 +311,11 @@ class WebsocketClient(RawWebsocketClient):
 
     # UNTESTED
     def delete_entry_subentry(self, entry_id: str, subentry_id: str) -> None:
-        """Delete an entry's sub-entry."""
+        """
+        Delete an entry's sub-entry.
+
+        Sends command :code:`{"type": "config_entries/subentries/delete", ...}`.
+        """
         self.recv(
             self.send(
                 "config_entries/subentries/delete",
