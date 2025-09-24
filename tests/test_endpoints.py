@@ -129,6 +129,19 @@ def test_websocket_get_rendered_template(websocket_client: WebsocketClient) -> N
     }
 
 
+async def test_async_websocket_get_rendered_template(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "render_template"` websocket command."""
+    rendered_template = await async_websocket_client.async_get_rendered_template(
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+    )
+    assert rendered_template in {
+        "The sun is above the horizon.",
+        "The sun is below the horizon.",
+    }
+
+
 def test_check_api_config(cached_client: Client) -> None:
     """Tests the `POST /api/config/core/check_config` endpoint."""
     assert cached_client.check_api_config()
@@ -199,6 +212,14 @@ def test_websocket_get_entities(websocket_client: WebsocketClient) -> None:
     assert "sun" in entities
 
 
+async def test_async_websocket_get_entities(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "get_entities"` websocket command."""
+    entities = await async_websocket_client.async_get_entities()
+    assert "sun" in entities
+
+
 def test_get_domains(cached_client: Client) -> None:
     """Tests the `GET /api/services` endpoint."""
     domains = cached_client.get_domains()
@@ -214,6 +235,14 @@ async def test_async_get_domains(async_cached_client: Client) -> None:
 def test_websocket_get_domains(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_domains"` websocket command."""
     domains = websocket_client.get_domains()
+    assert "homeassistant" in domains
+
+
+async def test_async_websocket_get_domains(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "get_domains"` websocket command."""
+    domains = await async_websocket_client.async_get_domains()
     assert "homeassistant" in domains
 
 
@@ -234,6 +263,15 @@ async def test_async_get_domain(async_cached_client: Client) -> None:
 def test_websocket_get_domain(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_domain"` websocket command."""
     domain = websocket_client.get_domain("homeassistant")
+    assert domain is not None
+    assert domain.services
+
+
+async def test_async_websocket_get_domain(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "get_domain"` websocket command."""
+    domain = await async_websocket_client.async_get_domain("homeassistant")
     assert domain is not None
     assert domain.services
 
@@ -364,6 +402,19 @@ def test_websocket_trigger_service(websocket_client: WebsocketClient) -> None:
     assert resp is None
 
 
+async def test_async_websocket_trigger_service(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "trigger_service"` websocket command."""
+    notify = await async_websocket_client.async_get_domain("notify")
+    assert notify is not None
+    resp = await notify.persistent_notification(
+        message="Your API Test Suite just said hello!", title="Test Suite Notifcation"
+    )
+    # Websocket API doesnt return changed states so we check for None
+    assert resp is None
+
+
 def test_websocket_trigger_service_with_entity_id(
     websocket_client: WebsocketClient,
 ) -> None:
@@ -416,6 +467,20 @@ def test_websocket_trigger_service_with_response(
     assert data is not None
 
 
+async def test_async_websocket_trigger_service_with_response(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "trigger_service_with_response"` websocket command."""
+    weather = await async_websocket_client.async_get_domain("weather")
+    assert weather is not None
+    data = weather.get_forecasts(
+        entity_id="weather.forecast_home",
+        type="hourly",
+    )
+    # Websocket API doesnt return changed states so we check data is not None because we expect a response
+    assert data is not None
+
+
 def test_get_states(cached_client: Client) -> None:
     """Tests the `GET /api/states` endpoint."""
     states = cached_client.get_states()
@@ -433,6 +498,15 @@ async def test_async_get_states(async_cached_client: Client) -> None:
 def test_websocket_get_states(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_states"` websocket command."""
     states = websocket_client.get_states()
+    for state in states:
+        assert isinstance(state, State)
+
+
+async def test_async_websocket_get_states(
+    async_websocket_client: WebsocketClient
+) -> None:
+    """Tests the `"type": "get_states"` websocket command."""
+    states = await async_websocket_client.async_get_states()
     for state in states:
         assert isinstance(state, State)
 

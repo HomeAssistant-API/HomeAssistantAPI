@@ -55,3 +55,12 @@ def test_websocket_client_ping() -> None:
         os.environ["HOMEASSISTANTAPI_TOKEN"],
     ) as client:
         assert client.ping_latency() > 0
+
+
+async def test_async_websocket_client_ping() -> None:
+    async with WebsocketClient(
+        os.environ["HOMEASSISTANTAPI_WS_URL"],
+        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        use_async=True
+    ) as client:
+        assert (await client.async_ping_latency()) > 0
