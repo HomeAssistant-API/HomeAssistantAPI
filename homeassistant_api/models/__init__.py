@@ -3,7 +3,9 @@
 from .base import BaseModel
 from .config_entries import (
     ConfigEntry,
+    ConfigEntryChange,
     ConfigEntryDisabler,
+    ConfigEntryEvent,
     ConfigEntryState,
     ConfigFlowContext,
     ConfigSubEntry,
@@ -45,4 +47,6 @@ __all__ = (
     "ConfigEntryState",
     "ConfigEntry",
     "ConfigSubEntry",
+    "ConfigEntryChange",
+    "ConfigEntryEvent",
 )

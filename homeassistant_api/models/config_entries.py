@@ -143,3 +143,16 @@ class ConfigSubEntry(BaseModel):
     subentry_type: str
     title: str
     unique_id: Optional[str]
+
+
+class ConfigEntryChange(str, Enum):
+    """What was changed in a config entry."""
+
+    ADDED = "added"
+    REMOVED = "removed"
+    UPDATED = "updated"
+
+
+class ConfigEntryEvent(BaseModel):
+    type: Optional[ConfigEntryChange]
+    entry: ConfigEntry

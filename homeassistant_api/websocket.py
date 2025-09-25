@@ -5,6 +5,7 @@ from typing import Dict, Generator, List, Optional, Tuple, Union, cast
 
 from homeassistant_api.models import (
     ConfigEntry,
+    ConfigEntryEvent,
     ConfigSubEntry,
     DisableEnableResult,
     Domain,
@@ -287,7 +288,40 @@ class WebsocketClient(RawWebsocketClient):
             )
         )
 
-    # TODO: config_entries/subscribe
+    def _subscribe_config_entries(self) -> int:
+        """
+        Subscribe to config entry flows.
+
+        Sends command :code:`{"type": "config_entries/subscribe"}`.
+        """
+
+        return self.recv(self.send("config_entries/subscribe")).id
+
+    @contextlib.contextmanager
+    def listen_config_entries(
+        self, disconnect_client: bool = True
+    ) -> Generator[Generator[List[ConfigEntryEvent], None, None], None, None]:
+        """
+        Listen to all config entry flow events.
+
+        For example:
+
+        .. code-block:: python
+
+            with ws_client.listen_config_entries() as flows:
+                for i, flow in zip(range(2), flows):  # to only wait for two flows to be received
+                    print(flow)
+        """
+        subscription = self._subscribe_config_entries()
+        yield cast(
+            Generator[List[ConfigEntryEvent], None, None], self._wait_for(subscription)
+        )
+        # There is no "unsubscribe" method available for these events.
+        # Provide the ability to "unsubscribe" by disconnecting and reconnecting the Websocket client.
+        if disconnect_client:
+            logger.info("Reloading Websocket Client. Undefined behavior may occur.")
+            self.__exit__(None, None, None)
+            self.__enter__()
 
     # UNTESTED
     def get_entry_subentries(self, entry_id: str) -> Tuple[ConfigSubEntry, ...]:
@@ -468,14 +502,14 @@ class WebsocketClient(RawWebsocketClient):
 
     def _wait_for(
         self, subscription_id: int
-    ) -> Generator[Union[FiredEvent, FiredTrigger], None, None]:
+    ) -> Generator[Union[FiredEvent, FiredTrigger, List[ConfigEntryEvent]], None, None]:
         """
         An iterator that waits for events of a certain type.
         """
         while True:
             yield cast(
                 Union[
-                    FiredEvent, FiredTrigger
+                    FiredEvent, FiredTrigger, List[ConfigEntryEvent]
                 ],  # we can cast this because TemplateEvent is only used for rendering templates
                 cast(EventResponse, self.recv(subscription_id)).event,
             )
