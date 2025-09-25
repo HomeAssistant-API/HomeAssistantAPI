@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 
 from homeassistant_api import Client
+from homeassistant_api.errors import RequestError
+from homeassistant_api.models import ConfigEntryDisabler
 from homeassistant_api.models.events import Event
 from homeassistant_api.models.states import State
 from homeassistant_api.websocket import WebsocketClient
@@ -195,6 +197,98 @@ def test_websocket_get_domain(websocket_client: WebsocketClient) -> None:
     domain = websocket_client.get_domain("homeassistant")
     assert domain is not None
     assert domain.services
+
+
+def test_get_nonuser_flows_in_progress(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "config_entries/flow/progress"` websocket command."""
+    # No flows in progress
+    flows = websocket_client.get_nonuser_flows_in_progress()
+    assert not flows
+
+
+def test_disable_enable_config_entry(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "config_entries/disable"` websocket command."""
+    # Get sun entry
+    entry = websocket_client.get_config_entries()[0]
+    assert entry.disabled_by is None
+
+    # Disable entry
+    websocket_client.disable_config_entry(entry.entry_id)
+
+    # Check that it was disabled
+    disabled_entry = websocket_client.get_config_entries()[0]
+    assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+
+    # Re-enable
+    websocket_client.enable_config_entry(entry.entry_id)
+
+    # Check that it was enable
+    enabled_entry = websocket_client.get_config_entries()[0]
+    assert enabled_entry.disabled_by is None
+
+
+def test_ignore_config_flow(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
+    # Currently not able to test as no flows are in progress. Send invalid parameters and handle that error
+    try:
+        websocket_client.ignore_config_flow("", "")
+    except RequestError as error:
+        assert (
+            error.__str__()
+            == "An error occurred while making the request to 'Config entry not found' with data: 'not_found'"
+        )
+
+
+def test_get_config_entries(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "config_entries/get"` websocket command."""
+    # Check number of entries
+    entries = websocket_client.get_config_entries()
+    assert len(entries) == 4
+
+    # Check that entries have expected values
+    sun = entries[0]
+    # Usually some kind of float. Is 0.0 in testing environment
+    assert sun.created_at == 0.0
+    assert sun.entry_id == "5f8426fa502435857743f302651753c9"
+    assert sun.domain == "sun"
+    assert sun.modified_at == 0.0
+    assert sun.title == "Sun"
+    assert sun.source == "import"
+    assert sun.supports_options is False
+    assert sun.supports_remove_device is False
+    assert sun.supports_unload is True
+    assert sun.supports_reconfigure is False
+    assert sun.supported_subentry_types == {}
+    assert sun.pref_disable_new_entities is False
+    assert sun.pref_disable_polling is False
+    assert sun.disabled_by is None
+    assert sun.reason is None
+    assert sun.error_reason_translation_key is None
+    assert sun.error_reason_translation_placeholders is None
+    assert sun.num_subentries == 0
+
+
+def test_get_entry_subentries(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "config_entries/subentries/list"` websocket command."""
+    # Currently not able to test as no entries with subentries available
+    # Get the sun entry
+    sun = websocket_client.get_config_entries()[0]
+    assert sun
+
+    # Get subentries for sun (empty tuple)
+    assert not websocket_client.get_entry_subentries(sun.entry_id)
+
+
+def test_delete_entry_subentry(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
+    # Currently not able to test as no entries with subentries available. Send invalid parameters and handle that error
+    try:
+        websocket_client.delete_entry_subentry("", "")
+    except RequestError as error:
+        assert (
+            error.__str__()
+            == "An error occurred while making the request to 'Config entry not found' with data: 'not_found'"
+        )
 
 
 def test_trigger_service(cached_client: Client) -> None:
