@@ -26,10 +26,12 @@ async def test_async_listen_events(async_websocket_client: WebsocketClient) -> N
         await async_websocket_client.async_fire_event(
             "async_test_event", message="Triggered by async websocket client"
         )
-        async for _, event in zip(range(1), events):
+        # Typing breaks when using zip in an async context, so break instead
+        async for event in events:
             assert event.origin == "LOCAL"
             assert event.event_type == "async_test_event"
             assert event.data["message"] == "Triggered by async websocket client"
+            break
 
 
 def test_listen_trigger(websocket_client: WebsocketClient) -> None:
@@ -92,8 +94,10 @@ async def test_async_listen_trigger(async_websocket_client: WebsocketClient) -> 
     async with async_websocket_client.async_listen_trigger(
         "time", at=future.strftime("%H:%M:%S")
     ) as triggers:
-        async for _, trigger in zip(range(1), triggers):
+        # Typing breaks when using zip in an async context, so break instead
+        async for trigger in triggers:
             assert trigger["trigger"]["platform"] == "time"
             assert datetime.fromisoformat(
                 trigger["trigger"]["now"]
             ).timestamp() == pytest.approx(future.timestamp(), abs=1)
+            break
