@@ -16,14 +16,14 @@ version = "5.0.1"
 packages = [{ include = "homeassistant_api" }]
 
 [tool.poetry.dependencies]
-aiohttp = "^3.8.1"
-aiohttp-client-cache = ">=0.6.1"
-pydantic = ">=2.0,<2.9"
+aiohttp = "^3"
+aiohttp-client-cache = "^0"
+pydantic = "^2"
 python = "^3.9,<4.0.0"
-requests = "^2.27.1"
-requests-cache = "^0.9.2"
-simplejson = "^3.17.6"
-websockets = "^14.1"
+requests = "^2"
+requests-cache = "^1"
+simplejson = "^3"
+websockets = "^15"
 
 [tool.poetry.group.docs]
 optional = true
@@ -52,7 +52,7 @@ optional = true
 pytest-asyncio = "^0.18.3"
 pytest-cov = "^3.0.0"
 pytest = "^6.2.5"
-aiosqlite = "^0.18.0"
+aiosqlite = "^0.20.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
