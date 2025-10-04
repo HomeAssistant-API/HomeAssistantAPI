@@ -12,7 +12,7 @@ name = "HomeAssistant-API"
 readme = "README.md"
 include = ["homeassistant_api/py.typed"]
 repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
-version = "5.0.1"
+version = "5.0.2"
 packages = [{ include = "homeassistant_api" }]
 
 [tool.poetry.dependencies]
