@@ -577,7 +577,7 @@ class Service(BaseModel):
 
     service_id: str
     domain: Domain = Field(exclude=True, repr=False)
-    name: str
+    name: Optional[str] = None
     description: Optional[str] = None
     fields: Optional[Dict[str, Union[ServiceField, ServiceFieldCollection]]] = None
     target: Optional[ServiceFieldSelectorTarget] = None
