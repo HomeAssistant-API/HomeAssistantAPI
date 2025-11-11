@@ -26,6 +26,9 @@ main*.py
 # Test Server
 test_server/
 
+# Custom Components
+volumes/config/.storage/custom_components/
+
 # Distribution / packaging
 .Python
 build/
