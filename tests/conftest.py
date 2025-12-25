@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from typing import AsyncGenerator, Generator, Literal
+from typing import AsyncGenerator, Generator, Literal, cast
 
 import pytest
 import pytest_asyncio
@@ -32,7 +32,7 @@ def setup_cached_client(wait_for_server) -> Generator[Client, None, None]:
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
     ) as client:
-        yield client
+        yield cast(Client, client)
 
 
 @pytest.fixture(scope="session")
