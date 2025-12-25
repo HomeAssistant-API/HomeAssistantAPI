@@ -484,52 +484,6 @@ class ServiceFieldSelectorUIStateContext(BaseModel):
     allow_name: Optional[bool] = None
 
 
-# fields.file.ServiceField.selector.media.multiple
-#   Extra inputs are not permitted [type=extra_forbidden, input_value=False, input_type=bool]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.file.ServiceFieldCollection.fields
-#   Field required [type=missing, input_value={'required': True, 'selec...'], 'multiple': False}}}, input_type=dict]
-#     For further information visit https://errors.pydantic.dev/2.12/v/missing
-# fields.file.ServiceFieldCollection.required
-#   Extra inputs are not permitted [type=extra_forbidden, input_value=True, input_type=bool]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.file.ServiceFieldCollection.selector
-#   Extra inputs are not permitted [type=extra_forbidden, input_value={'media': {'accept': ['im...*'], 'multiple': False}}, input_type=dict]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-
-# fields.media.ServiceField.selector.media.multiple
-#   Extra inputs are not permitted [type=extra_forbidden, input_value=False, input_type=bool]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-
-# fields.media.ServiceFieldCollection.fields
-#   Field required [type=missing, input_value={'required': True, 'selec...ontent_type": "music"}'}, input_type=dict]
-#     For further information visit https://errors.pydantic.dev/2.12/v/missing
-# fields.media.ServiceFieldCollection.required
-#   Extra inputs are not permitted [type=extra_forbidden, input_value=True, input_type=bool]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.media.ServiceFieldCollection.selector
-#   Extra inputs are not permitted [type=extra_forbidden, input_value={'media': {'multiple': False}}, input_type=dict]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.media.ServiceFieldCollection.example
-#   Extra inputs are not permitted [type=extra_forbidden, input_value='{"media_content_id": "ht...content_type": "music"}', input_type=str]
-#     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-
-# fields.media.ServiceField.selector.media.multiple
-# Extra inputs are not permitted [type=extra_forbidden, input_value=False, input_type=bool]
-#   For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.media.ServiceFieldCollection.fields
-# Field required [type=missing, input_value={'required': True, 'selec...ontent_type": "music"}'}, input_type=dict]
-#   For further information visit https://errors.pydantic.dev/2.12/v/missing
-# fields.media.ServiceFieldCollection.required
-# Extra inputs are not permitted [type=extra_forbidden, input_value=True, input_type=bool]
-#   For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.media.ServiceFieldCollection.selector
-# Extra inputs are not permitted [type=extra_forbidden, input_value={'media': {'multiple': False}}, input_type=dict]
-#   For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
-# fields.media.ServiceFieldCollection.example
-# Extra inputs are not permitted [type=extra_forbidden, input_value='{"media_content_id": "ht...content_type": "music"}', input_type=str]
-#   For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden```
-
 class ServiceFieldSelector(BaseModel):
     action: Optional[ServiceFieldSelectorAction] = None
     addon: Optional[ServiceFieldSelectorAddon] = None
