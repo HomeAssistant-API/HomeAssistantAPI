@@ -23,6 +23,5 @@ class BaseModel(PydanticBaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         validate_assignment=True,
-        extra="forbid",
         protected_namespaces=(),
     )
