@@ -177,6 +177,11 @@ class ServiceFieldSelectorAddon(BaseModel):
     slug: Optional[str] = None
 
 
+class ServiceFieldSelectorApp(BaseModel):
+    name: Optional[str] = None
+    slug: Optional[str] = None
+
+
 class ServiceFieldSelectorArea(BaseModel):
     entity: Optional[
         Union[List[ServiceFieldSelectorEntityFilter], ServiceFieldSelectorEntityFilter]
@@ -487,6 +492,7 @@ class ServiceFieldSelectorUIStateContext(BaseModel):
 class ServiceFieldSelector(BaseModel):
     action: Optional[ServiceFieldSelectorAction] = None
     addon: Optional[ServiceFieldSelectorAddon] = None
+    app: Optional[ServiceFieldSelectorApp] = None
     area: Optional[ServiceFieldSelectorArea] = None
     areas_display: Optional[ServiceFieldSelectorAreasDisplay] = None
     attribute: Optional[ServiceFieldSelectorAttribute] = None
