@@ -23,6 +23,7 @@ from homeassistant_api.errors import (
     UnauthorizedError,
     UnexpectedStatusCodeError,
 )
+from homeassistant_api.models.websocket import Error
 from homeassistant_api.processing import Processing
 from homeassistant_api.utils import prepare_entity_id
 from homeassistant_api.websocket import WebsocketClient
@@ -220,3 +221,12 @@ def test_exception_unexpected_status_code() -> None:
 def test_unkown_scheme() -> None:
     with pytest.raises(ValueError):
         Client("ftp://example.com", "token")
+
+
+def test_error_model_without_optional_fields() -> None:
+    """Tests that Error model accepts responses missing optional translation fields."""
+    error = Error(code="invalid_format", message="required key not provided")
+    assert error.code == "invalid_format"
+    assert error.translation_key is None
+    assert error.translation_placeholders is None
+    assert error.translation_domain is None
