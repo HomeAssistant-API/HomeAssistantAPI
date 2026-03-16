@@ -32,8 +32,10 @@ jobs:
         run: |
           pip install poetry
           poetry install --with styling
-      - name: Run Ruff
-        run: poetry run ruff homeassistant_api
+      - name: Run Ruff format
+        run: poetry run ruff format homeassistant_api
+      - name: Run Ruff linting
+        run: poetry run ruff check homeassistant_api
       - name: Run MyPy
         run: poetry run mypy homeassistant_api --show-error-codes
 
