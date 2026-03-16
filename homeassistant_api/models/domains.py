@@ -383,9 +383,9 @@ class ServiceFieldSelectorObject(BaseModel):
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
     scale: Optional[Union[int, float]] = None
-    error_correction_level: Optional[
-        ServiceFieldSelectorQRCodeErrorCorrectionLevel
-    ] = None
+    error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
+        None
+    )
     center_image: Optional[str] = None
 
 

@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 from typing import AsyncGenerator, Generator, Literal, cast
@@ -33,14 +32,6 @@ def setup_cached_client(wait_for_server) -> Generator[Client, None, None]:
         os.environ["HOMEASSISTANTAPI_TOKEN"],
     ) as client:
         yield cast(Client, client)
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Redefines the event loop with a broader scope."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest_asyncio.fixture(name="async_cached_client", scope="session")

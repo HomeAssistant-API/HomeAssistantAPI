@@ -3,6 +3,8 @@
 import logging
 from datetime import datetime
 
+import pytest
+
 from homeassistant_api import Client
 from homeassistant_api.errors import RequestError
 from homeassistant_api.models import ConfigEntryDisabler
@@ -152,6 +154,48 @@ async def test_async_get_entities(async_cached_client: Client) -> None:
     """Tests the `GET /api/states` endpoint."""
     entities = await async_cached_client.async_get_entities()
     assert "sun" in entities
+
+
+def test_websocket_get_config(websocket_client: WebsocketClient) -> None:
+    """Tests the `"type": "get_config"` websocket command."""
+    config = websocket_client.get_config()
+    assert isinstance(config, dict)
+    assert config.get("state") in {"RUNNING", "NOT_RUNNING"}
+
+
+def test_websocket_get_state(websocket_client: WebsocketClient) -> None:
+    """Tests WebsocketClient.get_state with entity_id."""
+    state = websocket_client.get_state(entity_id="sun.sun")
+    assert state.entity_id == "sun.sun"
+    assert state.state in {"above_horizon", "below_horizon"}
+
+
+def test_websocket_get_entity_by_group_slug(websocket_client: WebsocketClient) -> None:
+    """Tests WebsocketClient.get_entity with group_id and slug."""
+    entity = websocket_client.get_entity(group_id="sun", slug="sun")
+    assert entity is not None
+    assert entity.entity_id == "sun.sun"
+
+
+def test_websocket_get_entity_by_entity_id(websocket_client: WebsocketClient) -> None:
+    """Tests WebsocketClient.get_entity with entity_id."""
+    entity = websocket_client.get_entity(entity_id="sun.sun")
+    assert entity is not None
+    assert entity.entity_id == "sun.sun"
+
+
+def test_websocket_get_entity_no_args(websocket_client: WebsocketClient) -> None:
+    """Tests WebsocketClient.get_entity raises ValueError with no arguments."""
+    with pytest.raises(
+        ValueError, match="Neither group_id and slug or entity_id provided"
+    ):
+        websocket_client.get_entity()
+
+
+def test_websocket_get_state_not_found(websocket_client: WebsocketClient) -> None:
+    """Tests WebsocketClient.get_state raises ValueError for nonexistent entity."""
+    with pytest.raises(ValueError, match="not found"):
+        websocket_client.get_state(entity_id="fake.nonexistent_entity_12345")
 
 
 def test_websocket_get_entities(websocket_client: WebsocketClient) -> None:
@@ -323,6 +367,22 @@ def test_websocket_trigger_service(websocket_client: WebsocketClient) -> None:
     )
     # Websocket API doesnt return changed states so we check for None
     assert resp is None
+
+
+def test_websocket_trigger_service_with_entity_id(
+    websocket_client: WebsocketClient,
+) -> None:
+    """Tests websocket trigger_service with an entity_id target."""
+    state_before = websocket_client.get_state(entity_id="sun.sun")
+    websocket_client.trigger_service(
+        "homeassistant",
+        "update_entity",
+        entity_id="sun.sun",
+    )
+    state_after = websocket_client.get_state(entity_id="sun.sun")
+    # update_entity refreshes the entity; state should remain valid
+    assert state_after.entity_id == state_before.entity_id
+    assert state_after.state in {"above_horizon", "below_horizon"}
 
 
 def test_trigger_service_with_response(cached_client: Client) -> None:

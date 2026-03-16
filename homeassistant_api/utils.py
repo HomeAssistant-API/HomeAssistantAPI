@@ -6,7 +6,8 @@ from typing_extensions import TypeAliasType
 
 if TYPE_CHECKING or os.getenv("DOCUMENTATION_MODE") != "true":
     JSONType = TypeAliasType(
-        "JSONType", "Optional[Union[int, float, str, bool, list[JSONType], dict[str, JSONType]]]"
+        "JSONType",
+        "Optional[Union[int, float, str, bool, list[JSONType], dict[str, JSONType]]]",
     )
 else:
     JSONType = type("JSONType", (object,), {})

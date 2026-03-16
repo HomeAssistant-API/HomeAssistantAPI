@@ -10,7 +10,9 @@ repos:
     hooks:
       - id: trailing-whitespace
     rev: "v4.1.0"
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.209'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 'v0.15.6'
     hooks:
-      - id: ruff
+      - id: ruff-format
+      - id: ruff-check
+      - id: ruff-format
