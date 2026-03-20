@@ -323,7 +323,6 @@ class WebsocketClient(RawWebsocketClient):
             self.__exit__(None, None, None)
             self.__enter__()
 
-    # UNTESTED
     def get_entry_subentries(self, entry_id: str) -> Tuple[ConfigSubEntry, ...]:
         """
         Get an entry's sub-entries.

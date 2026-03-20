@@ -50,7 +50,7 @@ async def setup_async_cached_client(
 @pytest.fixture(name="websocket_client", scope="session")
 def setup_websocket_client(
     wait_for_server: Literal[None],
-) -> Generator[Client, None, None]:
+) -> Generator[WebsocketClient, None, None]:
     """Initializes the Client and enters a WebSocket session."""
     with WebsocketClient(
         os.environ["HOMEASSISTANTAPI_WS_URL"],
