@@ -1,9 +1,20 @@
 import contextlib
 import logging
 import urllib.parse as urlparse
-from typing import Dict, Generator, Optional, Tuple, Union, cast
+from typing import Dict, Generator, List, Optional, Tuple, Union, cast
 
-from homeassistant_api.models import Domain, Entity, Group, State
+from homeassistant_api.models import (
+    ConfigEntry,
+    ConfigEntryEvent,
+    ConfigSubEntry,
+    DisableEnableResult,
+    Domain,
+    Entity,
+    FlowResult,
+    Group,
+    IntegrationTypes,
+    State,
+)
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import (
     EventResponse,
@@ -175,7 +186,7 @@ class WebsocketClient(RawWebsocketClient):
         """
         resp = self.recv(self.send("get_services"))
         domains = map(
-            lambda item: Domain.from_json(
+            lambda item: Domain.from_json_with_client(
                 {"domain": item[0], "services": item[1]},
                 client=self,
             ),
@@ -193,6 +204,158 @@ class WebsocketClient(RawWebsocketClient):
         For now, just call the :py:meth":`get_domains` method and parsing the result.
         """
         return self.get_domains()[domain]
+
+    # config_entries.py
+
+    def get_nonuser_flows_in_progress(self) -> Tuple[FlowResult, ...]:
+        """
+        Get config entries that are in progress but not initiated by a user.
+
+        Sends command :code:`{"type": "config_entries/flow/progress"}`.
+        """
+        return tuple(
+            FlowResult.from_json(flow_result)
+            for flow_result in cast(
+                list[dict[str, JSONType]],
+                cast(
+                    ResultResponse, self.recv(self.send("config_entries/flow/progress"))
+                ).result,
+            )
+        )
+
+    def disable_config_entry(self, entry_id: str) -> DisableEnableResult:
+        """
+        Disable a config entry.
+
+        Sends command :code:`{"type": "config_entries/disable", disabled_by="user",  ...}`.
+        """
+        return DisableEnableResult.from_json(
+            cast(
+                ResultResponse,
+                self.recv(
+                    self.send(
+                        "config_entries/disable", entry_id=entry_id, disabled_by="user"
+                    )
+                ),
+            ).result,
+        )
+
+    def enable_config_entry(self, entry_id: str) -> DisableEnableResult:
+        """Enable a config entry.
+
+        Sends command :code:`{"type": "config_entries/disable", disabled_by=None, ...}`.
+
+        """
+        return DisableEnableResult.from_json(
+            cast(
+                ResultResponse,
+                self.recv(
+                    self.send(
+                        "config_entries/disable", entry_id=entry_id, disabled_by=None
+                    )
+                ),
+            ).result,
+        )
+
+    def ignore_config_flow(self, flow_id: str, title: str) -> None:
+        """
+        Ignore an active config flow.
+
+        Sends command :code:`{"type": "config_entries/ignore_flow", ...}`.
+        """
+        self.recv(self.send("config_entries/ignore_flow", flow_id=flow_id, title=title))
+
+    def get_config_entries(
+        self, type_filter: List[IntegrationTypes] = [], domain: str = ""
+    ) -> Tuple[ConfigEntry, ...]:
+        """
+        Get filtered config entries.
+
+        Sends command :code:`{"type": "config_entries/get", ...}`.
+        """
+        return tuple(
+            ConfigEntry.from_json(config_entry)
+            for config_entry in cast(
+                list[dict[str, JSONType]],
+                cast(
+                    ResultResponse,
+                    self.recv(
+                        self.send(
+                            "config_entries/get", type_filter=type_filter, domain=domain
+                        )
+                    ),
+                ).result,
+            )
+        )
+
+    def _subscribe_config_entries(self) -> int:
+        """
+        Subscribe to config entry flows.
+
+        Sends command :code:`{"type": "config_entries/subscribe"}`.
+        """
+
+        return self.recv(self.send("config_entries/subscribe")).id
+
+    @contextlib.contextmanager
+    def listen_config_entries(
+        self, disconnect_client: bool = True
+    ) -> Generator[Generator[List[ConfigEntryEvent], None, None], None, None]:
+        """
+        Listen to all config entry flow events.
+
+        For example:
+
+        .. code-block:: python
+
+            with ws_client.listen_config_entries() as flows:
+                for i, flow in zip(range(2), flows):  # to only wait for two flows to be received
+                    print(flow)
+        """
+        subscription = self._subscribe_config_entries()
+        yield cast(
+            Generator[List[ConfigEntryEvent], None, None], self._wait_for(subscription)
+        )
+        # There is no "unsubscribe" method available for these events.
+        # Provide the ability to "unsubscribe" by disconnecting and reconnecting the Websocket client.
+        if disconnect_client:
+            logger.info("Reloading Websocket Client. Undefined behavior may occur.")
+            self.__exit__(None, None, None)
+            self.__enter__()
+
+    def get_entry_subentries(self, entry_id: str) -> Tuple[ConfigSubEntry, ...]:
+        """
+        Get an entry's sub-entries.
+
+        Sends command :code:`{"type": "config_entries/subentries/list", ...}`.
+        """
+        return tuple(
+            ConfigSubEntry.from_json(sub_entry)
+            for sub_entry in cast(
+                list[dict[str, JSONType]],
+                cast(
+                    ResultResponse,
+                    self.recv(
+                        self.send("config_entries/subentries/list", entry_id=entry_id)
+                    ),
+                ).result,
+            )
+        )
+
+    # UNTESTED
+    def delete_entry_subentry(self, entry_id: str, subentry_id: str) -> None:
+        """
+        Delete an entry's sub-entry.
+
+        Sends command :code:`{"type": "config_entries/subentries/delete", ...}`.
+        """
+        self.recv(
+            self.send(
+                "config_entries/subentries/delete",
+                entry_id=entry_id,
+                subentry_id=subentry_id,
+            )
+        )
 
     def trigger_service(
         self,
@@ -338,14 +501,14 @@ class WebsocketClient(RawWebsocketClient):
 
     def _wait_for(
         self, subscription_id: int
-    ) -> Generator[Union[FiredEvent, FiredTrigger], None, None]:
+    ) -> Generator[Union[FiredEvent, FiredTrigger, List[ConfigEntryEvent]], None, None]:
         """
         An iterator that waits for events of a certain type.
         """
         while True:
             yield cast(
                 Union[
-                    FiredEvent, FiredTrigger
+                    FiredEvent, FiredTrigger, List[ConfigEntryEvent]
                 ],  # we can cast this because TemplateEvent is only used for rendering templates
                 cast(EventResponse, self.recv(subscription_id)).event,
             )

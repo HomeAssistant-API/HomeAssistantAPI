@@ -43,19 +43,20 @@ types-requests = "^2.27.9"
 types-simplejson = "^3.17.3"
 types-toml = "^0.10.4"
 mypy = "^1.8.0"
-ruff = "^0.0.209"
+ruff = "^0.15"
 
 [tool.poetry.group.testing]
 optional = true
-
 [tool.poetry.group.testing.dependencies]
-pytest-asyncio = "^0.18.3"
-pytest-cov = "^3.0.0"
-pytest = "^6.2.5"
-aiosqlite = "^0.20.0"
+pytest-asyncio = "^1"
+pytest-cov = "^7"
+pytest = "^8"
+aiosqlite = "^0.22"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 log_cli = true
 # log_cli_level = "DEBUG"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
@@ -72,7 +73,7 @@ exclude_lines = [
     "pragma: no cover"
 ]
 
-[tool.ruff]
+[tool.ruff.lint]
 exclude = [
     '.git',
     '__pycache__',
@@ -85,7 +86,7 @@ select = [
     'W',
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ['F401']
 "conf.py" = ['E402']
 

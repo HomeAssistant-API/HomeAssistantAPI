@@ -19,6 +19,8 @@ from homeassistant_api.errors import (
     MalformedDataError,
     MethodNotAllowedError,
     ProcessorNotFoundError,
+    RequestError,
+    RequestTimeoutError,
     ResponseError,
     UnauthorizedError,
     UnexpectedStatusCodeError,
@@ -221,6 +223,37 @@ def test_exception_unexpected_status_code() -> None:
 def test_unkown_scheme() -> None:
     with pytest.raises(ValueError):
         Client("ftp://example.com", "token")
+
+
+def test_request_error_with_message_and_data() -> None:
+    """Tests RequestError when both message and data are provided."""
+    err = RequestError(
+        "some_data", url="http://localhost/api", message="Custom message"
+    )
+    assert "Custom message" in str(err)
+    assert "'http://localhost/api'" in str(err)
+    assert "'some_data'" in str(err)
+
+
+def test_request_error_no_data() -> None:
+    """Tests RequestError when data is None and no message."""
+    err = RequestError(None, url="http://localhost/api")
+    assert "'http://localhost/api'" in str(err)
+    assert "data" not in str(err)
+
+
+def test_request_timeout_error() -> None:
+    """Tests RequestTimeoutError constructor."""
+    err = RequestTimeoutError("Connection timed out", url="http://localhost/api")
+    assert "Connection timed out" in str(err)
+    assert "'http://localhost/api'" in str(err)
+    assert isinstance(err, RequestError)
+
+
+def test_websocket_invalid_scheme() -> None:
+    """Tests that WebsocketClient raises ValueError for non-ws schemes."""
+    with pytest.raises(ValueError, match="Unknown scheme"):
+        WebsocketClient("http://localhost", "token")
 
 
 def test_error_model_without_optional_fields() -> None:

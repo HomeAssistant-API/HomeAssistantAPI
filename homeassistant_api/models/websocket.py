@@ -1,10 +1,11 @@
 """A module defining the responses we expect from the websocket API."""
 
-from typing import Any, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 
 from homeassistant_api.utils import JSONType
 
 from .base import BaseModel, DatetimeIsoField
+from .config_entries import ConfigEntryEvent
 from .states import Context
 
 __all__ = (
@@ -99,4 +100,4 @@ class EventResponse(BaseModel):
 
     id: int
     type: Literal["event"]
-    event: Union[FiredEvent, FiredTrigger, TemplateEvent]
+    event: Union[FiredEvent, FiredTrigger, TemplateEvent, List[ConfigEntryEvent]]

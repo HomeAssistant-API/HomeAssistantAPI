@@ -1,6 +1,21 @@
 """The Model objects for the entire library."""
 
 from .base import BaseModel
+from .config_entries import (
+    ConfigEntry,
+    ConfigEntryChange,
+    ConfigEntryDisabler,
+    ConfigEntryEvent,
+    ConfigEntryState,
+    ConfigFlowContext,
+    ConfigSubEntry,
+    DisableEnableResult,
+    DiscoveryKey,
+    FlowContext,
+    FlowResult,
+    FlowResultType,
+    IntegrationTypes,
+)
 from .domains import Domain, Service, ServiceField
 from .entity import Entity, Group
 from .events import Event
@@ -21,4 +36,17 @@ __all__ = (
     "History",
     "LogbookEntry",
     "State",
+    "DisableEnableResult",
+    "DiscoveryKey",
+    "FlowContext",
+    "ConfigFlowContext",
+    "FlowResult",
+    "FlowResultType",
+    "IntegrationTypes",
+    "ConfigEntryDisabler",
+    "ConfigEntryState",
+    "ConfigEntry",
+    "ConfigSubEntry",
+    "ConfigEntryChange",
+    "ConfigEntryEvent",
 )

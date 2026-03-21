@@ -5,7 +5,8 @@ from datetime import datetime
 
 import pytest
 
-from homeassistant_api import Client
+from homeassistant_api import Client, Domain
+from homeassistant_api.models.events import Event
 from homeassistant_api.models.states import State
 
 
@@ -117,6 +118,18 @@ def test_entity_get_history_none(cached_client: Client) -> None:
         start_timestamp=datetime(2015, 1, 1), end_timestamp=datetime(2020, 1, 1)
     )
     assert history is None
+
+
+def test_event_from_json_raises() -> None:
+    """Tests that Event.from_json raises ValueError directing to from_json_with_client."""
+    with pytest.raises(ValueError, match="does not support `from_json\\(\\)`"):
+        Event.from_json({})
+
+
+def test_domain_from_json_with_client_missing_keys(cached_client: Client) -> None:
+    """Tests that Domain.from_json_with_client raises ValueError when keys are missing."""
+    with pytest.raises(ValueError, match="Missing services or domain"):
+        Domain.from_json_with_client({"foo": "bar"}, cached_client)
 
 
 async def test_async_entity_get_history_none(async_cached_client: Client) -> None:

@@ -1,0 +1,100 @@
+"""Unit tests for RawWebsocketClient and WebsocketClient error paths."""
+
+import pytest
+
+from homeassistant_api.errors import ReceivingError, RequestError, ResponseError
+from homeassistant_api.rawwebsocket import RawWebsocketClient
+from homeassistant_api.models import websocket as ws_models
+
+
+def make_raw_client() -> RawWebsocketClient:
+    """Create a RawWebsocketClient without connecting."""
+    return RawWebsocketClient("ws://localhost:8123/api/websocket", "fake_token")
+
+
+def test_exit_without_connection() -> None:
+    """Tests __exit__ raises ReceivingError when connection is not open."""
+    client = make_raw_client()
+    with pytest.raises(ReceivingError, match="Connection is not open"):
+        client.__exit__(None, None, None)
+
+
+def test_send_without_connection() -> None:
+    """Tests _send raises ReceivingError when connection is not open."""
+    client = make_raw_client()
+    with pytest.raises(ReceivingError, match="Connection is not open"):
+        client._send({"type": "test"})
+
+
+def test_recv_without_connection() -> None:
+    """Tests _recv raises ReceivingError when connection is not open."""
+    client = make_raw_client()
+    with pytest.raises(ReceivingError, match="Connection is not open"):
+        client._recv()
+
+
+def test_handle_recv_message_without_id() -> None:
+    """Tests handle_recv raises ReceivingError for messages missing an id."""
+    client = make_raw_client()
+    with pytest.raises(ReceivingError, match="without an id"):
+        client.handle_recv({"type": "result", "success": True})
+
+
+def test_parse_response_error_result() -> None:
+    """Tests parse_response raises RequestError for failed result messages."""
+    client = make_raw_client()
+    client._result_responses[1] = None
+    with pytest.raises(RequestError):
+        client.parse_response(
+            {
+                "id": 1,
+                "type": "result",
+                "success": False,
+                "error": {"code": "not_found", "message": "Entity not found"},
+            }
+        )
+
+
+def test_parse_response_unexpected_type() -> None:
+    """Tests parse_response raises ReceivingError for unknown message types."""
+    client = make_raw_client()
+    with pytest.raises(ReceivingError, match="unexpected message type"):
+        client.parse_response({"id": 1, "type": "unknown_type"})
+
+
+def test_authentication_phase_invalid_welcome(monkeypatch) -> None:
+    """Tests authentication_phase raises ResponseError on invalid welcome message."""
+    client = make_raw_client()
+    monkeypatch.setattr(client, "_recv", lambda: {"type": "not_auth_required"})
+    with pytest.raises(
+        ResponseError, match="Unexpected response during authentication"
+    ):
+        client.authentication_phase()
+
+
+def test_authentication_phase_unexpected_auth_response(monkeypatch) -> None:
+    """Tests authentication_phase raises ResponseError when AuthOk.model_validate raises a non-ValidationError."""
+    call_count = 0
+
+    def fake_recv():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return {"type": "auth_required", "ha_version": "2024.1.0"}
+        return {"type": "auth_ok", "ha_version": "2024.1.0", "message": "unexpected"}
+
+    client = make_raw_client()
+    monkeypatch.setattr(client, "_recv", fake_recv)
+    monkeypatch.setattr(client, "_send", lambda data: None)
+
+    # Patch AuthOk.model_validate to raise a non-ValidationError exception
+
+    def raise_runtime_error(*args, **kwargs):
+        raise RuntimeError("something went wrong")
+
+    monkeypatch.setattr(ws_models.AuthOk, "model_validate", raise_runtime_error)
+
+    with pytest.raises(
+        ResponseError, match="Unexpected response during authentication"
+    ):
+        client.authentication_phase()

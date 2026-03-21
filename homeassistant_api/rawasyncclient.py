@@ -112,7 +112,7 @@ class RawAsyncClient(RawBaseClient):
             )
         except asyncio.exceptions.TimeoutError as err:
             raise RequestTimeoutError(
-                f'Home Assistant did not respond in time (timeout: {kwargs.get("timeout", 300)} sec)',
+                f"Home Assistant did not respond in time (timeout: {kwargs.get('timeout', 300)} sec)",
                 self.endpoint(path) + f"?{params}" * bool(params),
             ) from err
 
@@ -271,7 +271,7 @@ class RawAsyncClient(RawBaseClient):
         """
         data = await self.async_request("services")
         domains = map(
-            lambda json: Domain.from_json(json, client=cast(Client, self)),
+            lambda json: Domain.from_json_with_client(json, client=cast(Client, self)),
             cast(Tuple[dict[str, JSONType], ...], data),
         )
         return {domain.domain_id: domain for domain in domains}
@@ -382,7 +382,9 @@ class RawAsyncClient(RawBaseClient):
         data = await self.async_request("events")
         return tuple(
             map(
-                lambda json: Event.from_json(json, client=cast(Client, self)),
+                lambda json: Event.from_json_with_client(
+                    json, client=cast(Client, self)
+                ),
                 cast(List[dict[str, JSONType]], data),
             )
         )

@@ -30,11 +30,6 @@ class Context(BaseModel):
         description="Unique string identifying the user.",
     )
 
-    @classmethod
-    def from_json(cls, json: dict[str, JSONType]) -> "Context":
-        """Constructs Context model from json data"""
-        return cls.model_validate(json)
-
 
 class State(BaseModel):
     """A model representing a state of an entity."""
@@ -61,8 +56,3 @@ class State(BaseModel):
     context: Optional[Context] = Field(
         None, description="Provides information about the context of the state."
     )
-
-    @classmethod
-    def from_json(cls, json: dict[str, JSONType]) -> "State":
-        """Constructs State model from json data"""
-        return cls.model_validate(json)

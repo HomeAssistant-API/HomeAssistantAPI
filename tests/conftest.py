@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 from typing import AsyncGenerator, Generator, Literal, cast
@@ -35,14 +34,6 @@ def setup_cached_client(wait_for_server) -> Generator[Client, None, None]:
         yield cast(Client, client)
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Redefines the event loop with a broader scope."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
 @pytest_asyncio.fixture(name="async_cached_client", scope="session")
 async def setup_async_cached_client(
     wait_for_server: Literal[None],
@@ -59,7 +50,7 @@ async def setup_async_cached_client(
 @pytest.fixture(name="websocket_client", scope="session")
 def setup_websocket_client(
     wait_for_server: Literal[None],
-) -> Generator[Client, None, None]:
+) -> Generator[WebsocketClient, None, None]:
     """Initializes the Client and enters a WebSocket session."""
     with WebsocketClient(
         os.environ["HOMEASSISTANTAPI_WS_URL"],

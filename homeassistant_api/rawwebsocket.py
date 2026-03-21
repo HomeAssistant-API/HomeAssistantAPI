@@ -41,12 +41,12 @@ class RawWebsocketClient:
         self._conn = None
 
         self._id_counter = 0
-        self._result_responses: dict[int, Optional[ResultResponse]] = (
-            {}
-        )  # id -> response
-        self._event_responses: dict[int, list[EventResponse]] = (
-            {}
-        )  # id -> [response, ...]
+        self._result_responses: dict[
+            int, Optional[ResultResponse]
+        ] = {}  # id -> response
+        self._event_responses: dict[
+            int, list[EventResponse]
+        ] = {}  # id -> [response, ...]
         self._ping_responses: dict[int, PingResponse] = {}  # id -> (sent, received)
 
     def __repr__(self) -> str:
