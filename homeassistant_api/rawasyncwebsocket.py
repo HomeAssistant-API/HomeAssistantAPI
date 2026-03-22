@@ -300,7 +300,7 @@ class RawAsyncWebsocketClient(RawBaseWebsocketClient):
         """
         resp = await self.async_recv(await self.async_send("get_services"))
         domains = map(
-            lambda item: Domain.from_json(
+            lambda item: Domain.from_json_with_client(
                 {"domain": item[0], "services": item[1]},
                 client=cast(WebsocketClient, self),
             ),
