@@ -383,9 +383,9 @@ class ServiceFieldSelectorObject(BaseModel):
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
     scale: Optional[Union[int, float]] = None
-    error_correction_level: Optional[
-        ServiceFieldSelectorQRCodeErrorCorrectionLevel
-    ] = None
+    error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
+        None
+    )
     center_image: Optional[str] = None
 
 
@@ -614,14 +614,13 @@ class Service(BaseModel):
 
     async def async_trigger(
         self, **service_data
-    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]]:
+    ) -> Union[
+        Tuple[State, ...],
+        None,
+        dict[str, JSONType],
+        tuple[tuple[State, ...], dict[str, JSONType]],
+    ]:
         """Triggers the service associated with this object."""
-        from homeassistant_api import WebsocketClient  # prevent circular import
-
-        if isinstance(self.domain._client, WebsocketClient):
-            raise NotImplementedError(
-                "WebsocketClient does not support async/await syntax."
-            )
         try:
             return await self.domain._client.async_trigger_service_with_response(
                 self.domain.domain_id,
@@ -647,7 +646,12 @@ class Service(BaseModel):
         Coroutine[
             Any,
             Any,
-            Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]],
+            Union[
+                Tuple[State, ...],
+                Tuple[Tuple[State, ...], dict[str, JSONType]],
+                dict[str, JSONType],
+                None,
+            ],
         ],
     ]:
         """

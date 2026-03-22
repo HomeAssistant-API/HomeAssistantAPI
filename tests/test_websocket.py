@@ -1,8 +1,9 @@
-"""Unit tests for RawWebsocketClient and WebsocketClient error paths."""
+"""Unit tests for RawWebsocketClient, RawAsyncWebsocketClient, and WebsocketClient error paths."""
 
 import pytest
 
 from homeassistant_api.errors import ReceivingError, RequestError, ResponseError
+from homeassistant_api.rawasyncwebsocket import RawAsyncWebsocketClient
 from homeassistant_api.rawwebsocket import RawWebsocketClient
 from homeassistant_api.models import websocket as ws_models
 
@@ -10,6 +11,11 @@ from homeassistant_api.models import websocket as ws_models
 def make_raw_client() -> RawWebsocketClient:
     """Create a RawWebsocketClient without connecting."""
     return RawWebsocketClient("ws://localhost:8123/api/websocket", "fake_token")
+
+
+def make_raw_async_client() -> RawAsyncWebsocketClient:
+    """Create a RawAsyncWebsocketClient without connecting."""
+    return RawAsyncWebsocketClient("ws://localhost:8123/api/websocket", "fake_token")
 
 
 def test_exit_without_connection() -> None:
@@ -98,3 +104,70 @@ def test_authentication_phase_unexpected_auth_response(monkeypatch) -> None:
         ResponseError, match="Unexpected response during authentication"
     ):
         client.authentication_phase()
+
+
+async def test_async_aexit_without_connection() -> None:
+    """Tests __aexit__ raises ReceivingError when connection is not open."""
+    client = make_raw_async_client()
+    with pytest.raises(ReceivingError, match="Connection is not open"):
+        await client.__aexit__(None, None, None)
+
+
+async def test_async_send_without_connection() -> None:
+    """Tests _async_send raises ReceivingError when connection is not open."""
+    client = make_raw_async_client()
+    with pytest.raises(ReceivingError, match="Connection is not open"):
+        await client._async_send({"type": "test"})
+
+
+async def test_async_recv_without_connection() -> None:
+    """Tests _async_recv raises ReceivingError when connection is not open."""
+    client = make_raw_async_client()
+    with pytest.raises(ReceivingError, match="Connection is not open"):
+        await client._async_recv()
+
+
+async def test_async_authentication_phase_invalid_welcome(monkeypatch) -> None:
+    """Tests async_authentication_phase raises ResponseError on invalid welcome message."""
+    client = make_raw_async_client()
+
+    async def fake_recv():
+        return {"type": "not_auth_required"}
+
+    monkeypatch.setattr(client, "_async_recv", fake_recv)
+    with pytest.raises(
+        ResponseError, match="Unexpected response during authentication"
+    ):
+        await client.async_authentication_phase()
+
+
+async def test_async_authentication_phase_unexpected_auth_response(
+    monkeypatch,
+) -> None:
+    """Tests async_authentication_phase raises ResponseError when AuthOk.model_validate raises a non-ValidationError."""
+    call_count = 0
+
+    async def fake_recv():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return {"type": "auth_required", "ha_version": "2024.1.0"}
+        return {"type": "auth_ok", "ha_version": "2024.1.0", "message": "unexpected"}
+
+    client = make_raw_async_client()
+    monkeypatch.setattr(client, "_async_recv", fake_recv)
+
+    async def fake_send(data):
+        pass
+
+    monkeypatch.setattr(client, "_async_send", fake_send)
+
+    def raise_runtime_error(*args, **kwargs):
+        raise RuntimeError("something went wrong")
+
+    monkeypatch.setattr(ws_models.AuthOk, "model_validate", raise_runtime_error)
+
+    with pytest.raises(
+        ResponseError, match="Unexpected response during authentication"
+    ):
+        await client.async_authentication_phase()

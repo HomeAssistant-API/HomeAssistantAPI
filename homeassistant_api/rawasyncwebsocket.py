@@ -2,9 +2,18 @@ import contextlib
 import json
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Dict, Generator, Optional, Tuple, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncGenerator,
+    Dict,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
-import websockets.sync.client as ws
+import websockets.asyncio.client as ws
 from pydantic import ValidationError
 
 from homeassistant_api.errors import (
@@ -45,55 +54,43 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class RawWebsocketClient(RawBaseWebsocketClient):
-    _conn: Optional[ws.ClientConnection]
+class RawAsyncWebsocketClient(RawBaseWebsocketClient):
+    _async_conn: Optional[ws.ClientConnection]
 
     def __init__(self, api_url: str, token: str) -> None:
         super().__init__(api_url, token)
-        self._conn = None
+        self._async_conn = None
 
-        self._id_counter = 0
-        self._result_responses: dict[
-            int, Optional[ResultResponse]
-        ] = {}  # id -> response
-        self._event_responses: dict[
-            int, list[EventResponse]
-        ] = {}  # id -> [response, ...]
-        self._ping_responses: dict[int, PingResponse] = {}  # id -> (sent, received)
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.api_url!r})"
-
-    def __enter__(self):
-        self._conn = ws.connect(self.api_url)
-        self._conn.__enter__()
-        okay = self.authentication_phase()
+    async def __aenter__(self):
+        self._async_conn = await ws.connect(self.api_url)
+        await self._async_conn.__aenter__()
+        okay = await self.async_authentication_phase()
         logging.info("Authenticated with Home Assistant (%s)", okay.ha_version)
-        self.supported_features_phase()
+        await self.async_supported_features_phase()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        if not self._conn:
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        if not self._async_conn:
             raise ReceivingError("Connection is not open!")
-        self._conn.__exit__(exc_type, exc_value, traceback)
-        self._conn = None
+        await self._async_conn.__aexit__(exc_type, exc_value, traceback)
+        self._async_conn = None
 
-    def _send(self, data: dict[str, JSONType]) -> None:
+    async def _async_send(self, data: dict[str, JSONType]) -> None:
         """Send a message to the websocket server."""
         logger.debug(f"Sending message: {data}")
-        if self._conn is None:
+        if self._async_conn is None:
             raise ReceivingError("Connection is not open!")
-        self._conn.send(json.dumps(data))
+        await self._async_conn.send(json.dumps(data))
 
-    def _recv(self) -> dict[str, JSONType]:
+    async def _async_recv(self) -> dict[str, JSONType]:
         """Receive a message from the websocket server."""
-        if self._conn is None:
+        if self._async_conn is None:
             raise ReceivingError("Connection is not open!")
-        _bytes = self._conn.recv()
+        _bytes = await self._async_conn.recv()
         logger.debug("Received message: %s", _bytes)
         return cast(dict[str, JSONType], json.loads(_bytes))
 
-    def send(self, type: str, include_id: bool = True, **data: Any) -> int:
+    async def async_send(self, type: str, include_id: bool = True, **data: Any) -> int:
         """
         Send a command message to the websocket server and wait for a "result" response.
 
@@ -103,7 +100,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             data["id"] = self._request_id()
 
         data["type"] = type
-        self._send(data)
+        await self._async_send(data)
 
         if "id" in data:
             assert isinstance(data["id"], int)
@@ -119,7 +116,9 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             return data["id"]
         return -1  # non-command messages don't have an id
 
-    def recv(self, id: int) -> Union[EventResponse, ResultResponse, PingResponse]:
+    async def async_recv(
+        self, id: int
+    ) -> Union[EventResponse, ResultResponse, PingResponse]:
         """Receive a response to a message from the websocket server."""
         while True:
             ## have we received a message with the id we're looking for?
@@ -134,23 +133,23 @@ class RawWebsocketClient(RawBaseWebsocketClient):
                     return self._ping_responses.pop(id)
 
             ## if not, keep receiving messages until we do
-            self.handle_recv(self._recv())
+            self.handle_recv(await self._async_recv())
 
-    def authentication_phase(self) -> AuthOk:
+    async def async_authentication_phase(self) -> AuthOk:
         """Authenticate with the websocket server."""
         # Capture the first message from the server saying we need to authenticate
         try:
-            welcome = AuthRequired.model_validate(self._recv())
+            welcome = AuthRequired.model_validate(await self._async_recv())
             logger.debug(f"Received welcome message: {welcome}")
         except ValidationError as e:
             raise ResponseError("Unexpected response during authentication") from e
 
         # Send our authentication token
-        self.send("auth", access_token=self.token, include_id=False)
+        await self.async_send("auth", access_token=self.token, include_id=False)
         logger.debug("Sent auth message")
 
         # Check the response
-        resp = self._recv()
+        resp = await self._async_recv()
         try:
             return AuthOk.model_validate(resp)
         except ValidationError as e:
@@ -161,10 +160,10 @@ class RawWebsocketClient(RawBaseWebsocketClient):
                 "Unexpected response during authentication", resp["message"]
             ) from e
 
-    def supported_features_phase(self) -> None:
+    async def async_supported_features_phase(self) -> None:
         """Get the supported features from the websocket server."""
-        resp = self.recv(
-            self.send(
+        resp = await self.async_recv(
+            await self.async_send(
                 "supported_features",
                 features={
                     # "coalesce_messages": 42, # including this key sets it to True
@@ -173,27 +172,29 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         )
         assert cast(ResultResponse, resp).result is None
 
-    def ping_latency(self) -> float:
+    async def async_ping_latency(self) -> float:
         """Get the latency (in milliseconds) of the connection by sending a ping message."""
-        pong = cast(PingResponse, self.recv(self.send("ping")))
+        pong = cast(PingResponse, await self.async_recv(await self.async_send("ping")))
         assert pong.end is not None
         return (pong.end - pong.start) / 1_000_000
 
-    def get_rendered_template(self, template: str) -> str:
+    async def async_get_rendered_template(self, template: str) -> str:
         """
         Renders a Jinja2 template with Home Assistant context data.
         See https://www.home-assistant.io/docs/configuration/templating.
 
         Sends command :code:`{"type": "render_template", ...}`.
         """
-        id = self.send("render_template", template=template, report_errors=True)
-        first = self.recv(id)
+        id = await self.async_send(
+            "render_template", template=template, report_errors=True
+        )
+        first = await self.async_recv(id)
         assert cast(ResultResponse, first).result is None
-        second = self.recv(id)
-        self._unsubscribe(id)
+        second = await self.async_recv(id)
+        await self._async_unsubscribe(id)
         return cast(TemplateEvent, cast(EventResponse, second).event).result
 
-    def get_config(self) -> dict[str, JSONType]:
+    async def async_get_config(self) -> dict[str, JSONType]:
         """
         Get the Home Assistant configuration.
 
@@ -203,11 +204,11 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             dict[str, JSONType],
             cast(
                 ResultResponse,
-                self.recv(self.send("get_config")),
+                await self.async_recv(await self.async_send("get_config")),
             ).result,
         )
 
-    def get_states(self) -> Tuple[State, ...]:
+    async def async_get_states(self) -> Tuple[State, ...]:
         """
         Get a list of states.
 
@@ -217,11 +218,14 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             State.from_json(state)
             for state in cast(
                 list[dict[str, JSONType]],
-                cast(ResultResponse, self.recv(self.send("get_states"))).result,
+                cast(
+                    ResultResponse,
+                    await self.async_recv(await self.async_send("get_states")),
+                ).result,
             )
         )
 
-    def get_state(  # pylint: disable=duplicate-code
+    async def async_get_state(  # pylint: disable=duplicate-code
         self,
         *,
         entity_id: Optional[str] = None,
@@ -240,18 +244,18 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             entity_id=entity_id,
         )
 
-        for state in self.get_states():
+        for state in await self.async_get_states():
             if state.entity_id == entity_id:
                 return state
         raise ValueError(f"Entity {entity_id} not found!")
 
-    def get_entities(self) -> Dict[str, Group]:
+    async def async_get_entities(self) -> Dict[str, Group]:
         """
         Fetches all entities from the Websocket API and returns them as a dictionary of :py:class:`Group`'s.
         For example :code:`light.living_room` would be in the group :code:`light` (i.e. :code:`get_entities()["light"].living_room`).
         """
         entities: Dict[str, Group] = {}
-        for state in self.get_states():
+        for state in await self.async_get_states():
             group_id, entity_slug = state.entity_id.split(".")
             if group_id not in entities:
                 entities[group_id] = Group(
@@ -261,7 +265,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             entities[group_id]._add_entity(entity_slug, state)
         return entities
 
-    def get_entity(
+    async def async_get_entity(
         self,
         group_id: Optional[str] = None,
         slug: Optional[str] = None,
@@ -276,9 +280,9 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         There is a lot of disappointment and frustration in the community because this is not available.
         """
         if group_id is not None and slug is not None:
-            state = self.get_state(group_id=group_id, slug=slug)
+            state = await self.async_get_state(group_id=group_id, slug=slug)
         elif entity_id is not None:
-            state = self.get_state(entity_id=entity_id)
+            state = await self.async_get_state(entity_id=entity_id)
         else:
             help_msg = (
                 "Use keyword arguments to pass entity_id. "
@@ -295,7 +299,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         group._add_entity(split_slug, state)
         return group.get_entity(split_slug)
 
-    def get_domains(self) -> dict[str, Domain]:
+    async def async_get_domains(self) -> dict[str, Domain]:
         """
         Get a list of services that Home Assistant offers (organized into a dictionary of service domains).
 
@@ -303,7 +307,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
 
         Sends command :code:`{"type": "get_services", ...}`.
         """
-        resp = self.recv(self.send("get_services"))
+        resp = await self.async_recv(await self.async_send("get_services"))
         domains = map(
             lambda item: Domain.from_json_with_client(
                 {"domain": item[0], "services": item[1]},
@@ -313,7 +317,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         )
         return {domain.domain_id: domain for domain in domains}
 
-    def get_domain(self, domain: str) -> Domain:
+    async def async_get_domain(self, domain: str) -> Domain:
         """Get a domain.
 
         Note: This is not a method in the WS API client... yet.
@@ -322,9 +326,9 @@ class RawWebsocketClient(RawBaseWebsocketClient):
 
         For now, just call the :py:meth":`get_domains` method and parsing the result.
         """
-        return self.get_domains()[domain]
+        return (await self.async_get_domains())[domain]
 
-    def trigger_service(
+    async def async_trigger_service(
         self,
         domain: str,
         service: str,
@@ -345,7 +349,9 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         if entity_id is not None:
             params["target"] = {"entity_id": entity_id}
 
-        data = self.recv(self.send("call_service", include_id=True, **params))
+        data = await self.async_recv(
+            await self.async_send("call_service", include_id=True, **params)
+        )
 
         # TODO: handle data["result"]["context"] ?
 
@@ -357,7 +363,7 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             is None
         )  # should always be None for services without a response
 
-    def trigger_service_with_response(
+    async def async_trigger_service_with_response(
         self,
         domain: str,
         service: str,
@@ -378,17 +384,19 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         if entity_id is not None:
             params["target"] = {"entity_id": entity_id}
 
-        data = self.recv(self.send("call_service", include_id=True, **params))
+        data = await self.async_recv(
+            await self.async_send("call_service", include_id=True, **params)
+        )
 
         return cast(dict[str, dict[str, JSONType]], cast(ResultResponse, data).result)[
             "response"
         ]
 
-    @contextlib.contextmanager
-    def listen_events(
+    @contextlib.asynccontextmanager
+    async def async_listen_events(
         self,
         event_type: Optional[str] = None,
-    ) -> Generator[Generator[FiredEvent, None, None], None, None]:
+    ) -> AsyncGenerator[AsyncGenerator[FiredEvent, None], None]:
         """
         Listen for all events of a certain type.
 
@@ -396,15 +404,15 @@ class RawWebsocketClient(RawBaseWebsocketClient):
 
         .. code-block:: python
 
-            with ws_client.listen_events("test_event") as events:
-                for i, event in zip(range(2), events):  # to only wait for two events to be received
+            async with ws_client.listen_events("test_event") as events:
+                async for i, event in zip(range(2), events):  # to only wait for two events to be received
                     print(event)
         """
-        subscription = self._subscribe_events(event_type)
-        yield cast(Generator[FiredEvent, None, None], self._wait_for(subscription))
-        self._unsubscribe(subscription)
+        subscription = await self._async_subscribe_events(event_type)
+        yield cast(AsyncGenerator[FiredEvent, None], self._async_wait_for(subscription))
+        await self._async_unsubscribe(subscription)
 
-    def _subscribe_events(self, event_type: Optional[str]) -> int:
+    async def _async_subscribe_events(self, event_type: Optional[str]) -> int:
         """
         Subscribe to all events of a certain type.
 
@@ -412,12 +420,16 @@ class RawWebsocketClient(RawBaseWebsocketClient):
         Sends command :code:`{"type": "subscribe_events", ...}`.
         """
         params = {"event_type": event_type} if event_type else {}
-        return self.recv(self.send("subscribe_events", include_id=True, **params)).id
+        return (
+            await self.async_recv(
+                await self.async_send("subscribe_events", include_id=True, **params)
+            )
+        ).id
 
-    @contextlib.contextmanager
-    def listen_trigger(
+    @contextlib.asynccontextmanager
+    async def async_listen_trigger(
         self, trigger: str, **trigger_fields
-    ) -> Generator[Generator[dict[str, JSONType], None, None], None, None]:
+    ) -> AsyncGenerator[AsyncGenerator[dict[str, JSONType], None], None]:
         """
         Listen to a Home Assistant trigger.
         Allows additional trigger keyword parameters with :code:`**kwargs` (i.e. passing :code:`tag_id=...` for NFC tag triggers).
@@ -431,12 +443,12 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             - trigger: state
               entity_id: light.kitchen
 
-        To subscribe to that same state trigger with :py:class:`WebsocketClient` instead
+        To subscribe to that same state trigger with :py:class:`AsyncWebsocketClient` instead
 
         .. code-block:: python
 
-            with ws_client.listen_trigger("state", entity_id="light.kitchen") as trigger:
-                for event in trigger:  # will iterate until we manually break out of the loop
+            async with ws_client.listen_trigger("state", entity_id="light.kitchen") as trigger:
+                async for event in trigger:  # will iterate until we manually break out of the loop
                     print(event)
                     if <some_condition>:
                         break
@@ -444,31 +456,33 @@ class RawWebsocketClient(RawBaseWebsocketClient):
 
         Woohoo! We can now listen to triggers in Python code!
         """
-        subscription = self._subscribe_trigger(trigger, **trigger_fields)
+        subscription = await self._async_subscribe_trigger(trigger, **trigger_fields)
         yield (
             fired_trigger.variables
-            for fired_trigger in cast(
-                Generator[FiredTrigger, None, None],
-                self._wait_for(subscription),
+            async for fired_trigger in cast(
+                AsyncGenerator[FiredTrigger, None],
+                self._async_wait_for(subscription),
             )
         )
-        self._unsubscribe(subscription)
+        await self._async_unsubscribe(subscription)
 
-    def _subscribe_trigger(self, trigger: str, **trigger_fields) -> int:
+    async def _async_subscribe_trigger(self, trigger: str, **trigger_fields) -> int:
         """
         Return the subscription id of the trigger we subscribe to.
 
         Sends command :code:`{"type": "subscribe_trigger", ...}`.
         """
-        return self.recv(
-            self.send(
-                "subscribe_trigger", trigger={"platform": trigger, **trigger_fields}
+        return (
+            await self.async_recv(
+                await self.async_send(
+                    "subscribe_trigger", trigger={"platform": trigger, **trigger_fields}
+                )
             )
         ).id
 
-    def _wait_for(
+    async def _async_wait_for(
         self, subscription_id: int
-    ) -> Generator[Union[FiredEvent, FiredTrigger], None, None]:
+    ) -> AsyncGenerator[Union[FiredEvent, FiredTrigger], None]:
         """
         An iterator that waits for events of a certain type.
         """
@@ -477,26 +491,28 @@ class RawWebsocketClient(RawBaseWebsocketClient):
                 Union[
                     FiredEvent, FiredTrigger
                 ],  # we can cast this because TemplateEvent is only used for rendering templates
-                cast(EventResponse, self.recv(subscription_id)).event,
+                cast(EventResponse, await self.async_recv(subscription_id)).event,
             )
 
-    def _unsubscribe(self, subcription_id: int) -> None:
+    async def _async_unsubscribe(self, subcription_id: int) -> None:
         """
         Unsubscribe from all events of a certain type.
 
         Sends command :code:`{"type": "unsubscribe_events", ...}`.
         """
-        resp = self.recv(self.send("unsubscribe_events", subscription=subcription_id))
+        resp = await self.async_recv(
+            await self.async_send("unsubscribe_events", subscription=subcription_id)
+        )
         assert cast(ResultResponse, resp).result is None
         self._event_responses.pop(subcription_id)
 
-    def get_config_entries(self) -> Tuple[ConfigEntry, ...]:
+    async def async_get_config_entries(self) -> Tuple[ConfigEntry, ...]:
         """
         Get all config entries.
 
         Sends command :code:`{"type": "config_entries/get", ...}`.
         """
-        resp = self.recv(self.send("config_entries/get"))
+        resp = await self.async_recv(await self.async_send("config_entries/get"))
         return tuple(
             ConfigEntry.from_json(entry)
             for entry in cast(
@@ -505,14 +521,14 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             )
         )
 
-    def disable_config_entry(self, entry_id: str) -> DisableEnableResult:
+    async def async_disable_config_entry(self, entry_id: str) -> DisableEnableResult:
         """
         Disable a config entry.
 
         Sends command :code:`{"type": "config_entries/disable", ...}`.
         """
-        resp = self.recv(
-            self.send(
+        resp = await self.async_recv(
+            await self.async_send(
                 "config_entries/disable",
                 entry_id=entry_id,
                 disabled_by="user",
@@ -522,14 +538,14 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             cast(dict[str, JSONType], cast(ResultResponse, resp).result)
         )
 
-    def enable_config_entry(self, entry_id: str) -> DisableEnableResult:
+    async def async_enable_config_entry(self, entry_id: str) -> DisableEnableResult:
         """
         Enable a config entry.
 
         Sends command :code:`{"type": "config_entries/disable", ...}`.
         """
-        resp = self.recv(
-            self.send(
+        resp = await self.async_recv(
+            await self.async_send(
                 "config_entries/disable",
                 entry_id=entry_id,
                 disabled_by=None,
@@ -539,27 +555,29 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             cast(dict[str, JSONType], cast(ResultResponse, resp).result)
         )
 
-    def ignore_config_flow(self, flow_id: str, title: str) -> None:
+    async def async_ignore_config_flow(self, flow_id: str, title: str) -> None:
         """
         Ignore a config flow.
 
         Sends command :code:`{"type": "config_entries/ignore_flow", ...}`.
         """
-        self.recv(
-            self.send(
+        await self.async_recv(
+            await self.async_send(
                 "config_entries/ignore_flow",
                 flow_id=flow_id,
                 title=title,
             )
         )
 
-    def get_nonuser_flows_in_progress(self) -> Tuple[FlowResult, ...]:
+    async def async_get_nonuser_flows_in_progress(self) -> Tuple[FlowResult, ...]:
         """
         Get non-user config flows in progress.
 
         Sends command :code:`{"type": "config_entries/flow/progress", ...}`.
         """
-        resp = self.recv(self.send("config_entries/flow/progress"))
+        resp = await self.async_recv(
+            await self.async_send("config_entries/flow/progress")
+        )
         return tuple(
             FlowResult.from_json(flow)
             for flow in cast(
@@ -568,13 +586,17 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             )
         )
 
-    def get_entry_subentries(self, entry_id: str) -> Tuple[ConfigSubEntry, ...]:
+    async def async_get_entry_subentries(
+        self, entry_id: str
+    ) -> Tuple[ConfigSubEntry, ...]:
         """
         Get subentries for a config entry.
 
         Sends command :code:`{"type": "config_entries/subentries/list", ...}`.
         """
-        resp = self.recv(self.send("config_entries/subentries/list", entry_id=entry_id))
+        resp = await self.async_recv(
+            await self.async_send("config_entries/subentries/list", entry_id=entry_id)
+        )
         return tuple(
             ConfigSubEntry.from_json(subentry)
             for subentry in cast(
@@ -583,43 +605,47 @@ class RawWebsocketClient(RawBaseWebsocketClient):
             )
         )
 
-    def delete_entry_subentry(self, entry_id: str, subentry_id: str) -> None:
+    async def async_delete_entry_subentry(
+        self, entry_id: str, subentry_id: str
+    ) -> None:
         """
         Delete a subentry from a config entry.
 
         Sends command :code:`{"type": "config_entries/subentries/delete", ...}`.
         """
-        self.recv(
-            self.send(
+        await self.async_recv(
+            await self.async_send(
                 "config_entries/subentries/delete",
                 entry_id=entry_id,
                 subentry_id=subentry_id,
             )
         )
 
-    @contextlib.contextmanager
-    def listen_config_entries(
+    @contextlib.asynccontextmanager
+    async def async_listen_config_entries(
         self,
-    ) -> Generator[Generator[list[ConfigEntryEvent], None, None], None, None]:
+    ) -> AsyncGenerator[AsyncGenerator[list[ConfigEntryEvent], None], None]:
         """
         Listen for config entry changes.
 
         Sends command :code:`{"type": "config_entries/subscribe", ...}`.
         """
-        subscription = self.recv(self.send("config_entries/subscribe")).id
-        yield self._wait_for_config_entries(subscription)
-        self._unsubscribe(subscription)
+        subscription = (
+            await self.async_recv(await self.async_send("config_entries/subscribe"))
+        ).id
+        yield self._async_wait_for_config_entries(subscription)
+        await self._async_unsubscribe(subscription)
 
-    def _wait_for_config_entries(
+    async def _async_wait_for_config_entries(
         self, subscription_id: int
-    ) -> Generator[list[ConfigEntryEvent], None, None]:
-        """An iterator that waits for config entry events."""
+    ) -> AsyncGenerator[list[ConfigEntryEvent], None]:
+        """An async iterator that waits for config entry events."""
         while True:
-            event_resp = cast(EventResponse, self.recv(subscription_id))
+            event_resp = cast(EventResponse, await self.async_recv(subscription_id))
             entries = cast(list[dict[str, JSONType]], event_resp.event)
             yield [ConfigEntryEvent.from_json(entry) for entry in entries]
 
-    def fire_event(self, event_type: str, **event_data) -> Context:
+    async def async_fire_event(self, event_type: str, **event_data) -> Context:
         """
         Fire an event.
 
@@ -633,7 +659,9 @@ class RawWebsocketClient(RawBaseWebsocketClient):
                 dict[str, dict[str, JSONType]],
                 cast(
                     ResultResponse,
-                    self.recv(self.send("fire_event", include_id=True, **params)),
+                    await self.async_recv(
+                        await self.async_send("fire_event", include_id=True, **params)
+                    ),
                 ).result,
             )["context"]
         )

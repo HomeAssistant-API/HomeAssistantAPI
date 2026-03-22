@@ -57,3 +57,16 @@ def setup_websocket_client(
         os.environ["HOMEASSISTANTAPI_TOKEN"],
     ) as client:
         yield client
+
+
+@pytest.fixture(name="async_websocket_client", scope="session")
+async def setup_async_websocket_client(
+    wait_for_server: Literal[None],
+) -> AsyncGenerator[WebsocketClient, None]:
+    """Initializes the Client and enters an async WebSocket session."""
+    async with WebsocketClient(
+        os.environ["HOMEASSISTANTAPI_WS_URL"],
+        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        use_async=True,
+    ) as client:
+        yield client

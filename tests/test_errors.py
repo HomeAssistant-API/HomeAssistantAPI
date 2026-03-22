@@ -45,6 +45,16 @@ def test_websocket_unauthorized() -> None:
             pass
 
 
+async def test_async_websocket_unauthorized() -> None:
+    with pytest.raises(UnauthorizedError):
+        async with WebsocketClient(
+            os.environ["HOMEASSISTANTAPI_WS_URL"],
+            "lolthisisawrongtokenforsure",
+            use_async=True,
+        ):
+            pass
+
+
 async def test_async_unauthorized() -> None:
     with pytest.raises(UnauthorizedError):
         async with Client(

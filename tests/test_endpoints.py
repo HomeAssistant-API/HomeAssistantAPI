@@ -129,6 +129,19 @@ def test_websocket_get_rendered_template(websocket_client: WebsocketClient) -> N
     }
 
 
+async def test_async_websocket_get_rendered_template(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "render_template"` websocket command."""
+    rendered_template = await async_websocket_client.async_get_rendered_template(
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+    )
+    assert rendered_template in {
+        "The sun is above the horizon.",
+        "The sun is below the horizon.",
+    }
+
+
 def test_check_api_config(cached_client: Client) -> None:
     """Tests the `POST /api/config/core/check_config` endpoint."""
     assert cached_client.check_api_config()
@@ -154,6 +167,15 @@ async def test_async_get_entities(async_cached_client: Client) -> None:
 def test_websocket_get_config(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_config"` websocket command."""
     config = websocket_client.get_config()
+    assert isinstance(config, dict)
+    assert config.get("state") in {"RUNNING", "NOT_RUNNING"}
+
+
+async def test_async_websocket_get_config(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "get_config"` websocket command."""
+    config = await async_websocket_client.async_get_config()
     assert isinstance(config, dict)
     assert config.get("state") in {"RUNNING", "NOT_RUNNING"}
 
@@ -187,6 +209,53 @@ def test_websocket_get_entity_no_args(websocket_client: WebsocketClient) -> None
         websocket_client.get_entity()
 
 
+async def test_async_websocket_get_state(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests async WebsocketClient.async_get_state with entity_id."""
+    state = await async_websocket_client.async_get_state(entity_id="sun.sun")
+    assert state.entity_id == "sun.sun"
+    assert state.state in {"above_horizon", "below_horizon"}
+
+
+async def test_async_websocket_get_entity_by_group_slug(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests async WebsocketClient.async_get_entity with group_id and slug."""
+    entity = await async_websocket_client.async_get_entity(group_id="sun", slug="sun")
+    assert entity is not None
+    assert entity.entity_id == "sun.sun"
+
+
+async def test_async_websocket_get_entity_by_entity_id(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests async WebsocketClient.async_get_entity with entity_id."""
+    entity = await async_websocket_client.async_get_entity(entity_id="sun.sun")
+    assert entity is not None
+    assert entity.entity_id == "sun.sun"
+
+
+async def test_async_websocket_get_entity_no_args(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests async WebsocketClient.async_get_entity raises ValueError with no arguments."""
+    with pytest.raises(
+        ValueError, match="Neither group_id and slug or entity_id provided"
+    ):
+        await async_websocket_client.async_get_entity()
+
+
+async def test_async_websocket_get_state_not_found(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests async WebsocketClient.async_get_state raises ValueError for nonexistent entity."""
+    with pytest.raises(ValueError, match="not found"):
+        await async_websocket_client.async_get_state(
+            entity_id="fake.nonexistent_entity_12345"
+        )
+
+
 def test_websocket_get_state_not_found(websocket_client: WebsocketClient) -> None:
     """Tests WebsocketClient.get_state raises ValueError for nonexistent entity."""
     with pytest.raises(ValueError, match="not found"):
@@ -196,6 +265,14 @@ def test_websocket_get_state_not_found(websocket_client: WebsocketClient) -> Non
 def test_websocket_get_entities(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_entities"` websocket command."""
     entities = websocket_client.get_entities()
+    assert "sun" in entities
+
+
+async def test_async_websocket_get_entities(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "get_entities"` websocket command."""
+    entities = await async_websocket_client.async_get_entities()
     assert "sun" in entities
 
 
@@ -214,6 +291,14 @@ async def test_async_get_domains(async_cached_client: Client) -> None:
 def test_websocket_get_domains(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_domains"` websocket command."""
     domains = websocket_client.get_domains()
+    assert "homeassistant" in domains
+
+
+async def test_async_websocket_get_domains(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "get_domains"` websocket command."""
+    domains = await async_websocket_client.async_get_domains()
     assert "homeassistant" in domains
 
 
@@ -238,10 +323,27 @@ def test_websocket_get_domain(websocket_client: WebsocketClient) -> None:
     assert domain.services
 
 
+async def test_async_websocket_get_domain(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "get_domain"` websocket command."""
+    domain = await async_websocket_client.async_get_domain("homeassistant")
+    assert domain is not None
+    assert domain.services
+
+
 def test_get_nonuser_flows_in_progress(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/flow/progress"` websocket command."""
     # No flows in progress
     flows = websocket_client.get_nonuser_flows_in_progress()
+    assert not flows
+
+
+async def test_async_get_nonuser_flows_in_progress(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "config_entries/flow/progress"` websocket command."""
+    flows = await async_websocket_client.async_get_nonuser_flows_in_progress()
     assert not flows
 
 
@@ -261,21 +363,42 @@ def test_disable_enable_config_entry(websocket_client: WebsocketClient) -> None:
     # Re-enable
     websocket_client.enable_config_entry(entry.entry_id)
 
-    # Check that it was enable
+    # Check that it was enabled
     enabled_entry = websocket_client.get_config_entries()[0]
+    assert enabled_entry.disabled_by is None
+
+
+async def test_async_disable_enable_config_entry(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "config_entries/disable"` websocket command."""
+    entry = (await async_websocket_client.async_get_config_entries())[0]
+    assert entry.disabled_by is None
+
+    await async_websocket_client.async_disable_config_entry(entry.entry_id)
+
+    disabled_entry = (await async_websocket_client.async_get_config_entries())[0]
+    assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+
+    await async_websocket_client.async_enable_config_entry(entry.entry_id)
+
+    enabled_entry = (await async_websocket_client.async_get_config_entries())[0]
     assert enabled_entry.disabled_by is None
 
 
 def test_ignore_config_flow(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
     # Currently not able to test as no flows are in progress. Send invalid parameters and handle that error
-    try:
+    with pytest.raises(RequestError, match="Config entry not found"):
         websocket_client.ignore_config_flow("", "")
-    except RequestError as error:
-        assert (
-            error.__str__()
-            == "An error occurred while making the request to 'Config entry not found' with data: 'not_found'"
-        )
+
+
+async def test_async_ignore_config_flow(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
+    with pytest.raises(RequestError, match="Config entry not found"):
+        await async_websocket_client.async_ignore_config_flow("", "")
 
 
 def test_get_config_entries(websocket_client: WebsocketClient) -> None:
@@ -307,6 +430,20 @@ def test_get_config_entries(websocket_client: WebsocketClient) -> None:
     assert sun.num_subentries == 0
 
 
+async def test_async_get_config_entries(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "config_entries/get"` websocket command."""
+    entries = await async_websocket_client.async_get_config_entries()
+    assert len(entries) == 4
+
+    sun = entries[0]
+    assert sun.entry_id == "5f8426fa502435857743f302651753c9"
+    assert sun.domain == "sun"
+    assert sun.title == "Sun"
+    assert sun.disabled_by is None
+
+
 def test_get_entry_subentries(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/subentries/list"` websocket command."""
     # Currently not able to test as no entries with subentries available
@@ -318,16 +455,28 @@ def test_get_entry_subentries(websocket_client: WebsocketClient) -> None:
     assert not websocket_client.get_entry_subentries(sun.entry_id)
 
 
+async def test_async_get_entry_subentries(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "config_entries/subentries/list"` websocket command."""
+    sun = (await async_websocket_client.async_get_config_entries())[0]
+    assert sun
+    assert not await async_websocket_client.async_get_entry_subentries(sun.entry_id)
+
+
 def test_delete_entry_subentry(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
     # Currently not able to test as no entries with subentries available. Send invalid parameters and handle that error
-    try:
+    with pytest.raises(RequestError, match="Config entry not found"):
         websocket_client.delete_entry_subentry("", "")
-    except RequestError as error:
-        assert (
-            error.__str__()
-            == "An error occurred while making the request to 'Config entry not found' with data: 'not_found'"
-        )
+
+
+async def test_async_delete_entry_subentry(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
+    with pytest.raises(RequestError, match="Config entry not found"):
+        await async_websocket_client.async_delete_entry_subentry("", "")
 
 
 def test_trigger_service(cached_client: Client) -> None:
@@ -358,6 +507,19 @@ def test_websocket_trigger_service(websocket_client: WebsocketClient) -> None:
     notify = websocket_client.get_domain("notify")
     assert notify is not None
     resp = notify.persistent_notification(
+        message="Your API Test Suite just said hello!", title="Test Suite Notifcation"
+    )
+    # Websocket API doesnt return changed states so we check for None
+    assert resp is None
+
+
+async def test_async_websocket_trigger_service(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "trigger_service"` websocket command."""
+    notify = await async_websocket_client.async_get_domain("notify")
+    assert notify is not None
+    resp = await notify.persistent_notification(
         message="Your API Test Suite just said hello!", title="Test Suite Notifcation"
     )
     # Websocket API doesnt return changed states so we check for None
@@ -416,6 +578,20 @@ def test_websocket_trigger_service_with_response(
     assert data is not None
 
 
+async def test_async_websocket_trigger_service_with_response(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "trigger_service_with_response"` websocket command."""
+    weather = await async_websocket_client.async_get_domain("weather")
+    assert weather is not None
+    data = await weather.get_forecasts(
+        entity_id="weather.forecast_home",
+        type="hourly",
+    )
+    # Websocket API doesnt return changed states so we check data is not None because we expect a response
+    assert data is not None
+
+
 def test_get_states(cached_client: Client) -> None:
     """Tests the `GET /api/states` endpoint."""
     states = cached_client.get_states()
@@ -433,6 +609,15 @@ async def test_async_get_states(async_cached_client: Client) -> None:
 def test_websocket_get_states(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "get_states"` websocket command."""
     states = websocket_client.get_states()
+    for state in states:
+        assert isinstance(state, State)
+
+
+async def test_async_websocket_get_states(
+    async_websocket_client: WebsocketClient,
+) -> None:
+    """Tests the `"type": "get_states"` websocket command."""
+    states = await async_websocket_client.async_get_states()
     for state in states:
         assert isinstance(state, State)
 
