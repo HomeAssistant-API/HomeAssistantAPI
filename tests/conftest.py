@@ -62,7 +62,7 @@ def setup_websocket_client(
 @pytest.fixture(name="async_websocket_client", scope="session")
 async def setup_async_websocket_client(
     wait_for_server: Literal[None],
-) -> AsyncGenerator[Client, None]:
+) -> AsyncGenerator[WebsocketClient, None]:
     """Initializes the Client and enters an async WebSocket session."""
     async with WebsocketClient(
         os.environ["HOMEASSISTANTAPI_WS_URL"],

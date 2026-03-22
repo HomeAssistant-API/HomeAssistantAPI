@@ -21,7 +21,16 @@ from homeassistant_api.errors import (
     ResponseError,
     UnauthorizedError,
 )
-from homeassistant_api.models import Domain, Entity, Group, State
+from homeassistant_api.models import (
+    ConfigEntry,
+    ConfigEntryEvent,
+    ConfigSubEntry,
+    Domain,
+    Entity,
+    Group,
+    State,
+)
+from homeassistant_api.models.config_entries import DisableEnableResult, FlowResult
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import (
     AuthInvalid,
@@ -496,6 +505,145 @@ class RawAsyncWebsocketClient(RawBaseWebsocketClient):
         )
         assert cast(ResultResponse, resp).result is None
         self._event_responses.pop(subcription_id)
+
+    async def async_get_config_entries(self) -> Tuple[ConfigEntry, ...]:
+        """
+        Get all config entries.
+
+        Sends command :code:`{"type": "config_entries/get", ...}`.
+        """
+        resp = await self.async_recv(await self.async_send("config_entries/get"))
+        return tuple(
+            ConfigEntry.from_json(entry)
+            for entry in cast(
+                list[dict[str, JSONType]],
+                cast(ResultResponse, resp).result,
+            )
+        )
+
+    async def async_disable_config_entry(self, entry_id: str) -> DisableEnableResult:
+        """
+        Disable a config entry.
+
+        Sends command :code:`{"type": "config_entries/disable", ...}`.
+        """
+        resp = await self.async_recv(
+            await self.async_send(
+                "config_entries/disable",
+                entry_id=entry_id,
+                disabled_by="user",
+            )
+        )
+        return DisableEnableResult.from_json(
+            cast(dict[str, JSONType], cast(ResultResponse, resp).result)
+        )
+
+    async def async_enable_config_entry(self, entry_id: str) -> DisableEnableResult:
+        """
+        Enable a config entry.
+
+        Sends command :code:`{"type": "config_entries/disable", ...}`.
+        """
+        resp = await self.async_recv(
+            await self.async_send(
+                "config_entries/disable",
+                entry_id=entry_id,
+                disabled_by=None,
+            )
+        )
+        return DisableEnableResult.from_json(
+            cast(dict[str, JSONType], cast(ResultResponse, resp).result)
+        )
+
+    async def async_ignore_config_flow(self, flow_id: str, title: str) -> None:
+        """
+        Ignore a config flow.
+
+        Sends command :code:`{"type": "config_entries/ignore_flow", ...}`.
+        """
+        await self.async_recv(
+            await self.async_send(
+                "config_entries/ignore_flow",
+                flow_id=flow_id,
+                title=title,
+            )
+        )
+
+    async def async_get_nonuser_flows_in_progress(self) -> Tuple[FlowResult, ...]:
+        """
+        Get non-user config flows in progress.
+
+        Sends command :code:`{"type": "config_entries/flow/progress", ...}`.
+        """
+        resp = await self.async_recv(
+            await self.async_send("config_entries/flow/progress")
+        )
+        return tuple(
+            FlowResult.from_json(flow)
+            for flow in cast(
+                list[dict[str, JSONType]],
+                cast(ResultResponse, resp).result,
+            )
+        )
+
+    async def async_get_entry_subentries(
+        self, entry_id: str
+    ) -> Tuple[ConfigSubEntry, ...]:
+        """
+        Get subentries for a config entry.
+
+        Sends command :code:`{"type": "config_entries/subentries/list", ...}`.
+        """
+        resp = await self.async_recv(
+            await self.async_send("config_entries/subentries/list", entry_id=entry_id)
+        )
+        return tuple(
+            ConfigSubEntry.from_json(subentry)
+            for subentry in cast(
+                list[dict[str, JSONType]],
+                cast(ResultResponse, resp).result,
+            )
+        )
+
+    async def async_delete_entry_subentry(
+        self, entry_id: str, subentry_id: str
+    ) -> None:
+        """
+        Delete a subentry from a config entry.
+
+        Sends command :code:`{"type": "config_entries/subentries/delete", ...}`.
+        """
+        await self.async_recv(
+            await self.async_send(
+                "config_entries/subentries/delete",
+                entry_id=entry_id,
+                subentry_id=subentry_id,
+            )
+        )
+
+    @contextlib.asynccontextmanager
+    async def async_listen_config_entries(
+        self,
+    ) -> AsyncGenerator[AsyncGenerator[list[ConfigEntryEvent], None], None]:
+        """
+        Listen for config entry changes.
+
+        Sends command :code:`{"type": "config_entries/subscribe", ...}`.
+        """
+        subscription = (
+            await self.async_recv(await self.async_send("config_entries/subscribe"))
+        ).id
+        yield self._async_wait_for_config_entries(subscription)
+        await self._async_unsubscribe(subscription)
+
+    async def _async_wait_for_config_entries(
+        self, subscription_id: int
+    ) -> AsyncGenerator[list[ConfigEntryEvent], None]:
+        """An async iterator that waits for config entry events."""
+        while True:
+            event_resp = cast(EventResponse, await self.async_recv(subscription_id))
+            entries = cast(list[dict[str, JSONType]], event_resp.event)
+            yield [ConfigEntryEvent.from_json(entry) for entry in entries]
 
     async def async_fire_event(self, event_type: str, **event_data) -> Context:
         """
