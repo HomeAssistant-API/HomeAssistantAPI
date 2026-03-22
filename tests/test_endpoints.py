@@ -130,7 +130,7 @@ def test_websocket_get_rendered_template(websocket_client: WebsocketClient) -> N
 
 
 async def test_async_websocket_get_rendered_template(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "render_template"` websocket command."""
     rendered_template = await async_websocket_client.async_get_rendered_template(
@@ -213,7 +213,7 @@ def test_websocket_get_entities(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_entities(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "get_entities"` websocket command."""
     entities = await async_websocket_client.async_get_entities()
@@ -239,7 +239,7 @@ def test_websocket_get_domains(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_domains(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "get_domains"` websocket command."""
     domains = await async_websocket_client.async_get_domains()
@@ -268,7 +268,7 @@ def test_websocket_get_domain(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_domain(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "get_domain"` websocket command."""
     domain = await async_websocket_client.async_get_domain("homeassistant")
@@ -403,7 +403,7 @@ def test_websocket_trigger_service(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_trigger_service(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "trigger_service"` websocket command."""
     notify = await async_websocket_client.async_get_domain("notify")
@@ -468,7 +468,7 @@ def test_websocket_trigger_service_with_response(
 
 
 async def test_async_websocket_trigger_service_with_response(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "trigger_service_with_response"` websocket command."""
     weather = await async_websocket_client.async_get_domain("weather")
@@ -503,7 +503,7 @@ def test_websocket_get_states(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_states(
-    async_websocket_client: WebsocketClient
+    async_websocket_client: WebsocketClient,
 ) -> None:
     """Tests the `"type": "get_states"` websocket command."""
     states = await async_websocket_client.async_get_states()

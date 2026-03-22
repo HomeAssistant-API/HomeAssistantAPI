@@ -65,10 +65,6 @@ class Domain(BaseModel):
     @classmethod
     def from_json_with_client(
         cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient"]
-    def from_json(
-        cls,
-        json: Dict[str, JSONType],
-        client: Union["Client", "WebsocketClient"],
     ) -> "Domain":
         """Constructs Domain and Service models from json data."""
         if "domain" not in json or "services" not in json:
@@ -387,9 +383,9 @@ class ServiceFieldSelectorObject(BaseModel):
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
     scale: Optional[Union[int, float]] = None
-    error_correction_level: Optional[
-        ServiceFieldSelectorQRCodeErrorCorrectionLevel
-    ] = None
+    error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
+        None
+    )
     center_image: Optional[str] = None
 
 

@@ -67,6 +67,6 @@ async def setup_async_websocket_client(
     async with WebsocketClient(
         os.environ["HOMEASSISTANTAPI_WS_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        use_async=True
+        use_async=True,
     ) as client:
         yield client
