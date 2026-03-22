@@ -37,12 +37,12 @@ Next run in your terminal.
 Step Three: Installing Dependencies
 ======================================
 
-Firstly, you need to have Python 3.7 or newer with Pip installed.
+Firstly, you need to have Python 3.9 or newer installed.
 Download the latest Python Version from `here <https://www.python.org/>`__.
-Then you need to install the very popular Python Package Manager, :code:`poetry`.
-Checkout the `Poetry Docs <https://python-poetry.org/docs/>`__.
-You can install that with :code:`pip` by running :code:`pip install poetry`.
-Now you can install the project's dependencies by running :code:`cd HomeAssistantAPI && poetry install`
+Then you need to install :code:`uv`, a fast Python package manager.
+Checkout the `uv Docs <https://docs.astral.sh/uv/>`__.
+You can install it with :code:`pip` by running :code:`pip install uv`, or see the uv docs for other installation methods.
+Now you can install the project's dependencies by running :code:`cd HomeAssistantAPI && uv sync`
 
 Step Four: [Optional] Setting Up a Home Assistant Development Environment.
 =============================================================================
