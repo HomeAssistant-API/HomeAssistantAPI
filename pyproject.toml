@@ -8,7 +8,7 @@ version = "5.0.3"
 description = "Python Wrapper for Homeassistant's REST API"
 readme = "README.md"
 license = "GPL-3.0-or-later"
-requires-python = ">=3.9,<4.0"
+requires-python = ">=3.10,<4.0"
 authors = [
     { name = "GrandMoff100", email = "minecraftcrusher100@gmail.com" },
 ]
@@ -18,10 +18,8 @@ dependencies = [
     "pydantic>=2,<3",
     "requests>=2,<3",
     "requests-cache>=1,<2",
-    "ruff>=0.15.7",
     "simplejson>=3,<4",
-    "ty>=0.0.24",
-    "websockets>=15,<16",
+    "websockets>=16,<17",
 ]
 
 [project.urls]
@@ -31,17 +29,17 @@ Repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
 
 [dependency-groups]
 docs = [
-    "sphinx-autodoc-typehints>=1.25.2",
-    "sphinx-rtd-theme>=2.0.0",
-    "autodoc-pydantic>=2.0.1",
+    "sphinx-autodoc-typehints>=3,<4",
+    "sphinx-rtd-theme>=3,<4",
+    "autodoc-pydantic>=2,<3",
 ]
 styling = [
-    "pre-commit>=2.17.0",
-    "types-docutils>=0.17.5",
-    "types-requests>=2.27.9",
-    "types-simplejson>=3.17.3",
-    "types-toml>=0.10.4",
-    "mypy>=1.8.0",
+    "pre-commit>=4,<5",
+    "types-docutils>=0.22",
+    "types-requests>=2,<3",
+    "types-simplejson>=3.20",
+    "types-toml>=0.10",
+    "zuban>=0.6",
     "ruff>=0.15",
 ]
 testing = [
@@ -87,6 +85,7 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ['F401']
 "conf.py" = ['E402']
+"tests/*" = ["S101", "ANN202"]
 
 [tool.isort]
 profile = "black"

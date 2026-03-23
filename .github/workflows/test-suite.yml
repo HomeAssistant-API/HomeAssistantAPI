@@ -34,8 +34,8 @@ jobs:
         run: uv run ruff format homeassistant_api
       - name: Run Ruff linting
         run: uv run ruff check homeassistant_api
-      - name: Run MyPy
-        run: uv run mypy homeassistant_api --show-error-codes
+      - name: Run Zuban
+        run: uv run zuban check homeassistant_api
 
   code_functionality:
     name: "Code Functionality"

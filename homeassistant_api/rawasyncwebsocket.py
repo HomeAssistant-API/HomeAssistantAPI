@@ -409,7 +409,7 @@ class RawAsyncWebsocketClient(RawBaseWebsocketClient):
                     print(event)
         """
         subscription = await self._async_subscribe_events(event_type)
-        yield cast(AsyncGenerator[FiredEvent, None], self._async_wait_for(subscription))
+        yield cast(AsyncGenerator[FiredEvent, None], self._async_wait_for(subscription))  # type: ignore[unused-coroutine]
         await self._async_unsubscribe(subscription)
 
     async def _async_subscribe_events(self, event_type: Optional[str]) -> int:
@@ -461,7 +461,7 @@ class RawAsyncWebsocketClient(RawBaseWebsocketClient):
             fired_trigger.variables
             async for fired_trigger in cast(
                 AsyncGenerator[FiredTrigger, None],
-                self._async_wait_for(subscription),
+                self._async_wait_for(subscription),  # type: ignore[unused-coroutine]
             )
         )
         await self._async_unsubscribe(subscription)
