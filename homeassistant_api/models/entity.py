@@ -93,7 +93,7 @@ class Entity(BaseModel):
 
     async def async_get_state(self) -> State:
         """Asks Home Assistant for the state of the entity and sets it locally"""
-        self.state = await self.group._client.async_get_state(
+        self.state = await self.group._client.get_state(
             group_id=self.group.group_id,
             slug=self.slug,
         )
@@ -101,7 +101,7 @@ class Entity(BaseModel):
 
     async def async_update_state(self) -> State:
         """Tells Home Assistant to set the current local State object."""
-        self.state = await self.group._client.async_set_state(self.state)
+        self.state = await self.group._client.set_state(self.state)
         return self.state
 
     async def async_get_history(
@@ -114,7 +114,7 @@ class Entity(BaseModel):
         """
         Gets the :py:class:`History` of previous :py:class:`State`'s of the :py:class:`Entity`.
         """
-        async for history in self.group._client.async_get_entity_histories(
+        async for history in self.group._client.get_entity_histories(
             entities=(self,),
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,

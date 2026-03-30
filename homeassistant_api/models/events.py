@@ -38,7 +38,7 @@ class Event(BaseModel):
 
     async def async_fire(self, **event_data) -> str:
         """Fires the event type in homeassistant. Ex. `on_startup`"""
-        return await self._client.async_fire_event(self.event, **event_data)
+        return await self._client.fire_event(self.event, **event_data)
 
     @classmethod
     @override

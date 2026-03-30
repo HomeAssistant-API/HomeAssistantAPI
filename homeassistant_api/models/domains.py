@@ -622,13 +622,13 @@ class Service(BaseModel):
     ]:
         """Triggers the service associated with this object."""
         try:
-            return await self.domain._client.async_trigger_service_with_response(
+            return await self.domain._client.trigger_service_with_response(
                 self.domain.domain_id,
                 self.service_id,
                 **service_data,
             )
         except RequestError:
-            return await self.domain._client.async_trigger_service(
+            return await self.domain._client.trigger_service(
                 self.domain.domain_id,
                 self.service_id,
                 **service_data,

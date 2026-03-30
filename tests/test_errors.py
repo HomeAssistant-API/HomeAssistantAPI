@@ -10,7 +10,13 @@ import pytest
 import requests
 from multidict import CIMultiDict, CIMultiDictProxy
 
-from homeassistant_api import Client, Domain
+from homeassistant_api import (
+    AsyncClient,
+    AsyncWebsocketClient,
+    Client,
+    Domain,
+    WebsocketClient,
+)
 from homeassistant_api.errors import (
     APIConfigurationError,
     BadTemplateError,
@@ -28,7 +34,6 @@ from homeassistant_api.errors import (
 from homeassistant_api.models.websocket import Error
 from homeassistant_api.processing import Processing
 from homeassistant_api.utils import prepare_entity_id
-from homeassistant_api.websocket import WebsocketClient
 
 
 def test_unauthorized() -> None:
@@ -47,20 +52,18 @@ def test_websocket_unauthorized() -> None:
 
 async def test_async_websocket_unauthorized() -> None:
     with pytest.raises(UnauthorizedError):
-        async with WebsocketClient(
+        async with AsyncWebsocketClient(
             os.environ["HOMEASSISTANTAPI_WS_URL"],
             "lolthisisawrongtokenforsure",
-            use_async=True,
         ):
             pass
 
 
 async def test_async_unauthorized() -> None:
     with pytest.raises(UnauthorizedError):
-        async with Client(
+        async with AsyncClient(
             os.environ["HOMEASSISTANTAPI_URL"],
             "lolthisisawrongtokenforsure",
-            use_async=True,
         ):
             pass
 
@@ -77,9 +80,9 @@ def test_endpoint_not_found_error(cached_client: Client) -> None:
         cached_client.request("qwertyuioasdfghjkzxcvbnm")
 
 
-async def test_async_endpoint_not_found_error(async_cached_client: Client) -> None:
+async def test_async_endpoint_not_found_error(async_cached_client: AsyncClient) -> None:
     with pytest.raises(EndpointNotFoundError):
-        await async_cached_client.async_request("qwertyuioasdfghjkzxcvbnm")
+        await async_cached_client.request("qwertyuioasdfghjkzxcvbnm")
 
 
 def test_method_not_allowed_error(cached_client: Client) -> None:
@@ -87,9 +90,9 @@ def test_method_not_allowed_error(cached_client: Client) -> None:
         cached_client.request("", method="DELETE")
 
 
-async def test_async_method_not_allowed_error(async_cached_client: Client) -> None:
+async def test_async_method_not_allowed_error(async_cached_client: AsyncClient) -> None:
     with pytest.raises(MethodNotAllowedError):
-        await async_cached_client.async_request("", method="DELETE")
+        await async_cached_client.request("", method="DELETE")
 
 
 def test_wrong_headers(cached_client: Client) -> None:
@@ -97,9 +100,9 @@ def test_wrong_headers(cached_client: Client) -> None:
         cached_client.request("", headers=1234567890)  # type: ignore[arg-type]
 
 
-async def test_async_wrong_headers(async_cached_client: Client) -> None:
+async def test_async_wrong_headers(async_cached_client: AsyncClient) -> None:
     with pytest.raises(ValueError):
-        await async_cached_client.async_request("", headers=1234567890)  # type: ignore[arg-type]
+        await async_cached_client.request("", headers=1234567890)  # type: ignore[arg-type]
 
 
 def test_no_entity_information_provided(cached_client: Client) -> None:
@@ -109,11 +112,11 @@ def test_no_entity_information_provided(cached_client: Client) -> None:
 
 
 async def test_async_no_entity_information_provided(
-    async_cached_client: Client,
+    async_cached_client: AsyncClient,
 ) -> None:
     """Tests that the client raises an error if no entity information is provided."""
     with pytest.raises(ValueError):
-        await async_cached_client.async_get_entity()
+        await async_cached_client.get_entity()
 
 
 def test_invalid_template(cached_client: Client) -> None:
@@ -121,9 +124,9 @@ def test_invalid_template(cached_client: Client) -> None:
         cached_client.get_rendered_template("{{ invalid_template lol")
 
 
-async def test_async_invalid_template(async_cached_client: Client) -> None:
+async def test_async_invalid_template(async_cached_client: AsyncClient) -> None:
     with pytest.raises(BadTemplateError):
-        await async_cached_client.async_get_rendered_template("{{ invalid_template lol")
+        await async_cached_client.get_rendered_template("{{ invalid_template lol")
 
 
 def test_prepare_entity_id(cached_client: Client) -> None:

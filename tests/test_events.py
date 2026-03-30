@@ -7,7 +7,7 @@ from homeassistant_api.models import (
     ConfigEntryDisabler,
     ConfigEntryState,
 )
-from homeassistant_api.websocket import WebsocketClient
+from homeassistant_api import AsyncWebsocketClient, WebsocketClient
 
 
 def test_listen_events(websocket_client: WebsocketClient) -> None:
@@ -22,9 +22,11 @@ def test_listen_events(websocket_client: WebsocketClient) -> None:
             break
 
 
-async def test_async_listen_events(async_websocket_client: WebsocketClient) -> None:
-    async with async_websocket_client.async_listen_events("async_test_event") as events:
-        await async_websocket_client.async_fire_event(
+async def test_async_listen_events(
+    async_websocket_client: AsyncWebsocketClient,
+) -> None:
+    async with async_websocket_client.listen_events("async_test_event") as events:
+        await async_websocket_client.fire_event(
             "async_test_event", message="Triggered by async websocket client"
         )
         # Typing breaks when using zip in an async context, so break instead
@@ -88,9 +90,9 @@ def test_listen_config_entries(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_listen_config_entries(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
-    async with async_websocket_client.async_listen_config_entries() as flows:
+    async with async_websocket_client.listen_config_entries() as flows:
         i = 0
         async for flow in flows:
             if i == 0:
@@ -100,7 +102,7 @@ async def test_async_listen_config_entries(
                 assert flow[0].entry.state == ConfigEntryState.LOADED
 
                 # Trigger an "updated" event
-                await async_websocket_client.async_disable_config_entry(
+                await async_websocket_client.disable_config_entry(
                     flow[0].entry.entry_id
                 )
 
@@ -115,9 +117,7 @@ async def test_async_listen_config_entries(
                 assert flow[0].entry.state == ConfigEntryState.NOT_LOADED
 
                 # Restore original state
-                await async_websocket_client.async_enable_config_entry(
-                    flow[0].entry.entry_id
-                )
+                await async_websocket_client.enable_config_entry(flow[0].entry.entry_id)
 
             if i == 3:
                 assert flow[0].type == ConfigEntryChange.UPDATED
@@ -133,13 +133,15 @@ async def test_async_listen_config_entries(
             i += 1
 
 
-async def test_async_listen_trigger(async_websocket_client: WebsocketClient) -> None:
+async def test_async_listen_trigger(
+    async_websocket_client: AsyncWebsocketClient,
+) -> None:
     future = datetime.fromisoformat(
-        await async_websocket_client.async_get_rendered_template(
+        await async_websocket_client.get_rendered_template(
             "{{ (now() + timedelta(seconds=1)) }}"
         )
     )
-    async with async_websocket_client.async_listen_trigger(
+    async with async_websocket_client.listen_trigger(
         "time", at=future.strftime("%H:%M:%S")
     ) as triggers:
         # Typing breaks when using zip in an async context, so break instead

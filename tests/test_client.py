@@ -3,7 +3,7 @@ import os
 import aiohttp_client_cache.session
 import requests_cache
 
-from homeassistant_api import Client, WebsocketClient
+from homeassistant_api import AsyncClient, AsyncWebsocketClient, Client, WebsocketClient
 
 
 def test_custom_cached_session() -> None:
@@ -25,7 +25,7 @@ def test_default_session() -> None:
 
 
 async def test_custom_async_cached_session() -> None:
-    async with Client(
+    async with AsyncClient(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
         async_cache_session=aiohttp_client_cache.session.CachedSession(
@@ -34,17 +34,15 @@ async def test_custom_async_cached_session() -> None:
                 expire_after=10,
             ),
         ),
-        use_async=True,
     ):
         pass
 
 
 async def test_default_async_session() -> None:
-    async with Client(
+    async with AsyncClient(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
         async_cache_session=False,
-        use_async=True,
     ):
         pass
 
@@ -58,9 +56,8 @@ def test_websocket_client_ping() -> None:
 
 
 async def test_async_websocket_client_ping() -> None:
-    async with WebsocketClient(
+    async with AsyncWebsocketClient(
         os.environ["HOMEASSISTANTAPI_WS_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        use_async=True,
     ) as client:
-        assert (await client.async_ping_latency()) > 0
+        assert (await client.ping_latency()) > 0

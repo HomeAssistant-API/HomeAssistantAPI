@@ -1,5 +1,6 @@
 import logging
 import time
+import urllib.parse as urlparse
 from typing import Optional, cast
 
 from pydantic import ValidationError
@@ -19,7 +20,7 @@ from homeassistant_api.utils import JSONType
 logger = logging.getLogger(__name__)
 
 
-class RawBaseWebsocketClient:
+class BaseWebsocketClient:
     """Shared methods for Websocket clients."""
 
     api_url: str
@@ -30,6 +31,9 @@ class RawBaseWebsocketClient:
     _ping_responses: dict[int, PingResponse]
 
     def __init__(self, api_url: str, token: str) -> None:
+        parsed = urlparse.urlparse(api_url)
+        if parsed.scheme not in {"ws", "wss"}:
+            raise ValueError(f"Unknown scheme {parsed.scheme} in {api_url}")
         self.api_url = api_url
         self.token = token.strip()
 

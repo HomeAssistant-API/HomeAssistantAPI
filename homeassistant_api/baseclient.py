@@ -1,5 +1,6 @@
-"""Module for parent RawWrapper class"""
+"""Module for parent BaseClient class"""
 
+import urllib.parse as urlparse
 from datetime import datetime, timedelta
 from posixpath import join
 from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
@@ -10,7 +11,7 @@ from homeassistant_api.utils import JSONType
 from .models import Entity
 
 
-class RawBaseClient:
+class BaseClient:
     """Builds, and makes requests to the API"""
 
     api_url: str
@@ -24,6 +25,9 @@ class RawBaseClient:
         *,
         global_request_kwargs: Optional[Mapping[str, str]] = None,
     ) -> None:
+        parsed = urlparse.urlparse(api_url)
+        if parsed.scheme not in {"http", "https"}:
+            raise ValueError(f"Unknown scheme {parsed.scheme} in {api_url}")
         if global_request_kwargs is None:
             global_request_kwargs = {}
         self.api_url = api_url
@@ -85,7 +89,7 @@ class RawBaseClient:
         significant_changes_only: bool = False,
     ) -> Tuple[Dict[str, Optional[str]], str]:
         """
-        Pre-logic for :py:meth:`Client.get_entity_histories` and :py:meth:`Client.async_get_entity_histories`.
+        Pre-logic for :py:meth:`Client.get_entity_histories` and :py:meth:`AsyncClient.get_entity_histories`.
 
         Ensure timestamps
 
