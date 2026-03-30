@@ -33,7 +33,7 @@ docs = [
     "sphinx-rtd-theme>=3,<4",
     "autodoc-pydantic>=2,<3",
 ]
-styling = [
+dev = [
     "pre-commit>=4,<5",
     "types-docutils>=0.22",
     "types-requests>=2,<3",
@@ -41,8 +41,6 @@ styling = [
     "types-toml>=0.10",
     "zuban>=0.6",
     "ruff>=0.15",
-]
-testing = [
     "pytest-asyncio>=1",
     "pytest-cov>=7",
     "pytest>=8",

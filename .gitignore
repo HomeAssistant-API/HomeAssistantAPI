@@ -133,6 +133,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+uv.lock
+poetry.lock
 
 # Spyder project settings
 .spyderproject
