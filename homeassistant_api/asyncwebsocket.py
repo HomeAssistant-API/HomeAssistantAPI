@@ -240,16 +240,13 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             template=template,
             report_errors=True,
         )
-        first = await self.recv_result(msg_id)
-        if first.result is not None:
-            msg = "Expected None result for render_template subscription"
-            raise ValueError(msg)
+        await self.recv_result(msg_id)
         second = await self.recv_event(msg_id)
         await self._async_unsubscribe(msg_id)
         if not isinstance(second.event, TemplateEvent):
             msg = f"Expected TemplateEvent, got {type(second.event).__name__}"
             raise TypeError(msg)
-        return second.event.result
+        return str(second.event.result)
 
     async def get_config(self) -> dict[str, Any]:
         """
@@ -379,28 +376,30 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         )
         return {domain.domain_id: domain for domain in domains}
 
-    async def get_domain(self, domain: str) -> AsyncDomain:
+    async def get_domain(self, domain_id: str) -> AsyncDomain | None:
         """Get a domain.
 
         Note: This is not a method in the WS API client... yet.
 
         Please tell home-assistant/core to add a `get_domain` command to the WS API!
 
-        For now, just call the :py:meth":`get_domains` method and parsing the result.
+        For now, just call the :py:meth:`get_domains` method and parsing the result.
         """
-        return (await self.get_domains())[domain]
+        return (await self.get_domains()).get(domain_id)
 
     async def trigger_service(
         self,
         domain: str,
         service: str,
-        entity_id: str | None = None,
         **service_data: Any,
     ) -> None:
         """
         Trigger a service (that doesn't return a response).
 
         Sends command :code:`{"type": "call_service", ...}`.
+
+        Note: Unlike the REST API, the WebSocket API does not return changed states.
+        Subscribe to ``state_changed`` events via :py:meth:`listen_events` to track changes.
         """
         params = {
             "domain": domain,
@@ -408,8 +407,6 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             "service_data": service_data,
             "return_response": False,
         }
-        if entity_id is not None:
-            params["target"] = {"entity_id": entity_id}
 
         result = await self.recv_result_dict(
             await self.send("call_service", include_id=True, **params),
@@ -427,13 +424,16 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         self,
         domain: str,
         service: str,
-        entity_id: str | None = None,
         **service_data: Any,
     ) -> dict[str, Any]:
         """
         Trigger a service (that returns a response) and return the response.
 
         Sends command :code:`{"type": "call_service", ...}`.
+
+        Note: Unlike the REST API, the WebSocket API does not return changed states,
+        only the service response data. Subscribe to ``state_changed`` events via
+        :py:meth:`listen_events` to track changes.
         """
         params = {
             "domain": domain,
@@ -441,8 +441,6 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             "service_data": service_data,
             "return_response": True,
         }
-        if entity_id is not None:
-            params["target"] = {"entity_id": entity_id}
 
         result = await self.recv_result_dict(
             await self.send("call_service", include_id=True, **params),

@@ -84,7 +84,7 @@ class FiredEvent(BaseModel):
 
 
 class TemplateEvent(BaseModel):
-    result: str
+    result: Any
     listeners: dict[str, Any]
 
 

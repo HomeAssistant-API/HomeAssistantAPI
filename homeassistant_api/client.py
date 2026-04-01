@@ -174,6 +174,7 @@ class Client(BaseClient):
         start_timestamp: datetime | None = None,
         # Defaults to 1 day before. https://developers.home-assistant.io/docs/api/rest/
         end_timestamp: datetime | None = None,
+        *,
         significant_changes_only: bool = False,
     ) -> Generator[History, None, None]:
         """
@@ -395,7 +396,7 @@ class Client(BaseClient):
                 return event
         return None
 
-    def fire_event(self, event_type: str, **event_data: Any) -> str | None:
+    def fire_event(self, event_type: str, **event_data: Any) -> str:
         """
         Fires a given event_type within homeassistant. Must be an existing event_type.
         `POST /api/events/<event_type>`
@@ -405,7 +406,7 @@ class Client(BaseClient):
             method=HTTPMethod.POST,
             json=event_data,
         )
-        return data.get("message")
+        return data.get("message", "No message provided")
 
     def get_components(self) -> tuple[str, ...]:
         """
