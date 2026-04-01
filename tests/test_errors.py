@@ -6,10 +6,12 @@ import unittest.mock
 from http import HTTPMethod
 
 import aiohttp
+import aiohttp_client_cache.session
 import pytest
 import requests
 from multidict import CIMultiDict
 from multidict import CIMultiDictProxy
+from requests_cache import CachedSession
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
@@ -28,6 +30,7 @@ from homeassistant_api.errors import RequestTimeoutError
 from homeassistant_api.errors import ResponseError
 from homeassistant_api.errors import UnauthorizedError
 from homeassistant_api.errors import UnexpectedStatusCodeError
+from homeassistant_api.models.states import State
 from homeassistant_api.models.websocket import Error
 from homeassistant_api.processing import async_process_response
 from homeassistant_api.processing import process_response
@@ -287,3 +290,114 @@ def test_error_model_without_optional_fields() -> None:
     assert error.translation_key is None
     assert error.translation_placeholders is None
     assert error.translation_domain is None
+
+
+# --- Processing: async processor not found ---
+
+
+async def test_async_exception_processor_not_found_error() -> None:
+    """Tests that async_process_response raises ProcessorNotFoundError for unknown MIME types."""
+    with pytest.raises(ProcessorNotFoundError, match="this_type/does-not-exist"):
+        await async_process_response(
+            make_async_response(200, "", {"Content-Type": "this_type/does-not-exist"}),
+        )
+
+
+async def test_async_exception_bad_request() -> None:
+    """Tests that async_process_response raises RequestError for 400 responses."""
+    with pytest.raises(RequestError):
+        await async_process_response(
+            make_async_response(400, "bad request data", {}),
+        )
+
+
+async def test_async_exception_internal_server_error() -> None:
+    """Tests that async_process_response raises InternalServerError for 500 responses."""
+    with pytest.raises(InternalServerError):
+        await async_process_response(make_async_response(500, "server broke", {}))
+
+
+async def test_async_exception_unexpected_status_code() -> None:
+    """Tests that async_process_response raises UnexpectedStatusCodeError for unknown status."""
+    with pytest.raises(UnexpectedStatusCodeError):
+        await async_process_response(make_async_response(0, "", {}))
+
+
+# --- WebSocket: NotImplementedError stubs ---
+
+
+def test_websocket_set_state_not_supported(websocket_client: WebsocketClient) -> None:
+    """Tests that WebsocketClient.set_state raises NotImplementedError."""
+    state = State(state="test", entity_id="sun.sun")
+    with pytest.raises(
+        NotImplementedError,
+        match="not supported over the WebSocket API",
+    ):
+        websocket_client.set_state(state)
+
+
+def test_websocket_get_entity_histories_not_supported(
+    websocket_client: WebsocketClient,
+) -> None:
+    """Tests that WebsocketClient.get_entity_histories raises NotImplementedError."""
+    with pytest.raises(
+        NotImplementedError,
+        match="not supported over the WebSocket API",
+    ):
+        list(websocket_client.get_entity_histories())
+
+
+async def test_async_websocket_set_state_not_supported(
+    async_websocket_client: AsyncWebsocketClient,
+) -> None:
+    """Tests that AsyncWebsocketClient.set_state raises NotImplementedError."""
+    state = State(state="test", entity_id="sun.sun")
+    with pytest.raises(
+        NotImplementedError,
+        match="not supported over the WebSocket API",
+    ):
+        await async_websocket_client.set_state(state)
+
+
+async def test_async_websocket_get_entity_histories_not_supported(
+    async_websocket_client: AsyncWebsocketClient,
+) -> None:
+    """Tests that AsyncWebsocketClient.get_entity_histories raises NotImplementedError."""
+    with pytest.raises(
+        NotImplementedError,
+        match="not supported over the WebSocket API",
+    ):
+        async for _ in async_websocket_client.get_entity_histories():
+            pass
+
+
+# --- Client: no-cache session ---
+
+
+def test_client_no_cache_session() -> None:
+    """Tests that Client can be created without a cache session."""
+    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
+    client = Client(HA_URL, token, use_cache=False)
+    assert isinstance(client._session, requests.Session)
+    assert not isinstance(client._session, CachedSession)
+
+
+def test_client_default_cache_session() -> None:
+    """Tests that Client creates a CachedSession when use_cache=True."""
+    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
+    client = Client(HA_URL, token, use_cache=True)
+    assert isinstance(client._session, CachedSession)
+
+
+async def test_async_client_no_cache_session() -> None:
+    """Tests that AsyncClient can be created without a cache session."""
+    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
+    client = AsyncClient(HA_URL, token, use_cache=False)
+    assert isinstance(client._session, aiohttp.ClientSession)
+
+
+async def test_async_client_default_cache_session() -> None:
+    """Tests that AsyncClient creates a CachedSession when use_cache=True."""
+    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
+    client = AsyncClient(HA_URL, token, use_cache=True)
+    assert isinstance(client._session, aiohttp_client_cache.session.CachedSession)

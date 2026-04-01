@@ -9,7 +9,10 @@ import pytest
 from homeassistant_api import AsyncClient
 from homeassistant_api import Client
 from homeassistant_api import Domain
+from homeassistant_api.models.domains import BaseDomain
+from homeassistant_api.models.entity import BaseGroup
 from homeassistant_api.models.events import Event
+from homeassistant_api.models.history import History
 from homeassistant_api.models.states import State
 
 
@@ -142,3 +145,76 @@ async def test_async_entity_get_history_none(async_cached_client: AsyncClient) -
         end_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
     )
     assert history is None
+
+
+# --- BaseGroup: __getattr__ for nonexistent key ---
+
+
+def test_base_group_getattr_nonexistent() -> None:
+    """Tests that BaseGroup.__getattr__ raises AttributeError for unknown attributes."""
+    group = BaseGroup(group_id="test")
+    assert group.get_entity("nonexistent") is None
+    with pytest.raises(AttributeError):
+        _ = group.nonexistent_entity
+
+
+def test_base_group_add_entity_not_implemented() -> None:
+    """Tests that BaseGroup._add_entity raises NotImplementedError."""
+    group = BaseGroup(group_id="test")
+    with pytest.raises(NotImplementedError):
+        group._add_entity("slug", State(state="on", entity_id="test.slug"))
+
+
+# --- BaseDomain: _add_service not implemented ---
+
+
+def test_base_domain_add_service_not_implemented() -> None:
+    """Tests that BaseDomain._add_service raises NotImplementedError."""
+    domain = BaseDomain(domain_id="test")
+    with pytest.raises(NotImplementedError):
+        domain._add_service("svc")
+
+
+def test_base_domain_from_json_invalid_services_type(cached_client: Client) -> None:
+    """Tests that Domain.from_json_with_client raises TypeError when services is not a dict."""
+    with pytest.raises(TypeError, match="Expected dict for services"):
+        Domain.from_json_with_client(
+            {"domain": "test", "services": "not_a_dict"},
+            cached_client,
+        )
+
+
+# --- History: repr and entity_id ---
+
+
+def test_history_repr() -> None:
+    """Tests that History has a meaningful repr with entity_id."""
+    states = (
+        State(state="on", entity_id="light.kitchen"),
+        State(state="off", entity_id="light.kitchen"),
+    )
+    history = History(states=states)
+    assert history.entity_id == "light.kitchen"
+    assert "light.kitchen" in repr(history)
+
+
+def test_history_entity_id_from_states() -> None:
+    """Tests that History.entity_id is derived from the states' entity_ids."""
+    states = (
+        State(state="on", entity_id="light.kitchen"),
+        State(state="off", entity_id="light.kitchen"),
+    )
+    history = History(states=states)
+    assert history.entity_id == "light.kitchen"
+
+
+# --- Domain: service access via attribute ---
+
+
+def test_domain_service_attribute_access(cached_client: Client) -> None:
+    """Tests that Domain services are accessible as attributes."""
+    notify = cached_client.get_domain("notify")
+    assert notify is not None
+    svc = notify.get_service("persistent_notification")
+    assert svc is not None
+    assert notify.persistent_notification == svc
