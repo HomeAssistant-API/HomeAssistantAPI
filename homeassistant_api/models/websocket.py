@@ -1,21 +1,21 @@
 """A module defining the responses we expect from the websocket API."""
 
-from typing import Any, List, Literal, Optional, Union
+from typing import Any
+from typing import Literal
 
-from homeassistant_api.utils import JSONType
-
-from .base import BaseModel, DatetimeIsoField
+from .base import BaseModel
+from .base import DatetimeIsoField
 from .config_entries import ConfigEntryEvent
 from .states import Context
 
 __all__ = (
-    "AuthRequired",
-    "AuthOk",
     "AuthInvalid",
-    "PingResponse",
+    "AuthOk",
+    "AuthRequired",
     "ErrorResponse",
-    "ResultResponse",
     "EventResponse",
+    "PingResponse",
+    "ResultResponse",
 )
 
 
@@ -40,15 +40,15 @@ class PingResponse(BaseModel):
     id: int
     type: Literal["pong"]
     start: int  # added by the client, nanoseconds
-    end: Optional[int] = None  # added by the client, nanoseconds
+    end: int | None = None  # added by the client, nanoseconds
 
 
 class Error(BaseModel):
     code: str
     message: str
-    translation_key: Optional[str] = None
-    translation_placeholders: Optional[dict[str, str]] = None
-    translation_domain: Optional[str] = None
+    translation_key: str | None = None
+    translation_placeholders: dict[str, str] | None = None
+    translation_domain: str | None = None
 
 
 class ErrorResponse(BaseModel):
@@ -66,33 +66,33 @@ class ResultResponse(BaseModel):
     id: int
     success: Literal[True]
     type: Literal["result"]
-    result: Optional[Any]
+    result: Any | None
 
 
 class FiredEvent(BaseModel):
     """A model to parse the `event` key of fired event websocket responses."""
 
     event_type: str
-    data: dict[str, JSONType]
+    data: dict[str, Any]
 
     origin: Literal["LOCAL", "REMOTE"]
     # REMOTE if another API client or webhook fired the event
     # LOCAL if Home Assistant (or the auth token we used) fired the event
 
     time_fired: DatetimeIsoField  # datetime.datetime
-    context: Optional[Context]
+    context: Context | None
 
 
 class TemplateEvent(BaseModel):
     result: str
-    listeners: dict[str, JSONType]
+    listeners: dict[str, Any]
 
 
 class FiredTrigger(BaseModel):
     """A model to parse the `trigger` key of fired event websocket responses."""
 
-    context: Optional[Context]
-    variables: dict[str, JSONType]
+    context: Context | None
+    variables: dict[str, Any]
 
 
 class EventResponse(BaseModel):
@@ -100,4 +100,4 @@ class EventResponse(BaseModel):
 
     id: int
     type: Literal["event"]
-    event: Union[FiredEvent, FiredTrigger, TemplateEvent, List[ConfigEntryEvent]]
+    event: FiredEvent | FiredTrigger | TemplateEvent | list[ConfigEntryEvent]

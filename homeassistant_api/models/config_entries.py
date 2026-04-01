@@ -1,8 +1,9 @@
 """File for models used in responses from config entries."""
 
 import asyncio
+from collections.abc import Container
 from enum import Enum
-from typing import Any, Container, Dict, Optional, Tuple, Union
+from typing import Any
 
 from .base import BaseModel
 
@@ -24,54 +25,54 @@ class DiscoveryKey(BaseModel):
     """Serializable discovery key."""
 
     domain: str
-    key: Union[str, Tuple[str, ...]]
+    key: str | tuple[str, ...]
     version: int
 
 
 class FlowContext(BaseModel):
     """Base flow context"""
 
-    show_advanced_options: Union[bool, None] = None
+    show_advanced_options: bool | None = None
     source: str
 
 
 class ConfigFlowContext(FlowContext):
     """Context for config flow."""
 
-    alternative_domain: Optional[str] = None
-    configuration_url: Optional[str] = None
-    confirm_only: Optional[bool] = None
+    alternative_domain: str | None = None
+    configuration_url: str | None = None
+    confirm_only: bool | None = None
     discovery_key: DiscoveryKey
-    entry_id: Optional[str] = None
-    title_placeholders: Optional[Dict[str, str]] = None
-    unique_id: Optional[str] = None
+    entry_id: str | None = None
+    title_placeholders: dict[str, str] | None = None
+    unique_id: str | None = None
 
 
 class FlowResult(BaseModel):
     """Base flow result ."""
 
     context: ConfigFlowContext
-    data_schema: Optional[Any] = None
-    data: Optional[Dict[str, Any]] = None
-    description_placeholders: Optional[Dict[str, str]] = None
-    description: Optional[str] = None
-    errors: Optional[Dict[str, str]] = None
-    extra: Optional[str] = None
+    data_schema: Any | None = None
+    data: dict[str, Any] | None = None
+    description_placeholders: dict[str, str] | None = None
+    description: str | None = None
+    errors: dict[str, str] | None = None
+    extra: str | None = None
     flow_id: str
     handler: str
-    last_step: Optional[bool] = None
-    menu_options: Optional[Container[str]] = None
-    preview: Optional[str] = None
-    progress_action: Optional[str] = None
-    progress_task: Optional[asyncio.Task[Any]] = None
-    reason: Optional[str] = None
-    required: Optional[bool] = None
-    result: Optional[Any] = None
-    step_id: Optional[str] = None
-    title: Optional[str] = None
-    translation_domain: Optional[str] = None
-    type: Optional[FlowResultType] = None
-    url: Optional[str] = None
+    last_step: bool | None = None
+    menu_options: Container[str] | None = None
+    preview: str | None = None
+    progress_action: str | None = None
+    progress_task: asyncio.Task[Any] | None = None
+    reason: str | None = None
+    required: bool | None = None
+    result: Any | None = None
+    step_id: str | None = None
+    title: str | None = None
+    translation_domain: str | None = None
+    type: FlowResultType | None = None
+    url: str | None = None
 
 
 class DisableEnableResult(BaseModel):
@@ -126,13 +127,13 @@ class ConfigEntry(BaseModel):
     supports_remove_device: bool
     supports_unload: bool
     supports_reconfigure: bool
-    supported_subentry_types: Dict[str, Dict[str, bool]]
+    supported_subentry_types: dict[str, dict[str, bool]]
     pref_disable_new_entities: bool
     pref_disable_polling: bool
-    disabled_by: Optional[ConfigEntryDisabler]
-    reason: Optional[str]
-    error_reason_translation_key: Optional[str]
-    error_reason_translation_placeholders: Optional[Dict[str, Any]]
+    disabled_by: ConfigEntryDisabler | None
+    reason: str | None
+    error_reason_translation_key: str | None
+    error_reason_translation_placeholders: dict[str, Any] | None
     num_subentries: int
 
 
@@ -142,7 +143,7 @@ class ConfigSubEntry(BaseModel):
     subentry_id: str
     subentry_type: str
     title: str
-    unique_id: Optional[str]
+    unique_id: str | None
 
 
 class ConfigEntryChange(str, Enum):
@@ -154,5 +155,5 @@ class ConfigEntryChange(str, Enum):
 
 
 class ConfigEntryEvent(BaseModel):
-    type: Optional[ConfigEntryChange]
+    type: ConfigEntryChange | None
     entry: ConfigEntry

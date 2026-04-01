@@ -1,7 +1,10 @@
 """Module for Entity and entity Group data models"""
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Optional
+from typing import Union
 
 from pydantic import Field
 
@@ -10,36 +13,30 @@ from .history import History
 from .states import State
 
 if TYPE_CHECKING:
+    from homeassistant_api import AsyncClient
+    from homeassistant_api import AsyncWebsocketClient
     from homeassistant_api import Client
+    from homeassistant_api import WebsocketClient
 
 
-class Group(BaseModel):
+class BaseGroup(BaseModel):
     """Represents the groups that entities belong to."""
-
-    def __init__(self, *args, _client: Optional["Client"] = None, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        object.__setattr__(self, "_client", _client)
 
     group_id: str = Field(
         ...,
         description="A unique string identifying different types/groups of entities.",
     )
-    _client: "Client"
-    entities: Dict[str, "Entity"] = Field(
-        {},
+    entities: dict[str, "BaseEntity"] = Field(
+        default_factory=dict,
         description="A dictionary of all entities belonging to the group "
         "indexed by their :code:`entity_id`.",
     )
 
     def _add_entity(self, slug: str, state: State) -> None:
         """Registers entities to this Group object"""
-        self.entities[slug] = Entity(
-            slug=slug,
-            state=state,
-            group=self,
-        )
+        raise NotImplementedError
 
-    def get_entity(self, slug: str) -> Optional["Entity"]:
+    def get_entity(self, slug: str) -> Optional["BaseEntity"]:
         """Returns Entity with the given name if it exists. Otherwise returns None"""
         return self.entities.get(slug)
 
@@ -49,16 +46,72 @@ class Group(BaseModel):
         return super().__getattribute__(key)
 
 
-class Entity(BaseModel):
+class Group(BaseGroup):
+    """Sync group that creates sync Entity instances."""
+
+    client: Union["Client", "WebsocketClient"] = Field(exclude=True, repr=False)
+
+    def _add_entity(self, slug: str, state: State) -> None:
+        self.entities[slug] = Entity(
+            slug=slug,
+            state=state,
+            group=self,
+        )
+
+    def get_entity(self, slug: str) -> Optional["Entity"]:
+        """Returns Entity with the given name if it exists. Otherwise returns None"""
+        entity = self.entities.get(slug)
+        if entity is not None and not isinstance(entity, Entity):
+            msg = f"Expected Entity, got {type(entity)}"
+            raise TypeError(msg)
+        return entity
+
+
+class AsyncGroup(BaseGroup):
+    """Async group that creates async Entity instances."""
+
+    client: Union["AsyncClient", "AsyncWebsocketClient"] = Field(
+        exclude=True,
+        repr=False,
+    )
+
+    def _add_entity(self, slug: str, state: State) -> None:
+        self.entities[slug] = AsyncEntity(
+            slug=slug,
+            state=state,
+            group=self,
+        )
+
+    def get_entity(self, slug: str) -> Optional["AsyncEntity"]:
+        """Returns Entity with the given name if it exists. Otherwise returns None"""
+        entity = self.entities.get(slug)
+        if entity is not None and not isinstance(entity, AsyncEntity):
+            msg = f"Expected AsyncEntity, got {type(entity)}"
+            raise TypeError(msg)
+        return entity
+
+
+class BaseEntity(BaseModel):
     """Represents entities inside of homeassistant"""
 
     slug: str
     state: State
+    group: "BaseGroup" = Field(exclude=True, repr=False)
+
+    @property
+    def entity_id(self) -> str:
+        """Constructs the :code:`entity_id` string from its group and slug"""
+        return f"{self.group.group_id}.{self.slug}".strip()
+
+
+class Entity(BaseEntity):
+    """Sync entity with sync client methods."""
+
     group: Group = Field(exclude=True, repr=False)
 
     def get_state(self) -> State:
         """Asks Home Assistant for the state of the entity and updates it locally"""
-        self.state = self.group._client.get_state(entity_id=self.entity_id)
+        self.state = self.group.client.get_state(entity_id=self.entity_id)
         return self.state
 
     def update_state(self) -> State:
@@ -66,23 +119,17 @@ class Entity(BaseModel):
         Tells Home Assistant to set its current local State object.
         (You can modify the local state object yourself.)
         """
-        self.state = self.group._client.set_state(self.state)
+        self.state = self.group.client.set_state(self.state)
         return self.state
-
-    @property
-    def entity_id(self) -> str:
-        """Constructs the :code:`entity_id` string from its group and slug"""
-        return f"{self.group.group_id}.{self.slug}".strip()
 
     def get_history(
         self,
-        start_timestamp: Optional[datetime] = None,
-        # Defaults to 1 day before. https://developers.home-assistant.io/docs/api/rest/
-        end_timestamp: Optional[datetime] = None,
+        start_timestamp: datetime | None = None,
+        end_timestamp: datetime | None = None,
         significant_changes_only: bool = False,
-    ) -> Optional[History]:
+    ) -> History | None:
         """Gets the previous :py:class:`State`'s of the :py:class:`Entity`"""
-        for history in self.group._client.get_entity_histories(
+        for history in self.group.client.get_entity_histories(
             entities=(self,),
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
@@ -91,30 +138,35 @@ class Entity(BaseModel):
             return history
         return None
 
-    async def async_get_state(self) -> State:
+
+class AsyncEntity(BaseEntity):
+    """Async entity with async client methods."""
+
+    group: AsyncGroup = Field(exclude=True, repr=False)
+
+    async def get_state(self) -> State:
         """Asks Home Assistant for the state of the entity and sets it locally"""
-        self.state = await self.group._client.get_state(
+        self.state = await self.group.client.get_state(
             group_id=self.group.group_id,
             slug=self.slug,
         )
         return self.state
 
-    async def async_update_state(self) -> State:
+    async def update_state(self) -> State:
         """Tells Home Assistant to set the current local State object."""
-        self.state = await self.group._client.set_state(self.state)
+        self.state = await self.group.client.set_state(self.state)
         return self.state
 
-    async def async_get_history(
+    async def get_history(
         self,
-        start_timestamp: Optional[datetime] = None,
-        # Defaults to 1 day before. https://developers.home-assistant.io/docs/api/rest/
-        end_timestamp: Optional[datetime] = None,
+        start_timestamp: datetime | None = None,
+        end_timestamp: datetime | None = None,
         significant_changes_only: bool = False,
-    ) -> Optional[History]:
+    ) -> History | None:
         """
         Gets the :py:class:`History` of previous :py:class:`State`'s of the :py:class:`Entity`.
         """
-        async for history in self.group._client.get_entity_histories(
+        async for history in self.group.client.get_entity_histories(
             entities=(self,),
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,

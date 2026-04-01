@@ -5,28 +5,37 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime
+from http import HTTPMethod
 from posixpath import join
-from typing import (
-    Any,
-    AsyncGenerator,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING
+from typing import Any
 
-import aiohttp
-import aiohttp_client_cache.session
+from aiohttp import ClientSession
+from aiohttp import TCPConnector
+from aiohttp_client_cache import CacheBackend
+from aiohttp_client_cache.session import CachedSession
 
-from .errors import BadTemplateError, RequestError, RequestTimeoutError
-from .models import Domain, Entity, Event, Group, History, LogbookEntry, State
-from .processing import AsyncResponseType, Processing
 from .baseclient import BaseClient
-from .utils import JSONType, prepare_entity_id
+from .errors import BadTemplateError
+from .errors import RequestError
+from .errors import RequestTimeoutError
+from .models import AsyncDomain
+from .models import AsyncEntity
+from .models import AsyncEvent
+from .models import AsyncGroup
+from .models import History
+from .models import LogbookEntry
+from .models import State
+from .processing import AsyncResponseType
+from .processing import Processing
+from .utils import prepare_entity_id
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from datetime import datetime
+    from types import TracebackType
+
+    from typing_extensions import Self
 
 logger = logging.getLogger(__name__)
 
@@ -40,92 +49,90 @@ class AsyncClient(BaseClient):
     :param global_request_kwargs: A dictionary or dict-like object of kwargs to pass to :func:`requests.request` or :meth:`aiohttp.request`. Optional.
     """  # pylint: disable=line-too-long
 
-    async_cache_session: Union[
-        aiohttp_client_cache.session.CachedSession, aiohttp.ClientSession
-    ]
+    _session: CachedSession | ClientSession
 
     def __init__(
         self,
-        *args,
-        async_cache_session: Union[
-            aiohttp_client_cache.session.CachedSession,
-            Literal[False],
-            Literal[None],
-        ] = None,  # Explicitly disable cache with async_cache_session=False
+        *args: Any,
+        session: CachedSession | None = None,
+        use_cache: bool = False,
         verify_ssl: bool = True,
-        **kwargs,
-    ):
-        BaseClient.__init__(self, *args, **kwargs)
-        connector = aiohttp.TCPConnector(verify_ssl=False) if not verify_ssl else None
-        if async_cache_session is False:
-            self.async_cache_session = aiohttp.ClientSession(connector=connector)
-        elif async_cache_session is None:
-            self.async_cache_session = aiohttp_client_cache.CachedSession(  # type: ignore[attr-defined]
-                cache=aiohttp_client_cache.CacheBackend(  # type: ignore[attr-defined]
-                    cache_name="default_async_cache",
-                    expire_after=300,
-                ),
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        connector = TCPConnector(verify_ssl=verify_ssl)
+        if session is not None:
+            self._session = session
+        elif use_cache:
+            self._session = CachedSession(
+                cache=CacheBackend(cache_name="default_async_cache", expire_after=300),
                 connector=connector,
             )
         else:
-            self.async_cache_session = async_cache_session
+            self._session = ClientSession(connector=connector)
 
-    async def __aenter__(self):
-        logger.debug(
-            "Entering cached async requests session %r", self.async_cache_session
-        )
-        await self.async_cache_session.__aenter__()
+    async def __aenter__(self) -> Self:
+        logger.debug("Entering cached async requests session %r", self._session)
+        await self._session.__aenter__()
         await self.check_api_running()
         return self
 
-    async def __aexit__(self, _, __, ___):
-        logger.debug("Exiting async requests session %r", self.async_cache_session)
-        await self.async_cache_session.close()
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        logger.debug("Exiting async requests session %r", self._session)
+        await self._session.close()
 
     # Very important request function
     async def request(
         self,
         path: str,
         *,
-        params: str = "",  # should be a string of query parameters from construct_params()
-        method: str = "GET",
-        headers: Optional[Dict[str, str]] = None,
-        **kwargs,
+        params: dict[str, Any] | None = None,
+        method: HTTPMethod = HTTPMethod.GET,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
     ) -> Any:
         """Base method for making requests to the api"""
+        path = self.endpoint(path)
+        if params:
+            path = f"{path}?{self.construct_params(params)}"
+        if self.global_request_kwargs is not None:
+            kwargs.update(self.global_request_kwargs)
         try:
-            if self.global_request_kwargs is not None:
-                kwargs.update(self.global_request_kwargs)
-            return await self.response_logic(
-                await self.async_cache_session.request(
-                    method,
-                    self.endpoint(path) + f"?{params}" * bool(params),
-                    headers=self.prepare_headers(headers),
-                    **kwargs,
-                )
+            resp = await self._session.request(
+                method,
+                path,
+                headers=self.prepare_headers(headers),
+                **kwargs,
             )
         except asyncio.exceptions.TimeoutError as err:
-            raise RequestTimeoutError(
-                f"Home Assistant did not respond in time (timeout: {kwargs.get('timeout', 300)} sec)",
-                self.endpoint(path) + f"?{params}" * bool(params),
-            ) from err
+            msg = f"Home Assistant did not respond in time (timeout: {kwargs.get('timeout', 300)} sec)"
+            raise RequestTimeoutError(msg, path) from err
+        return await self.response_logic(resp)
 
-    async def _dict_request(self, *args: Any, **kwargs: Any) -> dict:
+    async def _dict_request(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         data = await self.request(*args, **kwargs)
         if not isinstance(data, dict):
-            raise TypeError
+            msg = f"Expected dict response, got {type(data).__name__}"
+            raise TypeError(msg)
         return data
 
     async def _list_request(self, *args: Any, **kwargs: Any) -> list:
         data = await self.request(*args, **kwargs)
         if not isinstance(data, list):
-            raise TypeError
+            msg = f"Expected list response, got {type(data).__name__}"
+            raise TypeError(msg)
         return data
 
     async def _str_request(self, *args: Any, **kwargs: Any) -> str:
         data = await self.request(*args, **kwargs)
         if not isinstance(data, str):
-            raise TypeError
+            msg = f"Expected str response, got {type(data).__name__}"
+            raise TypeError(msg)
         return data
 
     @staticmethod
@@ -139,37 +146,36 @@ class AsyncClient(BaseClient):
         Returns the server error log as a string.
         :code:`GET /api/error_log`
         """
-        return cast(str, await self.request("error_log"))
+        return await self._str_request("error_log")
 
-    async def get_config(self) -> dict[str, JSONType]:
+    async def get_config(self) -> dict[str, Any]:
         """
         Returns the yaml configuration of homeassistant.
         :code:`GET /api/config`
         """
-        return cast(dict[str, JSONType], await self.request("config"))
+        return await self._dict_request("config")
 
     async def get_logbook_entries(
         self,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> AsyncGenerator[LogbookEntry, None]:
         """
         Returns a list of logbook entries from homeassistant.
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
-        data = await self.request(
-            url, params=self.construct_params(cast(Dict[str, Optional[str]], params))
-        )
+        data = await self._list_request(url, params=params)
         for entry in data:
             yield LogbookEntry.model_validate(entry)
 
     async def get_entity_histories(
         self,
-        entities: Optional[Tuple[Entity, ...]] = None,
-        start_timestamp: Optional[datetime] = None,
+        entities: tuple[AsyncEntity, ...] | None = None,
+        start_timestamp: datetime | None = None,
         # Defaults to 1 day before. https://developers.home-assistant.io/docs/api/rest/
-        end_timestamp: Optional[datetime] = None,
+        end_timestamp: datetime | None = None,
+        *,
         significant_changes_only: bool = False,
     ) -> AsyncGenerator[History, None]:
         """
@@ -182,10 +188,7 @@ class AsyncClient(BaseClient):
             end_timestamp=end_timestamp,
             significant_changes_only=significant_changes_only,
         )
-        data = await self.request(
-            url,
-            params=self.construct_params(params),
-        )
+        data = await self._list_request(url, params=params)
         for states in data:
             yield History.model_validate({"states": states})
 
@@ -195,19 +198,17 @@ class AsyncClient(BaseClient):
         :code:`POST /api/template`
         """
         try:
-            return cast(
-                str,
-                await self.request(
-                    "template",
-                    json=dict(template=template),
-                    method="POST",
-                ),
+            return await self._str_request(
+                "template",
+                json={"template": template},
+                method=HTTPMethod.POST,
             )
         except RequestError as err:
-            raise BadTemplateError(
+            msg = (
                 "Your template is invalid. "
                 "Try debugging it in the developer tools page of homeassistant."
-            ) from err
+            )
+            raise BadTemplateError(msg) from err
 
     # API check methods
     async def check_api_config(self) -> bool:
@@ -215,45 +216,40 @@ class AsyncClient(BaseClient):
         Asks Home Assistant to validate its configuration file and returns true/false.
         :code:`POST /api/config/core/check_config`
         """
-        res = await self.request("config/core/check_config", method="POST")
-        res = cast(Dict[Any, Any], res)
-        valid = {"valid": True, "invalid": False}.get(
-            cast(
-                str,
-                res["result"],
-            ),
-            False,
+        res = await self._dict_request(
+            "config/core/check_config",
+            method=HTTPMethod.POST,
         )
-        return valid
+        return {"valid": True, "invalid": False}.get(res["result"], False)
 
     async def check_api_running(self) -> bool:
         """
         Asks Home Assistant if its running.
         :code:`GET /api/`
         """
-        res = cast(Dict[Any, Any], await self.request(""))
+        res = await self._dict_request("")
         return res.get("message") == "API running."
 
     # Entity methods
-    async def get_entities(self) -> Dict[str, Group]:
+    async def get_entities(self) -> dict[str, AsyncGroup]:
         """
         Fetches all entities from the api.
         :code:`GET /api/states`
         """
-        entities: Dict[str, Group] = {}
+        entities: dict[str, AsyncGroup] = {}
         for state in await self.get_states():
             group_id, entity_slug = state.entity_id.split(".")
             if group_id not in entities:
-                entities[group_id] = Group(group_id=group_id, _client=self)  # type: ignore[arg-type]
-            entities[group_id]._add_entity(entity_slug, state)
+                entities[group_id] = AsyncGroup(group_id=group_id, client=self)
+            entities[group_id]._add_entity(entity_slug, state)  # noqa: SLF001
         return entities
 
     async def get_entity(
         self,
-        group_id: Optional[str] = None,
-        slug: Optional[str] = None,
-        entity_id: Optional[str] = None,
-    ) -> Optional[Entity]:
+        group_id: str | None = None,
+        slug: str | None = None,
+        entity_id: str | None = None,
+    ) -> AsyncEntity | None:
         """
         Returns a Entity model for an :code:`entity_id`.
         :code:`GET /api/states/<entity_id>`
@@ -267,30 +263,26 @@ class AsyncClient(BaseClient):
                 "Use keyword arguments to pass entity_id. "
                 "Or you can pass the group_id and slug instead."
             )
-            raise ValueError(
-                f"Neither group_id and slug or entity_id provided. {help_msg}"
-            )
+            msg = f"Neither group_id and slug or entity_id provided. {help_msg}"
+            raise ValueError(msg)
         group_id, entity_slug = state.entity_id.split(".")
-        group = Group(group_id=group_id, _client=self)  # type: ignore[arg-type]
-        group._add_entity(entity_slug, state)
+        group = AsyncGroup(group_id=group_id, client=self)
+        group._add_entity(entity_slug, state)  # noqa: SLF001
         return group.get_entity(entity_slug)
 
     # Services and domain methods
-    async def get_domains(self) -> Dict[str, Domain]:
+    async def get_domains(self) -> dict[str, AsyncDomain]:
         """
         Fetches all :py:class:`Service` 's from the API.
         :code:`GET /api/services`
         """
-        data = await self.request("services")
-        domains = map(
-            lambda json: Domain.from_json_with_client(
-                json, client=cast("AsyncClient", self)
-            ),
-            cast(Tuple[dict[str, JSONType], ...], data),
+        data = await self._list_request("services")
+        domains = (
+            AsyncDomain.from_json_with_client(json, client=self) for json in data
         )
         return {domain.domain_id: domain for domain in domains}
 
-    async def get_domain(self, domain_id: str) -> Optional[Domain]:
+    async def get_domain(self, domain_id: str) -> AsyncDomain | None:
         """
         Fetches all :py:class:`Service`'s under a particular service :py:class:`Domain`.
         Uses cached data from :py:meth:`get_domains` if available.
@@ -302,44 +294,41 @@ class AsyncClient(BaseClient):
         self,
         domain: str,
         service: str,
-        **service_data: Union[dict[str, JSONType], List[Any], str],
-    ) -> Tuple[State, ...]:
+        **service_data: Any,
+    ) -> tuple[State, ...]:
         """
         Tells Home Assistant to trigger a service, returns all states changed while in the process of being called.
         :code:`POST /api/services/<domain>/<service>`
         """
-        data = await self.request(
+        data = await self._list_request(
             f"services/{domain}/{service}",
-            method="POST",
+            method=HTTPMethod.POST,
             json=service_data,
         )
-        return tuple(map(State.from_json, cast(List[Dict[Any, Any]], data)))
+        return tuple(map(State.from_json, data))
 
     async def trigger_service_with_response(
         self,
         domain: str,
         service: str,
-        **service_data: Union[dict[str, JSONType], List[Any], str],
-    ) -> tuple[tuple[State, ...], dict[str, JSONType]]:
+        **service_data: Any,
+    ) -> tuple[tuple[State, ...], dict[str, Any]]:
         """
         Tells Home Assistant to trigger a service, returns the response from the service call.
         :code:`POST /api/services/<domain>/<service>`
 
         Returns a list of the states changed and the response from the service call.
         """
-        data = cast(
-            dict[str, dict[str, JSONType]],
-            await self.request(
-                join("services", domain, service) + "?return_response",
-                method="POST",
-                json=service_data,
-            ),
+        data = await self._dict_request(
+            join("services", domain, service) + "?return_response",
+            method=HTTPMethod.POST,
+            json=service_data,
         )
         states = tuple(
             map(
                 State.from_json,
-                cast(List[Dict[Any, Any]], data.get("changed_states", [])),
-            )
+                data.get("changed_states", []),
+            ),
         )
         return states, data.get("service_response", {})
 
@@ -347,9 +336,9 @@ class AsyncClient(BaseClient):
     async def get_state(  # pylint: disable=duplicate-code
         self,
         *,
-        entity_id: Optional[str] = None,
-        group_id: Optional[str] = None,
-        slug: Optional[str] = None,
+        entity_id: str | None = None,
+        group_id: str | None = None,
+        slug: str | None = None,
     ) -> State:
         """
         Fetches the state of the entity specified.
@@ -360,8 +349,8 @@ class AsyncClient(BaseClient):
             slug=slug,
             entity_id=entity_id,
         )
-        data = await self.request(join("states", target_entity_id))
-        return State.from_json(cast(Dict[Any, Any], data))
+        data = await self._dict_request(join("states", target_entity_id))
+        return State.from_json(data)
 
     async def set_state(  # pylint: disable=duplicate-code
         self,
@@ -372,38 +361,33 @@ class AsyncClient(BaseClient):
         To communicate with the device, use :py:meth:`Service.trigger` or :py:meth:`Service.async_trigger`.
         :code:`POST /api/states/<entity_id>`
         """
-        data = await self.request(
+        data = await self._dict_request(
             join("states", state.entity_id),
-            method="POST",
+            method=HTTPMethod.POST,
             json=json.loads(state.model_dump_json()),
         )
-        return State.from_json(cast(Dict[Any, Any], data))
+        return State.from_json(data)
 
-    async def get_states(self) -> Tuple[State, ...]:
+    async def get_states(self) -> tuple[State, ...]:
         """
         Gets the states of all entities within homeassistant.
         :code:`GET /api/states`
         """
-        data = await self.request("states")
-        return tuple(map(State.from_json, cast(List[Dict[Any, Any]], data)))
+        data = await self._list_request("states")
+        return tuple(map(State.from_json, data))
 
     # Event methods
-    async def get_events(self) -> Tuple[Event, ...]:
+    async def get_events(self) -> tuple[AsyncEvent, ...]:
         """
         Gets the Events that happen within homeassistant
         :code:`GET /api/events`
         """
-        data = await self.request("events")
+        data = await self._list_request("events")
         return tuple(
-            map(
-                lambda json: Event.from_json_with_client(
-                    json, client=cast("AsyncClient", self)
-                ),
-                cast(List[dict[str, JSONType]], data),
-            )
+            AsyncEvent.from_json_with_client(json, client=self) for json in data
         )
 
-    async def get_event(self, name: str) -> Optional[Event]:
+    async def get_event(self, name: str) -> AsyncEvent | None:
         """
         Gets the :py:class:`Event` with the specified name if it has at least one listener.
         Uses cached data from :py:meth:`get_events` if available.
@@ -418,17 +402,17 @@ class AsyncClient(BaseClient):
         Fires a given event_type within homeassistant. Must be an existing event_type.
         :code:`POST /api/events/<event_type>`
         """
-        data = await self.request(
+        data = await self._dict_request(
             join("events", event_type),
-            method="POST",
+            method=HTTPMethod.POST,
             json=event_data,
         )
-        return cast(str, data.get("message", "No message provided"))
+        return data.get("message", "No message provided")
 
-    async def get_components(self) -> Tuple[str, ...]:
+    async def get_components(self) -> tuple[str, ...]:
         """
         Returns a tuple of all registered components.
         :code:`GET /api/components`
         """
-        data = await self.request("components")
-        return tuple(cast(List[str], data))
+        data = await self._list_request("components")
+        return tuple(data)

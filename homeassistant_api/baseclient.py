@@ -1,13 +1,15 @@
 """Module for parent BaseClient class"""
 
 import urllib.parse as urlparse
-from datetime import datetime, timedelta
+from collections.abc import Iterable
+from collections.abc import Mapping
+from datetime import datetime
+from datetime import timedelta
 from posixpath import join
-from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
+from typing import Any
 from urllib.parse import quote_plus
 
-from homeassistant_api.utils import JSONType
-
+from .models import AsyncEntity
 from .models import Entity
 
 
@@ -16,18 +18,19 @@ class BaseClient:
 
     api_url: str
     token: str
-    global_request_kwargs: dict[str, JSONType]
+    global_request_kwargs: dict[str, Any]
 
     def __init__(
         self,
         api_url: str,
         token: str,
         *,
-        global_request_kwargs: Optional[Mapping[str, str]] = None,
+        global_request_kwargs: Mapping[str, str] | None = None,
     ) -> None:
         parsed = urlparse.urlparse(api_url)
         if parsed.scheme not in {"http", "https"}:
-            raise ValueError(f"Unknown scheme {parsed.scheme} in {api_url}")
+            msg = f"Unknown scheme {parsed.scheme} in {api_url}"
+            raise ValueError(msg)
         if global_request_kwargs is None:
             global_request_kwargs = {}
         self.api_url = api_url
@@ -45,7 +48,7 @@ class BaseClient:
         return join(self.api_url, *path)
 
     @property
-    def _headers(self) -> Dict[str, str]:
+    def _headers(self) -> dict[str, str]:
         """Constructs the headers to send to the api for every request"""
         return {
             "Authorization": f"Bearer {self.token}",
@@ -54,21 +57,20 @@ class BaseClient:
 
     def prepare_headers(
         self,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, str]:
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, str]:
         """Prepares and verifies dictionary headers."""
         if headers is None:
             headers = {}
         if isinstance(headers, dict):
             headers.update(self._headers)
         else:
-            raise ValueError(
-                f"headers must be dict or dict subclass, not type {type(headers)!r}"
-            )
+            msg = f"headers must be dict or dict subclass, not type {type(headers)!r}"
+            raise TypeError(msg)
         return headers
 
     @staticmethod
-    def construct_params(params: Dict[str, Optional[str]]) -> str:
+    def construct_params(params: dict[str, str | None]) -> str:
         """
         Custom method for constructing non-standard query strings.
 
@@ -77,17 +79,17 @@ class BaseClient:
         To have an empty value use an empty string :code:`""` (i.e. :code:`?key1=&key2=value2`).
         """
         return "&".join(
-            [k if v is None else f"{k}={quote_plus(v)}" for k, v in params.items()]
+            [k if v is None else f"{k}={quote_plus(v)}" for k, v in params.items()],
         )
 
     @staticmethod
     def prepare_get_entity_histories_params(
-        entities: Optional[Tuple[Entity, ...]] = None,
-        start_timestamp: Optional[datetime] = None,
+        entities: tuple[Entity | AsyncEntity, ...] | None = None,
+        start_timestamp: datetime | None = None,
         # Defaults to 1 day before. https://developers.home-assistant.io/docs/api/rest/
-        end_timestamp: Optional[datetime] = None,
+        end_timestamp: datetime | None = None,
         significant_changes_only: bool = False,
-    ) -> Tuple[Dict[str, Optional[str]], str]:
+    ) -> tuple[dict[str, str | None], str]:
         """
         Pre-logic for :py:meth:`Client.get_entity_histories` and :py:meth:`AsyncClient.get_entity_histories`.
 
@@ -97,7 +99,7 @@ class BaseClient:
         * are timezone-aware
         * are URL-encoded (as :py:meth:`construct_params` is used instead of request's default parameter encoding)
         """
-        params: Dict[str, Optional[str]] = {}
+        params: dict[str, str | None] = {}
         if entities is not None:
             params["filter_entity_id"] = ",".join([ent.entity_id for ent in entities])
         if start_timestamp is not None:
@@ -118,14 +120,12 @@ class BaseClient:
 
     @staticmethod
     def prepare_get_logbook_entry_params(
-        filter_entities: Optional[Union[str, Iterable[str]]] = None,
-        start_timestamp: Optional[
-            Union[str, datetime]
-        ] = None,  # Defaults to 1 day before
-        end_timestamp: Optional[Union[str, datetime]] = None,
-    ) -> Tuple[Dict[str, str], str]:
+        filter_entities: str | Iterable[str] | None = None,
+        start_timestamp: str | datetime | None = None,  # Defaults to 1 day before
+        end_timestamp: str | datetime | None = None,
+    ) -> tuple[dict[str, str], str]:
         """Prepares the query string and url path for retrieving logbook entries."""
-        params: Dict[str, str] = {}
+        params: dict[str, str] = {}
         if filter_entities is not None:
             params.update(
                 {
@@ -133,8 +133,8 @@ class BaseClient:
                         filter_entities
                         if isinstance(filter_entities, str)
                         else ",".join(filter_entities)
-                    )
-                }
+                    ),
+                },
             )
         if end_timestamp is not None:
             if isinstance(end_timestamp, datetime):

@@ -1,11 +1,16 @@
 """Unit tests for WebsocketClient, AsyncWebsocketClient error paths."""
 
-import pytest
+from typing import Any
 
-from homeassistant_api.errors import ReceivingError, RequestError, ResponseError
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+
 from homeassistant_api.asyncwebsocket import AsyncWebsocketClient
-from homeassistant_api.websocket import WebsocketClient
+from homeassistant_api.errors import ReceivingError
+from homeassistant_api.errors import RequestError
+from homeassistant_api.errors import ResponseError
 from homeassistant_api.models import websocket as ws_models
+from homeassistant_api.websocket import WebsocketClient
 
 
 def make_sync_client() -> WebsocketClient:
@@ -57,7 +62,7 @@ def test_parse_response_error_result() -> None:
                 "type": "result",
                 "success": False,
                 "error": {"code": "not_found", "message": "Entity not found"},
-            }
+            },
         )
 
 
@@ -68,17 +73,20 @@ def test_parse_response_unexpected_type() -> None:
         client.parse_response({"id": 1, "type": "unknown_type"})
 
 
-def test_authentication_phase_invalid_welcome(monkeypatch) -> None:
+def test_authentication_phase_invalid_welcome(monkeypatch: MonkeyPatch) -> None:
     """Tests authentication_phase raises ResponseError on invalid welcome message."""
     client = make_sync_client()
     monkeypatch.setattr(client, "_recv", lambda: {"type": "not_auth_required"})
     with pytest.raises(
-        ResponseError, match="Unexpected response during authentication"
+        ResponseError,
+        match="Unexpected response during authentication",
     ):
         client.authentication_phase()
 
 
-def test_authentication_phase_unexpected_auth_response(monkeypatch) -> None:
+def test_authentication_phase_unexpected_auth_response(
+    monkeypatch: MonkeyPatch,
+) -> None:
     """Tests authentication_phase raises ResponseError when AuthOk.model_validate raises a non-ValidationError."""
     call_count = 0
 
@@ -91,17 +99,19 @@ def test_authentication_phase_unexpected_auth_response(monkeypatch) -> None:
 
     client = make_sync_client()
     monkeypatch.setattr(client, "_recv", fake_recv)
-    monkeypatch.setattr(client, "_send", lambda data: None)
+    monkeypatch.setattr(client, "_send", lambda _: None)
 
     # Patch AuthOk.model_validate to raise a non-ValidationError exception
 
-    def raise_runtime_error(*args, **kwargs):
-        raise RuntimeError("something went wrong")
+    def raise_runtime_error(*args: Any, **kwargs: Any):  # noqa: ARG001
+        msg = "something went wrong"
+        raise RuntimeError(msg)
 
     monkeypatch.setattr(ws_models.AuthOk, "model_validate", raise_runtime_error)
 
     with pytest.raises(
-        ResponseError, match="Unexpected response during authentication"
+        ResponseError,
+        match="Unexpected response during authentication",
     ):
         client.authentication_phase()
 
@@ -127,7 +137,9 @@ async def test_async_recv_without_connection() -> None:
         await client._async_recv()
 
 
-async def test_async_authentication_phase_invalid_welcome(monkeypatch) -> None:
+async def test_async_authentication_phase_invalid_welcome(
+    monkeypatch: MonkeyPatch,
+) -> None:
     """Tests authentication_phase raises ResponseError on invalid welcome message."""
     client = make_async_client()
 
@@ -136,13 +148,14 @@ async def test_async_authentication_phase_invalid_welcome(monkeypatch) -> None:
 
     monkeypatch.setattr(client, "_async_recv", fake_recv)
     with pytest.raises(
-        ResponseError, match="Unexpected response during authentication"
+        ResponseError,
+        match="Unexpected response during authentication",
     ):
         await client.authentication_phase()
 
 
 async def test_async_authentication_phase_unexpected_auth_response(
-    monkeypatch,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     """Tests authentication_phase raises ResponseError when AuthOk.model_validate raises a non-ValidationError."""
     call_count = 0
@@ -157,17 +170,19 @@ async def test_async_authentication_phase_unexpected_auth_response(
     client = make_async_client()
     monkeypatch.setattr(client, "_async_recv", fake_recv)
 
-    async def fake_send(data):
+    async def fake_send(data: Any):
         pass
 
     monkeypatch.setattr(client, "_async_send", fake_send)
 
-    def raise_runtime_error(*args, **kwargs):
-        raise RuntimeError("something went wrong")
+    def raise_runtime_error(*args: Any, **kwargs: Any) -> None:  # noqa: ARG001
+        msg = "something went wrong"
+        raise RuntimeError(msg)
 
     monkeypatch.setattr(ws_models.AuthOk, "model_validate", raise_runtime_error)
 
     with pytest.raises(
-        ResponseError, match="Unexpected response during authentication"
+        ResponseError,
+        match="Unexpected response during authentication",
     ):
         await client.authentication_phase()

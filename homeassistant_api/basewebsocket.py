@@ -1,21 +1,17 @@
 import logging
 import time
 import urllib.parse as urlparse
-from typing import Optional, cast
+from typing import Any
+from typing import cast
 
 from pydantic import ValidationError
 
-from homeassistant_api.errors import (
-    ReceivingError,
-    RequestError,
-)
-from homeassistant_api.models.websocket import (
-    ErrorResponse,
-    EventResponse,
-    PingResponse,
-    ResultResponse,
-)
-from homeassistant_api.utils import JSONType
+from homeassistant_api.errors import ReceivingError
+from homeassistant_api.errors import RequestError
+from homeassistant_api.models.websocket import ErrorResponse
+from homeassistant_api.models.websocket import EventResponse
+from homeassistant_api.models.websocket import PingResponse
+from homeassistant_api.models.websocket import ResultResponse
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +22,15 @@ class BaseWebsocketClient:
     api_url: str
     token: str
     _id_counter: int
-    _result_responses: dict[int, Optional[ResultResponse]]
+    _result_responses: dict[int, ResultResponse | None]
     _event_responses: dict[int, list[EventResponse]]
     _ping_responses: dict[int, PingResponse]
 
     def __init__(self, api_url: str, token: str) -> None:
         parsed = urlparse.urlparse(api_url)
         if parsed.scheme not in {"ws", "wss"}:
-            raise ValueError(f"Unknown scheme {parsed.scheme} in {api_url}")
+            msg = f"Unknown scheme {parsed.scheme} in {api_url}"
+            raise ValueError(msg)
         self.api_url = api_url
         self.token = token.strip()
 
@@ -50,7 +47,7 @@ class BaseWebsocketClient:
         self._id_counter += 1
         return self._id_counter
 
-    def check_success(self, data: dict[str, JSONType]) -> None:
+    def check_success(self, data: dict[str, Any]) -> None:
         """Check if a command message was successful."""
         try:
             error_resp = ErrorResponse.model_validate(data)
@@ -58,17 +55,16 @@ class BaseWebsocketClient:
         except ValidationError:
             pass
 
-    def handle_recv(self, data: dict[str, JSONType]) -> None:
+    def handle_recv(self, data: dict[str, Any]) -> None:
         """Handle a received message."""
         if "id" not in data:
-            raise ReceivingError(
-                "Received a message without an id outside the auth phase."
-            )
+            msg = "Received a message without an id outside the auth phase."
+            raise ReceivingError(msg)
         self.check_success(data)
         self.parse_response(data)
 
-    def parse_response(self, data: dict[str, JSONType]) -> None:
-        data_id = cast(int, data["id"])
+    def parse_response(self, data: dict[str, Any]) -> None:
+        data_id = cast("int", data["id"])
         if data.get("type") == "pong":
             logger.info("Received pong message")
             self._ping_responses[data_id].end = time.perf_counter_ns()
@@ -83,4 +79,5 @@ class BaseWebsocketClient:
             logger.info("Received event message %s", data["event"])
             self._event_responses[data_id].append(EventResponse.model_validate(data))
         else:
-            raise ReceivingError(f"Received unexpected message type: {data}")
+            msg = f"Received unexpected message type: {data}"
+            raise ReceivingError(msg)
