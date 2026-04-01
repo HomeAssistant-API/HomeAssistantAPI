@@ -29,7 +29,8 @@ from homeassistant_api.errors import ResponseError
 from homeassistant_api.errors import UnauthorizedError
 from homeassistant_api.errors import UnexpectedStatusCodeError
 from homeassistant_api.models.websocket import Error
-from homeassistant_api.processing import Processing
+from homeassistant_api.processing import async_process_response
+from homeassistant_api.processing import process_response
 from homeassistant_api.utils import prepare_entity_id
 
 HA_URL = os.environ["HOMEASSISTANTAPI_URL"]
@@ -162,6 +163,8 @@ def make_response(
         spec=requests.Response,
         status_code=status_code,
         text=content,
+        url="http://localhost/api/test",
+        request=unittest.mock.Mock(method="GET"),
         headers=CIMultiDictProxy(CIMultiDict(headers)),
         json=unittest.mock.Mock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
@@ -178,8 +181,9 @@ def make_async_response(
     return unittest.mock.Mock(
         spec=aiohttp.ClientResponse,
         status=status_code,
+        method="GET",
+        url="http://localhost/api/test",
         text=unittest.mock.AsyncMock(return_value=content),
-        content=unittest.mock.Mock(_buffer=[content.encode()]),
         headers=CIMultiDictProxy(CIMultiDict(headers)),
         json=unittest.mock.AsyncMock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
@@ -189,36 +193,36 @@ def make_async_response(
 
 def test_exception_malformed_data_error() -> None:
     with pytest.raises(MalformedDataError):
-        Processing(
+        process_response(
             make_response(
                 200,
                 "{this is not valid json}",
                 {"Content-Type": "application/json"},
             ),
-        ).process()
+        )
 
 
 async def test_async_exception_malformed_data_error() -> None:
     with pytest.raises(MalformedDataError):
-        await Processing(
+        await async_process_response(
             make_async_response(
                 200,
                 "{this is not valid json}",
                 {"Content-Type": "application/json"},
             ),
-        ).process()
+        )
 
 
 def test_exception_internal_server_error() -> None:
     with pytest.raises(InternalServerError):
-        Processing(make_response(500, "", {})).process()
+        process_response(make_response(500, "", {}))
 
 
 def test_exception_processor_not_found_error() -> None:
     with pytest.raises(ProcessorNotFoundError):
-        Processing(
+        process_response(
             make_response(200, "", {"Content-Type": "this_type/does-not-exist"}),
-        ).process()
+        )
 
 
 def test_exception_api_config_error() -> None:
@@ -235,7 +239,7 @@ def test_exception_response_error() -> None:
 
 def test_exception_unexpected_status_code() -> None:
     with pytest.raises(UnexpectedStatusCodeError):
-        Processing(make_response(0, "", {})).process()
+        process_response(make_response(0, "", {}))
 
 
 def test_unkown_scheme() -> None:

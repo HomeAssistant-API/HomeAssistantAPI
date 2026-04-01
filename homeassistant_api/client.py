@@ -25,8 +25,8 @@ from homeassistant_api.models import Group
 from homeassistant_api.models import History
 from homeassistant_api.models import LogbookEntry
 from homeassistant_api.models import State
-from homeassistant_api.processing import Processing
 from homeassistant_api.processing import ResponseType
+from homeassistant_api.processing import process_response
 from homeassistant_api.utils import prepare_entity_id
 
 if TYPE_CHECKING:
@@ -92,7 +92,6 @@ class Client(BaseClient):
         params: dict[str, Any] | None = None,
         method: HTTPMethod = HTTPMethod.GET,
         headers: dict[str, str] | None = None,
-        decode_bytes: bool = True,
         **kwargs: Any,
     ) -> Any:
         """Base method for making requests to the api"""
@@ -112,7 +111,7 @@ class Client(BaseClient):
         except Timeout as err:
             msg = f"Home Assistant did not respond in time (timeout: {kwargs.get('timeout', 300)} sec)"
             raise RequestTimeoutError(msg, url=path) from err
-        return self.response_logic(response=resp, decode_bytes=decode_bytes)
+        return self.response_logic(response=resp)
 
     def _dict_request(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         data = self.request(*args, **kwargs)
@@ -135,10 +134,10 @@ class Client(BaseClient):
             raise TypeError(msg)
         return data
 
-    @classmethod
-    def response_logic(cls, response: ResponseType, decode_bytes: bool = True) -> Any:
+    @staticmethod
+    def response_logic(response: ResponseType) -> Any:
         """Processes responses from the API and formats them"""
-        return Processing(response=response, decode_bytes=decode_bytes).process()
+        return process_response(response)
 
     # API information methods
     def get_error_log(self) -> str:

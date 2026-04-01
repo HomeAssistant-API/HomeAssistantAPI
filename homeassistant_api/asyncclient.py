@@ -27,7 +27,7 @@ from .models import History
 from .models import LogbookEntry
 from .models import State
 from .processing import AsyncResponseType
-from .processing import Processing
+from .processing import async_process_response
 from .utils import prepare_entity_id
 
 if TYPE_CHECKING:
@@ -137,8 +137,8 @@ class AsyncClient(BaseClient):
 
     @staticmethod
     async def response_logic(response: AsyncResponseType) -> Any:
-        """Processes custom mimetype content asyncronously."""
-        return await Processing(response=response).process()
+        """Processes custom mimetype content asynchronously."""
+        return await async_process_response(response)
 
     # API information methods
     async def get_error_log(self) -> str:
