@@ -1,4 +1,4 @@
-"""Module for all interaction with homeassistant."""
+"""Module for all interaction with Home Assistant."""
 
 from __future__ import annotations
 
@@ -39,11 +39,14 @@ logger = logging.getLogger(__name__)
 
 class Client(BaseClient):
     """
-    The base object for interacting with Homeassistant via the REST API.
+    The sync client for interacting with Home Assistant via the REST API.
 
     :param api_url: The location of the api endpoint. e.g. :code:`http://localhost:8123/api` Required.
     :param token: The refresh or long lived access token to authenticate your requests. Required.
-    :param global_request_kwargs: Kwargs to pass to :func:`requests.request` or :meth:`aiohttp.ClientSession.request`. Optional.
+    :param session: A custom :py:class:`requests_cache.CachedSession` or :py:class:`requests.Session` instance. Optional.
+    :param use_cache: Enable the default in-memory request cache (300s expiry). Ignored if :code:`session` is provided. Default :code:`False`.
+    :param verify_ssl: Whether to verify SSL certificates. Default :code:`True`.
+    :param global_request_kwargs: Kwargs to pass to :func:`requests.request`. Optional.
     """  # pylint: disable=line-too-long
 
     _session: CachedSession | Session
@@ -51,8 +54,7 @@ class Client(BaseClient):
     def __init__(
         self,
         *args: Any,
-        session: CachedSession
-        | None = None,  # Explicitly disable cache with cache_session=False
+        session: CachedSession | None = None,
         use_cache: bool = False,
         verify_ssl: bool = True,
         **kwargs: Any,
@@ -149,7 +151,7 @@ class Client(BaseClient):
 
     def get_config(self) -> dict[str, Any]:
         """
-        Returns the yaml configuration of homeassistant.
+        Returns the configuration of Home Assistant.
         :code:`GET /api/config`
         """
         return self._dict_request("config")
@@ -160,7 +162,7 @@ class Client(BaseClient):
         **kwargs: Any,
     ) -> Generator[LogbookEntry, None, None]:
         """
-        Returns a list of logbook entries from homeassistant.
+        Returns a list of logbook entries from Home Assistant.
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
@@ -206,7 +208,7 @@ class Client(BaseClient):
         except RequestError as err:
             msg = (
                 "Your template is invalid. "
-                "Try debugging it in the developer tools page of homeassistant."
+                "Try debugging it in the developer tools page of Home Assistant."
             )
             raise BadTemplateError(msg) from err
 
@@ -276,7 +278,7 @@ class Client(BaseClient):
     # Services and domain methods
     def get_domains(self) -> dict[str, Domain]:
         """
-        Fetches all :py:class:`Service` 's from the API.
+        Fetches all service :py:class:`Domain`'s from the API.
         :code:`GET /api/services`
         """
         data = self._list_request("services")
@@ -358,7 +360,7 @@ class Client(BaseClient):
     ) -> State:
         """
         This method sets the representation of a device within Home Assistant and will not communicate with the actual device.
-        To communicate with the device, use :py:meth:`Service.trigger` or :py:meth:`Service.async_trigger`.
+        To communicate with the device, use :py:meth:`Service.trigger`.
         :code:`POST /api/states/<entity_id>`
         """
         data = self._dict_request(
@@ -370,7 +372,7 @@ class Client(BaseClient):
 
     def get_states(self) -> tuple[State, ...]:
         """
-        Gets the states of all entities within homeassistant.
+        Gets the states of all entities within Home Assistant.
         :code:`GET /api/states`
         """
         data = self._list_request("states")
@@ -380,7 +382,7 @@ class Client(BaseClient):
     # Event methods
     def get_events(self) -> tuple[Event, ...]:
         """
-        Gets the Events that happen within homeassistant
+        Gets the Events that happen within Home Assistant.
         :code:`GET /api/events`
         """
         data = self._list_request("events")
@@ -398,7 +400,7 @@ class Client(BaseClient):
 
     def fire_event(self, event_type: str, **event_data: Any) -> str:
         """
-        Fires a given event_type within homeassistant. Must be an existing event_type.
+        Fires a given event_type within Home Assistant.
         `POST /api/events/<event_type>`
         """
         data = self._dict_request(

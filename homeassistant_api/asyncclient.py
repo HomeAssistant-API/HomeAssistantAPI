@@ -1,4 +1,4 @@
-"""Module for interacting with Home Assistant asyncronously."""
+"""Module for interacting with Home Assistant asynchronously."""
 
 from __future__ import annotations
 
@@ -42,11 +42,14 @@ logger = logging.getLogger(__name__)
 
 class AsyncClient(BaseClient):
     """
-    The async equivalent of :py:class:`Client`
+    The async client for interacting with Home Assistant via the REST API.
 
     :param api_url: The location of the api endpoint. e.g. :code:`http://localhost:8123/api` Required.
     :param token: The refresh or long lived access token to authenticate your requests. Required.
-    :param global_request_kwargs: A dictionary or dict-like object of kwargs to pass to :func:`requests.request` or :meth:`aiohttp.request`. Optional.
+    :param session: A custom :py:class:`aiohttp_client_cache.session.CachedSession` or :py:class:`aiohttp.ClientSession` instance. Optional.
+    :param use_cache: Enable the default in-memory request cache (300s expiry). Ignored if :code:`session` is provided. Default :code:`False`.
+    :param verify_ssl: Whether to verify SSL certificates. Default :code:`True`.
+    :param global_request_kwargs: Kwargs to pass to :meth:`aiohttp.ClientSession.request`. Optional.
     """  # pylint: disable=line-too-long
 
     _session: CachedSession | ClientSession
@@ -150,7 +153,7 @@ class AsyncClient(BaseClient):
 
     async def get_config(self) -> dict[str, Any]:
         """
-        Returns the yaml configuration of homeassistant.
+        Returns the configuration of Home Assistant.
         :code:`GET /api/config`
         """
         return await self._dict_request("config")
@@ -161,7 +164,7 @@ class AsyncClient(BaseClient):
         **kwargs: Any,
     ) -> AsyncGenerator[LogbookEntry, None]:
         """
-        Returns a list of logbook entries from homeassistant.
+        Returns a list of logbook entries from Home Assistant.
         :code:`GET /api/logbook/<timestamp>`
         """
         params, url = self.prepare_get_logbook_entry_params(*args, **kwargs)
@@ -179,7 +182,7 @@ class AsyncClient(BaseClient):
         significant_changes_only: bool = False,
     ) -> AsyncGenerator[History, None]:
         """
-        Returns a generator of entity state histories from homeassistant.
+        Yields entity state histories. See docs on the :py:class:`History` model.
         :code:`GET /api/history/period/<timestamp>`
         """
         params, url = self.prepare_get_entity_histories_params(
@@ -206,14 +209,14 @@ class AsyncClient(BaseClient):
         except RequestError as err:
             msg = (
                 "Your template is invalid. "
-                "Try debugging it in the developer tools page of homeassistant."
+                "Try debugging it in the developer tools page of Home Assistant."
             )
             raise BadTemplateError(msg) from err
 
     # API check methods
     async def check_api_config(self) -> bool:
         """
-        Asks Home Assistant to validate its configuration file and returns true/false.
+        Asks Home Assistant to validate its configuration file.
         :code:`POST /api/config/core/check_config`
         """
         res = await self._dict_request(
@@ -224,7 +227,7 @@ class AsyncClient(BaseClient):
 
     async def check_api_running(self) -> bool:
         """
-        Asks Home Assistant if its running.
+        Asks Home Assistant if it is running.
         :code:`GET /api/`
         """
         res = await self._dict_request("")
@@ -233,7 +236,7 @@ class AsyncClient(BaseClient):
     # Entity methods
     async def get_entities(self) -> dict[str, AsyncGroup]:
         """
-        Fetches all entities from the api.
+        Fetches all entities from the api and returns them as a dictionary of :py:class:`AsyncGroup`'s.
         :code:`GET /api/states`
         """
         entities: dict[str, AsyncGroup] = {}
@@ -251,7 +254,7 @@ class AsyncClient(BaseClient):
         entity_id: str | None = None,
     ) -> AsyncEntity | None:
         """
-        Returns a Entity model for an :code:`entity_id`.
+        Returns an :py:class:`AsyncEntity` model for an :code:`entity_id`.
         :code:`GET /api/states/<entity_id>`
         """
         if group_id is not None and slug is not None:
@@ -273,7 +276,7 @@ class AsyncClient(BaseClient):
     # Services and domain methods
     async def get_domains(self) -> dict[str, AsyncDomain]:
         """
-        Fetches all :py:class:`Service` 's from the API.
+        Fetches all service :py:class:`AsyncDomain`'s from the API.
         :code:`GET /api/services`
         """
         data = await self._list_request("services")
@@ -284,7 +287,7 @@ class AsyncClient(BaseClient):
 
     async def get_domain(self, domain_id: str) -> AsyncDomain | None:
         """
-        Fetches all :py:class:`Service`'s under a particular service :py:class:`Domain`.
+        Fetches all :py:class:`AsyncService`'s under a particular service :py:class:`AsyncDomain`.
         Uses cached data from :py:meth:`get_domains` if available.
         """
         domains = await self.get_domains()
@@ -358,7 +361,7 @@ class AsyncClient(BaseClient):
     ) -> State:
         """
         This method sets the representation of a device within Home Assistant and will not communicate with the actual device.
-        To communicate with the device, use :py:meth:`Service.trigger` or :py:meth:`Service.async_trigger`.
+        To communicate with the device, use :py:meth:`AsyncService.trigger`.
         :code:`POST /api/states/<entity_id>`
         """
         data = await self._dict_request(
@@ -370,7 +373,7 @@ class AsyncClient(BaseClient):
 
     async def get_states(self) -> tuple[State, ...]:
         """
-        Gets the states of all entities within homeassistant.
+        Gets the states of all entities within Home Assistant.
         :code:`GET /api/states`
         """
         data = await self._list_request("states")
@@ -379,7 +382,7 @@ class AsyncClient(BaseClient):
     # Event methods
     async def get_events(self) -> tuple[AsyncEvent, ...]:
         """
-        Gets the Events that happen within homeassistant
+        Gets the Events that happen within Home Assistant.
         :code:`GET /api/events`
         """
         data = await self._list_request("events")
@@ -389,7 +392,7 @@ class AsyncClient(BaseClient):
 
     async def get_event(self, name: str) -> AsyncEvent | None:
         """
-        Gets the :py:class:`Event` with the specified name if it has at least one listener.
+        Gets the :py:class:`AsyncEvent` with the specified name if it has at least one listener.
         Uses cached data from :py:meth:`get_events` if available.
         """
         for event in await self.get_events():
@@ -399,7 +402,7 @@ class AsyncClient(BaseClient):
 
     async def fire_event(self, event_type: str, **event_data: Any) -> str:
         """
-        Fires a given event_type within homeassistant. Must be an existing event_type.
+        Fires a given event_type within Home Assistant.
         :code:`POST /api/events/<event_type>`
         """
         data = await self._dict_request(

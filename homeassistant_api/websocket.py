@@ -242,7 +242,7 @@ class WebsocketClient(BaseWebsocketClient):
 
     def get_config(self) -> dict[str, Any]:
         """
-        Get the Home Assistant configuration.
+        Returns the configuration of Home Assistant.
 
         Sends command :code:`{"type": "get_config", ...}`.
         """
@@ -250,7 +250,7 @@ class WebsocketClient(BaseWebsocketClient):
 
     def get_states(self) -> tuple[State, ...]:
         """
-        Get a list of states.
+        Gets the states of all entities within Home Assistant.
 
         Sends command :code:`{"type": "get_states", ...}`.
         """
@@ -267,10 +267,11 @@ class WebsocketClient(BaseWebsocketClient):
         slug: str | None = None,
     ) -> State:
         """
-        Just calls the :py:meth:`get_states` method and filters the result.
+        Fetches the state of the entity specified.
 
-        Please tell home-assistant/core to add a :code:`{"type": "get_state", ...}` command to the WS API!
-        There is a lot of disappointment and frustration in the community because this is not available.
+        Note: The WebSocket API has no single-entity state command, so this fetches all states and filters.
+
+        Sends command :code:`{"type": "get_states", ...}`.
         """
         entity_id = prepare_entity_id(
             group_id=group_id,
@@ -309,10 +310,7 @@ class WebsocketClient(BaseWebsocketClient):
         """
         Returns an :py:class:`Entity` model for an :code:`entity_id`.
 
-        Calls :py:meth:`get_states` under the hood.
-
-        Please tell home-assistant/core to add a :code:`{"type": "get_state", ...}` command to the WS API!
-        There is a lot of disappointment and frustration in the community because this is not available.
+        Note: The WebSocket API has no single-entity state command, so this fetches all states and filters.
         """
         if group_id is not None and slug is not None:
             state = self.get_state(group_id=group_id, slug=slug)
@@ -348,9 +346,7 @@ class WebsocketClient(BaseWebsocketClient):
 
     def get_domains(self) -> dict[str, Domain]:
         """
-        Get a list of services that Home Assistant offers (organized into a dictionary of service domains).
-
-        For example, the service :code:`light.turn_on` would be in the domain :code:`light`.
+        Fetches all service :py:class:`Domain`'s from the API.
 
         Sends command :code:`{"type": "get_services", ...}`.
         """
@@ -365,13 +361,10 @@ class WebsocketClient(BaseWebsocketClient):
         return {domain.domain_id: domain for domain in domains}
 
     def get_domain(self, domain_id: str) -> Domain | None:
-        """Get a domain.
+        """
+        Fetches all :py:class:`Service`'s under a particular service :py:class:`Domain`.
 
-        Note: This is not a method in the WS API client... yet.
-
-        Please tell home-assistant/core to add a `get_domain` command to the WS API!
-
-        For now, just call the :py:meth:`get_domains` method and parsing the result.
+        Note: The WebSocket API has no single-domain command, so this fetches all domains and filters.
         """
         return self.get_domains().get(domain_id)
 
@@ -724,7 +717,7 @@ class WebsocketClient(BaseWebsocketClient):
 
     def fire_event(self, event_type: str, **event_data: Any) -> Context:
         """
-        Fire an event.
+        Fires a given event_type within Home Assistant.
 
         Sends command :code:`{"type": "fire_event", ...}`.
         """

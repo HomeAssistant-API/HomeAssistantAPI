@@ -37,7 +37,7 @@ Next run in your terminal.
 Step Three: Installing Dependencies
 ======================================
 
-Firstly, you need to have Python 3.9 or newer installed.
+Firstly, you need to have Python 3.11 or newer installed.
 Download the latest Python Version from `here <https://www.python.org/>`__.
 Then you need to install :code:`uv`, a fast Python package manager.
 Checkout the `uv Docs <https://docs.astral.sh/uv/>`__.
@@ -69,7 +69,7 @@ Code Styling Guidelines
 In order to make sure that our code is easy to read, and navigate.
 As well as to stop stupid mistakes like typos, undefined variables, etc.
 We enforce code standards.
-Using the tools, :code:`ruff`, :code:`pytest`, and :code:`docker`, we make make sure that our code quality is top notch, and that are changes work everywhere.
+Using the tools, :code:`ruff`, :code:`zuban`, :code:`pytest`, and :code:`docker`, we make make sure that our code quality is top notch, and that are changes work everywhere.
 You can those tools manually yourself, but they also run automatically when you open a PR.
 
 Merging Your Contributions

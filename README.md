@@ -25,25 +25,22 @@ with Client(
     '<API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
     '<Your Long Lived Access-Token>'
 ) as client:
-    light = client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+    client.trigger_service('light', 'turn_on', entity_id="light.living_room")
 ```
 
-All the methods also support async/await!
-Just prefix the method with `async_` and pass the `use_async=True` argument to the `Client` constructor.
-Then you can use the methods as coroutines
-(i.e. `await light.async_turn_on(...)`).
+All four client classes share the same method names.
+The async clients (`AsyncClient`, `AsyncWebsocketClient`) use `async def` methods that you `await`.
 
 ```py
 import asyncio
-from homeassistant_api import Client
+from homeassistant_api import AsyncClient
 
 async def main():
-    with Client(
+    async with AsyncClient(
         '<REST API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
         '<Your Long Lived Access-Token>',
-        use_async=True
     ) as client:
-    light = await client.async_trigger_service('light', 'turn_on', entity_id="light.living_room")
+        await client.trigger_service('light', 'turn_on', entity_id="light.living_room")
 
 asyncio.run(main())
 ```
@@ -57,10 +54,8 @@ with WebsocketClient(
     '<WS API Server URL>', # i.e. 'ws://homeassistant.local:8123/api/websocket'
     '<Your Long Lived Access-Token>'
 ) as ws_client:
-    light = ws_client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+    ws_client.trigger_service('light', 'turn_on', entity_id="light.living_room")
 ```
-
-> Note: The Websocket API is not yet supported in async/await mode.
 
 ## Documentation
 

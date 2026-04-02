@@ -30,11 +30,11 @@ Features
 ----------
 
 - Full consumption of the Home Assistant REST API endpoints.
-- Full consumption of the Home Assistant Websocket API (all of the documented commands and some undocumented ones)
+- Full consumption of the Home Assistant Websocket API (all of the documented commands and some undocumented ones).
 - Convenient Pydantic Models for data validation.
-- Syncrononous and Asynchronous support for integrating with all applications and/or libraries.
+- Synchronous and asynchronous support for both REST and WebSocket clients.
 - Modular design for intuitive readability.
-- Request caching for more efficient repeative requests.
+- Request caching for more efficient repetitive requests.
 
 Getting Started
 -------------------
