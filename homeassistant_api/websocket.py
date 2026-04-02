@@ -25,6 +25,9 @@ from homeassistant_api.models import History
 from homeassistant_api.models import State
 from homeassistant_api.models.config_entries import DisableEnableResult
 from homeassistant_api.models.config_entries import FlowResult
+from homeassistant_api.models.entity_registry import EntityRegistryEntry
+from homeassistant_api.models.entity_registry import EntityRegistryEntryExtended
+from homeassistant_api.models.entity_registry import EntityRegistryUpdateResult
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import AuthInvalid
 from homeassistant_api.models.websocket import AuthOk
@@ -48,23 +51,15 @@ logger = logging.getLogger(__name__)
 class WebsocketClient(BaseWebsocketClient):
     _conn: ws.ClientConnection | None
 
-    def __init__(self, api_url: str, token: str) -> None:
-        super().__init__(api_url, token)
+    def __init__(self, api_url: str, token: str, *, max_size: int = 2**24) -> None:
+        super().__init__(api_url, token, max_size=max_size)
         self._conn = None
-
-        self._id_counter = 0
-        self._result_responses: dict[int, ResultResponse | None] = {}  # id -> response
-        self._event_responses: dict[
-            int,
-            list[EventResponse],
-        ] = {}  # id -> [response, ...]
-        self._ping_responses: dict[int, PingResponse] = {}  # id -> (sent, received)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.api_url!r})"
 
     def __enter__(self) -> Self:
-        self._conn = ws.connect(self.api_url)
+        self._conn = ws.connect(self.api_url, max_size=self.max_size)
         self._conn.__enter__()
         okay = self.authentication_phase()
         logger.info("Authenticated with Home Assistant (%s)", okay.ha_version)
@@ -647,6 +642,61 @@ class WebsocketClient(BaseWebsocketClient):
                 entry_id=entry_id,
                 subentry_id=subentry_id,
             ),
+        )
+
+    # ── Entity Registry ─────────────────────────────────────────
+
+    def list_entity_registry(self) -> tuple[EntityRegistryEntry, ...]:
+        """
+        List all entity registry entries.
+
+        Sends command :code:`{"type": "config/entity_registry/list", ...}`.
+        """
+        return tuple(
+            EntityRegistryEntry.from_json(entry)
+            for entry in self.recv_result_list(
+                self.send("config/entity_registry/list"),
+            )
+        )
+
+    def get_entity_registry_entry(self, entity_id: str) -> EntityRegistryEntryExtended:
+        """
+        Get a single entity registry entry.
+
+        Sends command :code:`{"type": "config/entity_registry/get", ...}`.
+        """
+        result = self.recv_result_dict(
+            self.send("config/entity_registry/get", entity_id=entity_id),
+        )
+        return EntityRegistryEntryExtended.from_json(result)
+
+    def update_entity_registry_entry(
+        self,
+        entity_id: str,
+        **kwargs: Any,
+    ) -> EntityRegistryUpdateResult:
+        """
+        Update an entity registry entry.
+
+        Sends command :code:`{"type": "config/entity_registry/update", ...}`.
+        """
+        result = self.recv_result_dict(
+            self.send(
+                "config/entity_registry/update",
+                entity_id=entity_id,
+                **kwargs,
+            ),
+        )
+        return EntityRegistryUpdateResult.from_json(result)
+
+    def remove_entity_registry_entry(self, entity_id: str) -> None:
+        """
+        Remove an entity from the entity registry.
+
+        Sends command :code:`{"type": "config/entity_registry/remove", ...}`.
+        """
+        self.recv(
+            self.send("config/entity_registry/remove", entity_id=entity_id),
         )
 
     @contextlib.contextmanager

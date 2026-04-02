@@ -21,18 +21,20 @@ class BaseWebsocketClient:
 
     api_url: str
     token: str
+    max_size: int
     _id_counter: int
     _result_responses: dict[int, ResultResponse | None]
     _event_responses: dict[int, list[EventResponse]]
     _ping_responses: dict[int, PingResponse]
 
-    def __init__(self, api_url: str, token: str) -> None:
+    def __init__(self, api_url: str, token: str, *, max_size: int = 2**24) -> None:
         parsed = urlparse.urlparse(api_url)
         if parsed.scheme not in {"ws", "wss"}:
             msg = f"Unknown scheme {parsed.scheme} in {api_url}"
             raise ValueError(msg)
         self.api_url = api_url
         self.token = token.strip()
+        self.max_size = max_size
 
         self._id_counter = 0
         self._result_responses = {}  # id -> response

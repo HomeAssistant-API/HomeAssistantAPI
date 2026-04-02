@@ -27,6 +27,12 @@ from .entity import BaseEntity
 from .entity import BaseGroup
 from .entity import Entity
 from .entity import Group
+from .entity_registry import EntityCategory
+from .entity_registry import EntityDisabledBy
+from .entity_registry import EntityHiddenBy
+from .entity_registry import EntityRegistryEntry
+from .entity_registry import EntityRegistryEntryExtended
+from .entity_registry import EntityRegistryUpdateResult
 from .events import AsyncEvent
 from .events import BaseEvent
 from .events import Event
@@ -57,6 +63,12 @@ __all__ = (
     "DiscoveryKey",
     "Domain",
     "Entity",
+    "EntityCategory",
+    "EntityDisabledBy",
+    "EntityHiddenBy",
+    "EntityRegistryEntry",
+    "EntityRegistryEntryExtended",
+    "EntityRegistryUpdateResult",
     "Event",
     "FlowContext",
     "FlowResult",

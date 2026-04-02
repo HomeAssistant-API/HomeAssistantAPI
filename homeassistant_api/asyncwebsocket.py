@@ -25,6 +25,9 @@ from homeassistant_api.models import History
 from homeassistant_api.models import State
 from homeassistant_api.models.config_entries import DisableEnableResult
 from homeassistant_api.models.config_entries import FlowResult
+from homeassistant_api.models.entity_registry import EntityRegistryEntry
+from homeassistant_api.models.entity_registry import EntityRegistryEntryExtended
+from homeassistant_api.models.entity_registry import EntityRegistryUpdateResult
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import AuthInvalid
 from homeassistant_api.models.websocket import AuthOk
@@ -48,12 +51,12 @@ logger = logging.getLogger(__name__)
 class AsyncWebsocketClient(BaseWebsocketClient):
     _async_conn: ws.ClientConnection | None
 
-    def __init__(self, api_url: str, token: str) -> None:
-        super().__init__(api_url, token)
+    def __init__(self, api_url: str, token: str, *, max_size: int = 2**24) -> None:
+        super().__init__(api_url, token, max_size=max_size)
         self._async_conn = None
 
     async def __aenter__(self) -> Self:
-        self._async_conn = await ws.connect(self.api_url)
+        self._async_conn = await ws.connect(self.api_url, max_size=self.max_size)
         await self._async_conn.__aenter__()
         okay = await self.authentication_phase()
         logger.info("Authenticated with Home Assistant (%s)", okay.ha_version)
@@ -663,6 +666,64 @@ class AsyncWebsocketClient(BaseWebsocketClient):
                 entry_id=entry_id,
                 subentry_id=subentry_id,
             ),
+        )
+
+    # ── Entity Registry ─────────────────────────────────────────
+
+    async def list_entity_registry(self) -> tuple[EntityRegistryEntry, ...]:
+        """
+        List all entity registry entries.
+
+        Sends command :code:`{"type": "config/entity_registry/list", ...}`.
+        """
+        return tuple(
+            EntityRegistryEntry.from_json(entry)
+            for entry in await self.recv_result_list(
+                await self.send("config/entity_registry/list"),
+            )
+        )
+
+    async def get_entity_registry_entry(
+        self,
+        entity_id: str,
+    ) -> EntityRegistryEntryExtended:
+        """
+        Get a single entity registry entry.
+
+        Sends command :code:`{"type": "config/entity_registry/get", ...}`.
+        """
+        result = await self.recv_result_dict(
+            await self.send("config/entity_registry/get", entity_id=entity_id),
+        )
+        return EntityRegistryEntryExtended.from_json(result)
+
+    async def update_entity_registry_entry(
+        self,
+        entity_id: str,
+        **kwargs: Any,
+    ) -> EntityRegistryUpdateResult:
+        """
+        Update an entity registry entry.
+
+        Sends command :code:`{"type": "config/entity_registry/update", ...}`.
+        """
+        result = await self.recv_result_dict(
+            await self.send(
+                "config/entity_registry/update",
+                entity_id=entity_id,
+                **kwargs,
+            ),
+        )
+        return EntityRegistryUpdateResult.from_json(result)
+
+    async def remove_entity_registry_entry(self, entity_id: str) -> None:
+        """
+        Remove an entity from the entity registry.
+
+        Sends command :code:`{"type": "config/entity_registry/remove", ...}`.
+        """
+        await self.recv(
+            await self.send("config/entity_registry/remove", entity_id=entity_id),
         )
 
     @contextlib.asynccontextmanager
