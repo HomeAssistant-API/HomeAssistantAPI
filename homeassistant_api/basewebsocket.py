@@ -7,7 +7,7 @@ from typing import cast
 from pydantic import ValidationError
 
 from homeassistant_api.errors import ReceivingError
-from homeassistant_api.errors import RequestError
+from homeassistant_api.errors import ResponseError
 from homeassistant_api.models.websocket import ErrorResponse
 from homeassistant_api.models.websocket import EventResponse
 from homeassistant_api.models.websocket import PingResponse
@@ -53,7 +53,8 @@ class BaseWebsocketClient:
         """Check if a command message was successful."""
         try:
             error_resp = ErrorResponse.model_validate(data)
-            raise RequestError(error_resp.error.code, error_resp.error.message)
+            msg = f"[{error_resp.error.code}] {error_resp.error.message}"
+            raise ResponseError(msg)
         except ValidationError:
             pass
 
@@ -76,7 +77,8 @@ class BaseWebsocketClient:
                 self._result_responses[data_id] = ResultResponse.model_validate(data)
             else:
                 error_resp = ErrorResponse.model_validate(data)
-                raise RequestError(error_resp.error.code, error_resp.error.message)
+                msg = f"[{error_resp.error.code}] {error_resp.error.message}"
+                raise ResponseError(msg)
         elif data.get("type") == "event":
             logger.info("Received event message %s", data["event"])
             self._event_responses[data_id].append(EventResponse.model_validate(data))

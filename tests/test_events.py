@@ -59,9 +59,9 @@ def test_listen_trigger(websocket_client: WebsocketClient) -> None:
 
 def test_listen_config_entries(websocket_client: WebsocketClient) -> None:
     with websocket_client.listen_config_entries() as flows:
-        for i, flow in zip(range(5), flows, strict=False):
-            # The first "events" are currently available entries
+        for i, flow in enumerate(flows):
             if i == 0:
+                # The first "events" are currently available entries
                 # Assumes that the first entry (sun.sun?) is enabled
                 assert flow[0].type is None
                 assert flow[0].entry.disabled_by is None
@@ -92,6 +92,7 @@ def test_listen_config_entries(websocket_client: WebsocketClient) -> None:
                 assert flow[0].type == ConfigEntryChange.UPDATED
                 assert flow[0].entry.disabled_by is None
                 assert flow[0].entry.state == ConfigEntryState.LOADED
+                break
 
 
 async def test_async_listen_config_entries(

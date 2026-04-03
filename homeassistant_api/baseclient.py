@@ -61,13 +61,11 @@ class BaseClient:
     ) -> dict[str, str]:
         """Prepares and verifies dictionary headers."""
         if headers is None:
-            headers = {}
-        if isinstance(headers, dict):
-            headers.update(self._headers)
-        else:
+            return dict(self._headers)
+        if not isinstance(headers, dict):
             msg = f"headers must be dict or dict subclass, not type {type(headers)!r}"
             raise TypeError(msg)
-        return headers
+        return {**self._headers, **headers}
 
     @staticmethod
     def construct_params(params: dict[str, str | None]) -> str:

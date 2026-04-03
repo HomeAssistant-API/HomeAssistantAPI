@@ -1,7 +1,5 @@
 """File for models used in responses from config entries."""
 
-import asyncio
-from collections.abc import Container
 from enum import Enum
 from typing import Any
 
@@ -61,10 +59,10 @@ class FlowResult(BaseModel):
     flow_id: str
     handler: str
     last_step: bool | None = None
-    menu_options: Container[str] | None = None
+    menu_options: list[str] | None = None
     preview: str | None = None
     progress_action: str | None = None
-    progress_task: asyncio.Task[Any] | None = None
+    progress_task: str | None = None
     reason: str | None = None
     required: bool | None = None
     result: Any | None = None

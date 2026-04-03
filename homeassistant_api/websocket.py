@@ -73,14 +73,14 @@ class WebsocketClient(BaseWebsocketClient):
         traceback: TracebackType | None,
     ) -> None:
         if not self._conn:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
+            return
         self._conn.__exit__(exc_type, exc_value, traceback)
         self._conn = None
 
     def _send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
-        logger.debug(f"Sending message: {data}")
+        if data.get("type") != "auth":
+            logger.debug(f"Sending message: {data}")
         if self._conn is None:
             msg = "Connection is not open!"
             raise ReceivingError(msg)
@@ -202,12 +202,13 @@ class WebsocketClient(BaseWebsocketClient):
         resp = self._recv()
         try:
             return AuthOk.model_validate(resp)
-        except ValidationError as e:
-            error_resp = AuthInvalid.model_validate(resp)
-            raise UnauthorizedError(error_resp.message) from e
-        except Exception as e:
-            msg = "Unexpected response during authentication"
-            raise ResponseError(msg, resp["message"]) from e
+        except ValidationError:
+            try:
+                error_resp = AuthInvalid.model_validate(resp)
+                raise UnauthorizedError(error_resp.message) from None
+            except ValidationError:
+                msg = f"Unexpected response during authentication: {resp}"
+                raise ResponseError(msg) from None
 
     def supported_features_phase(self) -> None:
         """Get the supported features from the websocket server."""
@@ -455,11 +456,9 @@ class WebsocketClient(BaseWebsocketClient):
         Sends command :code:`{"type": "subscribe_events", ...}`.
         """
         params = {"event_type": event_type} if event_type else {}
-        r = self.recv(self.send("subscribe_events", include_id=True, **params))
-        if r is None:
-            msg = f"Event {event_type} not subscribed to any events"
-            raise TypeError(msg)
-        return r.id
+        return self.recv_result(
+            self.send("subscribe_events", include_id=True, **params),
+        ).id
 
     @contextlib.contextmanager
     def listen_trigger(
@@ -536,13 +535,15 @@ class WebsocketClient(BaseWebsocketClient):
 
         Sends command :code:`{"type": "unsubscribe_events", ...}`.
         """
-        resp = self.recv_result(
-            self.send("unsubscribe_events", subscription=subscription_id),
-        )
-        if resp.result is not None:
-            msg = f"leftover events {resp.result}"
-            raise TypeError(msg)
-        self._event_responses.pop(subscription_id)
+        try:
+            resp = self.recv_result(
+                self.send("unsubscribe_events", subscription=subscription_id),
+            )
+            if resp.result is not None:
+                msg = f"leftover events {resp.result}"
+                raise TypeError(msg)
+        finally:
+            self._event_responses.pop(subscription_id, None)
 
     def get_config_entries(self) -> tuple[ConfigEntry, ...]:
         """

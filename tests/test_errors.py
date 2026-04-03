@@ -265,8 +265,10 @@ def test_request_error_with_message_and_data() -> None:
 def test_request_error_no_data() -> None:
     """Tests RequestError when data is None and no message."""
     err = RequestError(None, url="http://localhost/api")
-    assert "'http://localhost/api'" in str(err)
-    assert "data" not in str(err)
+    assert (
+        str(err)
+        == "An error occurred while making the request to 'http://localhost/api'"
+    )
 
 
 def test_request_timeout_error() -> None:

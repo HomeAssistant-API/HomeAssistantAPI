@@ -17,18 +17,38 @@ __all__ = (
     "BaseGroup",
     "BaseService",
     "Client",
+    "ConfigEntry",
+    "ConfigEntryChange",
+    "ConfigEntryDisabler",
+    "ConfigEntryEvent",
+    "ConfigEntryState",
+    "ConfigFlowContext",
+    "ConfigSubEntry",
     "Context",
+    "DisableEnableResult",
+    "DiscoveryKey",
     "Domain",
     "Entity",
+    "EntityCategory",
+    "EntityDisabledBy",
+    "EntityHiddenBy",
+    "EntityRegistryEntry",
+    "EntityRegistryEntryExtended",
+    "EntityRegistryUpdateResult",
     "ErrorResponse",
     "Event",
     "EventResponse",
+    "FlowContext",
+    "FlowResult",
+    "FlowResultType",
     "Group",
     "History",
+    "IntegrationTypes",
     "LogbookEntry",
     "PingResponse",
     "ResultResponse",
     "Service",
+    "ServiceField",
     "State",
     "WebsocketClient",
 )
@@ -36,18 +56,40 @@ __all__ = (
 from .asyncclient import AsyncClient
 from .asyncwebsocket import AsyncWebsocketClient
 from .client import Client
+from .models.config_entries import ConfigEntry
+from .models.config_entries import ConfigEntryChange
+from .models.config_entries import ConfigEntryDisabler
+from .models.config_entries import ConfigEntryEvent
+from .models.config_entries import ConfigEntryState
+from .models.config_entries import ConfigFlowContext
+from .models.config_entries import ConfigSubEntry
+from .models.config_entries import DisableEnableResult
+from .models.config_entries import DiscoveryKey
+from .models.config_entries import FlowContext
+from .models.config_entries import FlowResult
+from .models.config_entries import FlowResultType
+from .models.config_entries import IntegrationTypes
 from .models.domains import AsyncDomain
 from .models.domains import AsyncService
 from .models.domains import BaseDomain
 from .models.domains import BaseService
 from .models.domains import Domain
 from .models.domains import Service
+from .models.domains import ServiceField
+from .models.domains import ServiceFieldSelector
+from .models.domains import ServiceFieldSelectorObjectField
 from .models.entity import AsyncEntity
 from .models.entity import AsyncGroup
 from .models.entity import BaseEntity
 from .models.entity import BaseGroup
 from .models.entity import Entity
 from .models.entity import Group
+from .models.entity_registry import EntityCategory
+from .models.entity_registry import EntityDisabledBy
+from .models.entity_registry import EntityHiddenBy
+from .models.entity_registry import EntityRegistryEntry
+from .models.entity_registry import EntityRegistryEntryExtended
+from .models.entity_registry import EntityRegistryUpdateResult
 from .models.events import AsyncEvent
 from .models.events import BaseEvent
 from .models.events import Event
@@ -80,4 +122,6 @@ Event.model_rebuild()
 Group.model_rebuild()
 History.model_rebuild()
 Service.model_rebuild()
+ServiceFieldSelector.model_rebuild()
+ServiceFieldSelectorObjectField.model_rebuild()
 State.model_rebuild()

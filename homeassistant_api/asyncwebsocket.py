@@ -70,14 +70,14 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         traceback: TracebackType | None,
     ) -> None:
         if not self._async_conn:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
+            return
         await self._async_conn.__aexit__(exc_type, exc_value, traceback)
         self._async_conn = None
 
     async def _async_send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
-        logger.debug(f"Sending message: {data}")
+        if data.get("type") != "auth":
+            logger.debug(f"Sending message: {data}")
         if self._async_conn is None:
             msg = "Connection is not open!"
             raise ReceivingError(msg)
@@ -96,7 +96,7 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             raise TypeError(msg)
         return r
 
-    async def send(self, msg_type: str, include_id: bool = True, **data: Any) -> int:
+    async def send(self, msg_type: str, *, include_id: bool = True, **data: Any) -> int:
         """
         Send a command message to the websocket server and wait for a "result" response.
 
@@ -202,12 +202,13 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         resp = await self._async_recv()
         try:
             return AuthOk.model_validate(resp)
-        except ValidationError as e:
-            error_resp = AuthInvalid.model_validate(resp)
-            raise UnauthorizedError(error_resp.message) from e
-        except Exception as e:
-            msg = "Unexpected response during authentication"
-            raise ResponseError(msg, resp["message"]) from e
+        except ValidationError:
+            try:
+                error_resp = AuthInvalid.model_validate(resp)
+                raise UnauthorizedError(error_resp.message) from None
+            except ValidationError:
+                msg = f"Unexpected response during authentication: {resp}"
+                raise ResponseError(msg) from None
 
     async def supported_features_phase(self) -> None:
         """Get the supported features from the websocket server."""
@@ -556,13 +557,15 @@ class AsyncWebsocketClient(BaseWebsocketClient):
 
         Sends command :code:`{"type": "unsubscribe_events", ...}`.
         """
-        resp = await self.recv_result(
-            await self.send("unsubscribe_events", subscription=subcription_id),
-        )
-        if resp.result is not None:
-            msg = "Expected None result for unsubscribe"
-            raise ValueError(msg)
-        self._event_responses.pop(subcription_id)
+        try:
+            resp = await self.recv_result(
+                await self.send("unsubscribe_events", subscription=subcription_id),
+            )
+            if resp.result is not None:
+                msg = "Expected None result for unsubscribe"
+                raise ValueError(msg)
+        finally:
+            self._event_responses.pop(subcription_id, None)
 
     async def get_config_entries(self) -> tuple[ConfigEntry, ...]:
         """

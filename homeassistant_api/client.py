@@ -98,12 +98,12 @@ class Client(BaseClient):
     ) -> Any:
         """Base method for making requests to the api"""
         path = self.endpoint(path)
-        if params is not None:
+        if params:
             path = f"{path}?{self.construct_params(params)}"
         if self.global_request_kwargs is not None:
             kwargs.update(self.global_request_kwargs)
         try:
-            logger.debug(f"%s request to {path}")
+            logger.debug(f"{method} request to {path}")
             resp = self._session.request(
                 method,
                 path,

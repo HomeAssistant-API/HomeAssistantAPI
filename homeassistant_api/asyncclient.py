@@ -63,7 +63,7 @@ class AsyncClient(BaseClient):
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        connector = TCPConnector(verify_ssl=verify_ssl)
+        connector = TCPConnector(ssl=verify_ssl)
         if session is not None:
             self._session = session
         elif use_cache:

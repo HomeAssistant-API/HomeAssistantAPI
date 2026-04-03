@@ -59,7 +59,7 @@ def setup_websocket_client() -> Generator[WebsocketClient, None, None]:
         yield client
 
 
-@pytest.fixture(name="async_websocket_client", scope="session")
+@pytest_asyncio.fixture(name="async_websocket_client", scope="session")
 async def setup_async_websocket_client() -> AsyncGenerator[AsyncWebsocketClient, None]:
     """Initializes the AsyncWebsocketClient and enters an async WebSocket session."""
     async with AsyncWebsocketClient(HA_WS_URL, HA_TOKEN) as client:

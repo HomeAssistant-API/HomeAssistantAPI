@@ -360,15 +360,16 @@ def test_disable_enable_config_entry(websocket_client: WebsocketClient) -> None:
     entry = websocket_client.get_config_entries()[0]
     assert entry.disabled_by is None
 
-    # Disable entry
-    websocket_client.disable_config_entry(entry.entry_id)
+    try:
+        # Disable entry
+        websocket_client.disable_config_entry(entry.entry_id)
 
-    # Check that it was disabled
-    disabled_entry = websocket_client.get_config_entries()[0]
-    assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
-
-    # Re-enable
-    websocket_client.enable_config_entry(entry.entry_id)
+        # Check that it was disabled
+        disabled_entry = websocket_client.get_config_entries()[0]
+        assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+    finally:
+        # Always re-enable to avoid breaking other tests
+        websocket_client.enable_config_entry(entry.entry_id)
 
     # Check that it was enabled
     enabled_entry = websocket_client.get_config_entries()[0]
@@ -382,12 +383,13 @@ async def test_async_disable_enable_config_entry(
     entry = (await async_websocket_client.get_config_entries())[0]
     assert entry.disabled_by is None
 
-    await async_websocket_client.disable_config_entry(entry.entry_id)
+    try:
+        await async_websocket_client.disable_config_entry(entry.entry_id)
 
-    disabled_entry = (await async_websocket_client.get_config_entries())[0]
-    assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
-
-    await async_websocket_client.enable_config_entry(entry.entry_id)
+        disabled_entry = (await async_websocket_client.get_config_entries())[0]
+        assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+    finally:
+        await async_websocket_client.enable_config_entry(entry.entry_id)
 
     enabled_entry = (await async_websocket_client.get_config_entries())[0]
     assert enabled_entry.disabled_by is None

@@ -18,13 +18,15 @@ class History(BaseModel):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        if self.entity_id is None:
-            msg = "History requires states with a non-null entity_id"
+        if not self.states:
+            msg = "History requires at least one state"
+            raise ValueError(msg)
+        entity_ids = {state.entity_id for state in self.states}
+        if len(entity_ids) != 1:
+            msg = f"All states in a History must share the same entity_id, got {entity_ids}"
             raise ValueError(msg)
 
     @property
     def entity_id(self) -> str:
         """Returns the shared :code:`entity_id` of states."""
-        entity_ids = [state.entity_id for state in self.states]
-        result, *_ = set(entity_ids)
-        return result
+        return self.states[0].entity_id

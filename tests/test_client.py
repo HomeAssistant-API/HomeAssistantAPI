@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 
 import aiohttp_client_cache.session
 import requests_cache
@@ -28,13 +29,14 @@ def test_default_session() -> None:
         pass
 
 
-async def test_custom_async_cached_session() -> None:
+async def test_custom_async_cached_session(tmp_path: Path) -> None:
+    cache_path = tmp_path / "test_custom_async_cached_session.sqlite"
     async with AsyncClient(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
         session=aiohttp_client_cache.session.CachedSession(
             cache=aiohttp_client_cache.SQLiteBackend(
-                cache_name="test_custom_async_cached_session.sqlite",
+                cache_name=str(cache_path),
                 expire_after=10,
             ),
         ),
