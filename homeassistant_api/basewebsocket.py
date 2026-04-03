@@ -4,8 +4,6 @@ import urllib.parse as urlparse
 from typing import Any
 from typing import cast
 
-from pydantic import ValidationError
-
 from homeassistant_api.errors import ReceivingError
 from homeassistant_api.errors import ResponseError
 from homeassistant_api.models.websocket import ErrorResponse
@@ -49,21 +47,11 @@ class BaseWebsocketClient:
         self._id_counter += 1
         return self._id_counter
 
-    def check_success(self, data: dict[str, Any]) -> None:
-        """Check if a command message was successful."""
-        try:
-            error_resp = ErrorResponse.model_validate(data)
-            msg = f"[{error_resp.error.code}] {error_resp.error.message}"
-            raise ResponseError(msg)
-        except ValidationError:
-            pass
-
     def handle_recv(self, data: dict[str, Any]) -> None:
         """Handle a received message."""
         if "id" not in data:
             msg = "Received a message without an id outside the auth phase."
             raise ReceivingError(msg)
-        self.check_success(data)
         self.parse_response(data)
 
     def parse_response(self, data: dict[str, Any]) -> None:

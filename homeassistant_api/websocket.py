@@ -73,7 +73,8 @@ class WebsocketClient(BaseWebsocketClient):
         traceback: TracebackType | None,
     ) -> None:
         if not self._conn:
-            return
+            msg = "Connection is not open!"
+            raise ReceivingError(msg)
         self._conn.__exit__(exc_type, exc_value, traceback)
         self._conn = None
 
@@ -209,6 +210,9 @@ class WebsocketClient(BaseWebsocketClient):
             except ValidationError:
                 msg = f"Unexpected response during authentication: {resp}"
                 raise ResponseError(msg) from None
+        except Exception as e:
+            msg = f"Unexpected response during authentication: {resp}"
+            raise ResponseError(msg) from e
 
     def supported_features_phase(self) -> None:
         """Get the supported features from the websocket server."""

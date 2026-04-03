@@ -12,6 +12,7 @@ from typing_extensions import Self
 from typing_extensions import override
 
 from homeassistant_api.errors import RequestError
+from homeassistant_api.errors import ResponseError
 
 from .base import BaseModel
 
@@ -622,7 +623,7 @@ class Service(BaseService):
                 self.service_id,
                 **service_data,
             )
-        except RequestError:
+        except (RequestError, ResponseError):
             return self.domain.client.trigger_service(
                 self.domain.domain_id,
                 self.service_id,
@@ -651,7 +652,7 @@ class AsyncService(BaseService):
                 self.service_id,
                 **service_data,
             )
-        except RequestError:
+        except (RequestError, ResponseError):
             return await self.domain.client.trigger_service(
                 self.domain.domain_id,
                 self.service_id,

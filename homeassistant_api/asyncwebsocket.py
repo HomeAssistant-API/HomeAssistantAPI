@@ -70,7 +70,8 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         traceback: TracebackType | None,
     ) -> None:
         if not self._async_conn:
-            return
+            msg = "Connection is not open!"
+            raise ReceivingError(msg)
         await self._async_conn.__aexit__(exc_type, exc_value, traceback)
         self._async_conn = None
 
@@ -209,6 +210,9 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             except ValidationError:
                 msg = f"Unexpected response during authentication: {resp}"
                 raise ResponseError(msg) from None
+        except Exception as e:
+            msg = f"Unexpected response during authentication: {resp}"
+            raise ResponseError(msg) from e
 
     async def supported_features_phase(self) -> None:
         """Get the supported features from the websocket server."""

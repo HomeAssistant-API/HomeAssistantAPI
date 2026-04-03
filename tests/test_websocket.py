@@ -7,7 +7,6 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from homeassistant_api.asyncwebsocket import AsyncWebsocketClient
 from homeassistant_api.errors import ReceivingError
-from homeassistant_api.errors import RequestError
 from homeassistant_api.errors import ResponseError
 from homeassistant_api.models import websocket as ws_models
 from homeassistant_api.websocket import WebsocketClient
@@ -52,10 +51,10 @@ def test_handle_recv_message_without_id() -> None:
 
 
 def test_parse_response_error_result() -> None:
-    """Tests parse_response raises RequestError for failed result messages."""
+    """Tests parse_response raises ResponseError for failed result messages."""
     client = make_sync_client()
     client._result_responses[1] = None
-    with pytest.raises(RequestError):
+    with pytest.raises(ResponseError):
         client.parse_response(
             {
                 "id": 1,

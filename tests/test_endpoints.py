@@ -10,7 +10,7 @@ from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
 from homeassistant_api import Client
 from homeassistant_api import WebsocketClient
-from homeassistant_api.errors import RequestError
+from homeassistant_api.errors import ResponseError
 from homeassistant_api.models import ConfigEntryDisabler
 from homeassistant_api.models.events import AsyncEvent
 from homeassistant_api.models.events import Event
@@ -398,7 +398,7 @@ async def test_async_disable_enable_config_entry(
 def test_ignore_config_flow(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
     # Currently not able to test as no flows are in progress. Send invalid parameters and handle that error
-    with pytest.raises(RequestError, match="Config entry not found"):
+    with pytest.raises(ResponseError, match="Config entry not found"):
         websocket_client.ignore_config_flow("", "")
 
 
@@ -406,7 +406,7 @@ async def test_async_ignore_config_flow(
     async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
-    with pytest.raises(RequestError, match="Config entry not found"):
+    with pytest.raises(ResponseError, match="Config entry not found"):
         await async_websocket_client.ignore_config_flow("", "")
 
 
@@ -476,7 +476,7 @@ async def test_async_get_entry_subentries(
 def test_delete_entry_subentry(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
     # Currently not able to test as no entries with subentries available. Send invalid parameters and handle that error
-    with pytest.raises(RequestError, match="Config entry not found"):
+    with pytest.raises(ResponseError, match="Config entry not found"):
         websocket_client.delete_entry_subentry("", "")
 
 
@@ -484,7 +484,7 @@ async def test_async_delete_entry_subentry(
     async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
-    with pytest.raises(RequestError, match="Config entry not found"):
+    with pytest.raises(ResponseError, match="Config entry not found"):
         await async_websocket_client.delete_entry_subentry("", "")
 
 
