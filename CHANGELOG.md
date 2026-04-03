@@ -1,4 +1,4 @@
-# HomeAssistant-API v2.0 Changelog
+# HomeAssistant-API v6.0 Changelog
 
 ## Breaking Changes
 A lot has changed in this version. A lot went into modernising and standardizing the interfaces of the clients.

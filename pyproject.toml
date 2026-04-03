@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "HomeAssistant-API"
-version = "5.0.3"
+version = "6.0.0"
 description = "Python Wrapper for Homeassistant's REST API"
 readme = "README.md"
 license = "GPL-3.0-or-later"
