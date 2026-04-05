@@ -1,9 +1,7 @@
 import os
 from datetime import datetime
-from pathlib import Path
 
-import aiohttp_client_cache.session
-import requests_cache
+import niquests
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
@@ -12,11 +10,11 @@ from homeassistant_api import WebsocketClient
 from homeassistant_api.baseclient import BaseClient
 
 
-def test_custom_cached_session() -> None:
+def test_custom_session() -> None:
     with Client(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        session=requests_cache.CachedSession(),
+        session=niquests.Session(),
     ):
         pass
 
@@ -29,17 +27,11 @@ def test_default_session() -> None:
         pass
 
 
-async def test_custom_async_cached_session(tmp_path: Path) -> None:
-    cache_path = tmp_path / "test_custom_async_cached_session.sqlite"
+async def test_custom_async_session() -> None:
     async with AsyncClient(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        session=aiohttp_client_cache.session.CachedSession(
-            cache=aiohttp_client_cache.SQLiteBackend(
-                cache_name=str(cache_path),
-                expire_after=10,
-            ),
-        ),
+        session=niquests.AsyncSession(),
     ):
         pass
 

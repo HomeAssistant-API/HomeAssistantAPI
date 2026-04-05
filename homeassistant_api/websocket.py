@@ -7,7 +7,7 @@ import time
 from typing import TYPE_CHECKING
 from typing import Any
 
-import websockets.sync.client as ws
+from niquests import Session
 from pydantic import ValidationError
 from typing_extensions import Self
 
@@ -45,22 +45,37 @@ if TYPE_CHECKING:
     from datetime import datetime
     from types import TracebackType
 
+    from urllib3.contrib.webextensions.protocol import ExtensionFromHTTP
+
 logger = logging.getLogger(__name__)
 
 
 class WebsocketClient(BaseWebsocketClient):
-    _conn: ws.ClientConnection | None
+    _session: Session
+    _ws: ExtensionFromHTTP
 
-    def __init__(self, api_url: str, token: str, *, max_size: int = 2**24) -> None:
+    def __init__(
+        self,
+        api_url: str,
+        token: str,
+        *,
+        max_size: int = 2**24,
+        session: Session | None = None,
+    ) -> None:
         super().__init__(api_url, token, max_size=max_size)
-        self._conn = None
+        self._session = session if session is not None else Session()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.api_url!r})"
 
     def __enter__(self) -> Self:
-        self._conn = ws.connect(self.api_url, max_size=self.max_size)
-        self._conn.__enter__()
+        self._session.__enter__()
+        resp = self._session.get(self.api_url)
+        resp.raise_for_status()
+        if resp.extension is None:
+            msg = "Server did not upgrade to WebSocket"
+            raise ReceivingError(msg)
+        self._ws = resp.extension
         okay = self.authentication_phase()
         logger.info("Authenticated with Home Assistant (%s)", okay.ha_version)
         self.supported_features_phase()
@@ -72,33 +87,34 @@ class WebsocketClient(BaseWebsocketClient):
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        if not self._conn:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
-        self._conn.__exit__(exc_type, exc_value, traceback)
-        self._conn = None
+        self._ws.close()
+        del self._ws
+        self._session.__exit__(exc_type, exc_value, traceback)
 
     def _send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
         if data.get("type") != "auth":
             logger.debug(f"Sending message: {data}")
-        if self._conn is None:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
-        self._conn.send(json.dumps(data))
+        self._ws.send_payload(json.dumps(data))
 
     def _recv(self) -> dict[str, Any]:
-        """Receive a message from the websocket server."""
-        if self._conn is None:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
-        _bytes = self._conn.recv()
-        logger.debug("Received message: %s", _bytes)
-        r = json.loads(_bytes)
-        if not isinstance(r, dict):
-            msg = f"Expected dict, got {type(r).__name__}"
-            raise TypeError(msg)
-        return r
+        """Receive a complete JSON message from the websocket server, buffering fragments."""
+        buf = ""
+        while True:
+            chunk = self._ws.next_payload()
+            if chunk is None:
+                msg = "WebSocket connection closed"
+                raise ReceivingError(msg)
+            buf += chunk if isinstance(chunk, str) else chunk.decode()
+            try:
+                r = json.loads(buf)
+            except json.JSONDecodeError:
+                continue
+            logger.debug("Received message: %s", buf)
+            if not isinstance(r, dict):
+                msg = f"Expected dict, got {type(r).__name__}"
+                raise TypeError(msg)
+            return r
 
     def send(self, msg_type: str, *, include_id: bool = True, **data: Any) -> int:
         """
@@ -112,21 +128,21 @@ class WebsocketClient(BaseWebsocketClient):
         data["type"] = msg_type
         self._send(data)
 
-        if "id" in data:
-            if not isinstance(data["id"], int):
-                msg = f"Expected int for message id, got {type(data['id'])}"
-                raise TypeError(msg)
-            if data["type"] == "ping":
-                self._ping_responses[data["id"]] = PingResponse(
-                    start=time.perf_counter_ns(),
-                    id=data["id"],
-                    type="pong",
-                )
-            else:
-                self._event_responses[data["id"]] = []
-                self._result_responses[data["id"]] = None
-            return data["id"]
-        return -1  # non-command messages don't have an id
+        if "id" not in data:
+            return -1  # non-command messages don't have an id
+        if not isinstance(data["id"], int):
+            msg = f"Expected int for message id, got {type(data['id'])}"
+            raise TypeError(msg)
+        if data["type"] == "ping":
+            self._ping_responses[data["id"]] = PingResponse(
+                start=time.perf_counter_ns(),
+                id=data["id"],
+                type="pong",
+            )
+        else:
+            self._event_responses[data["id"]] = []
+            self._result_responses[data["id"]] = None
+        return data["id"]
 
     def recv(self, msg_id: int) -> EventResponse | ResultResponse | PingResponse | None:
         """Receive a response to a message from the websocket server."""

@@ -7,7 +7,7 @@ import time
 from typing import TYPE_CHECKING
 from typing import Any
 
-import websockets.asyncio.client as ws
+from niquests import AsyncSession
 from pydantic import ValidationError
 from typing_extensions import Self
 
@@ -45,19 +45,34 @@ if TYPE_CHECKING:
     from datetime import datetime
     from types import TracebackType
 
+    from urllib3.contrib.webextensions._async.protocol import AsyncExtensionFromHTTP
+
 logger = logging.getLogger(__name__)
 
 
 class AsyncWebsocketClient(BaseWebsocketClient):
-    _async_conn: ws.ClientConnection | None
+    _session: AsyncSession
+    _ws: AsyncExtensionFromHTTP
 
-    def __init__(self, api_url: str, token: str, *, max_size: int = 2**24) -> None:
+    def __init__(
+        self,
+        api_url: str,
+        token: str,
+        *,
+        max_size: int = 2**24,
+        session: AsyncSession | None = None,
+    ) -> None:
         super().__init__(api_url, token, max_size=max_size)
-        self._async_conn = None
+        self._session = session if session is not None else AsyncSession()
 
     async def __aenter__(self) -> Self:
-        self._async_conn = await ws.connect(self.api_url, max_size=self.max_size)
-        await self._async_conn.__aenter__()
+        await self._session.__aenter__()
+        resp = await self._session.get(self.api_url)
+        resp.raise_for_status()
+        if resp.extension is None:
+            msg = "Server did not upgrade to WebSocket"
+            raise ReceivingError(msg)
+        self._ws = resp.extension
         okay = await self.authentication_phase()
         logger.info("Authenticated with Home Assistant (%s)", okay.ha_version)
         await self.supported_features_phase()
@@ -69,33 +84,34 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        if not self._async_conn:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
-        await self._async_conn.__aexit__(exc_type, exc_value, traceback)
-        self._async_conn = None
+        await self._ws.close()
+        del self._ws
+        await self._session.__aexit__(exc_type, exc_value, traceback)
 
     async def _async_send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
         if data.get("type") != "auth":
             logger.debug(f"Sending message: {data}")
-        if self._async_conn is None:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
-        await self._async_conn.send(json.dumps(data))
+        await self._ws.send_payload(json.dumps(data))
 
     async def _async_recv(self) -> dict[str, Any]:
-        """Receive a message from the websocket server."""
-        if self._async_conn is None:
-            msg = "Connection is not open!"
-            raise ReceivingError(msg)
-        _bytes = await self._async_conn.recv()
-        logger.debug("Received message: %s", _bytes)
-        r = json.loads(_bytes)
-        if not isinstance(r, dict):
-            msg = f"Expected dict, got {type(r).__name__}"
-            raise TypeError(msg)
-        return r
+        """Receive a complete JSON message from the websocket server, buffering fragments."""
+        buf = ""
+        while True:
+            chunk = await self._ws.next_payload()
+            if chunk is None:
+                msg = "WebSocket connection closed"
+                raise ReceivingError(msg)
+            buf += chunk if isinstance(chunk, str) else chunk.decode()
+            try:
+                r = json.loads(buf)
+            except json.JSONDecodeError:
+                continue
+            logger.debug("Received message: %s", buf)
+            if not isinstance(r, dict):
+                msg = f"Expected dict, got {type(r).__name__}"
+                raise TypeError(msg)
+            return r
 
     async def send(self, msg_type: str, *, include_id: bool = True, **data: Any) -> int:
         """

@@ -9,9 +9,8 @@ from posixpath import join
 from typing import TYPE_CHECKING
 from typing import Any
 
-from requests import Session
-from requests import Timeout
-from requests_cache import CachedSession
+from niquests import Session
+from niquests import Timeout
 from typing_extensions import Self
 
 from homeassistant_api.baseclient import BaseClient
@@ -43,32 +42,24 @@ class Client(BaseClient):
 
     :param api_url: The location of the api endpoint. e.g. :code:`http://localhost:8123/api` Required.
     :param token: The refresh or long lived access token to authenticate your requests. Required.
-    :param session: A custom :py:class:`requests_cache.CachedSession` or :py:class:`requests.Session` instance. Optional.
-    :param use_cache: Enable the default in-memory request cache (300s expiry). Ignored if :code:`session` is provided. Default :code:`False`.
+    :param session: A custom :py:class:`niquests.Session` instance. Optional.
     :param verify_ssl: Whether to verify SSL certificates. Default :code:`True`.
     :param global_request_kwargs: Kwargs to pass to :func:`requests.request`. Optional.
     """  # pylint: disable=line-too-long
 
-    _session: CachedSession | Session
+    _session: Session | None
 
     def __init__(
         self,
         *args: Any,
-        session: CachedSession | None = None,
-        use_cache: bool = False,
+        session: Session | None = None,
         verify_ssl: bool = True,
         **kwargs: Any,
     ) -> None:
         BaseClient.__init__(self, *args, **kwargs)
         self.global_request_kwargs["verify"] = verify_ssl
-        if session:
+        if session is not None:
             self._session = session
-        elif use_cache:
-            self._session = CachedSession(
-                cache_name="default_cache",
-                backend="memory",
-                expire_after=300,
-            )
         else:
             self._session = Session()
 

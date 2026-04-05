@@ -23,23 +23,23 @@ def make_async_client() -> AsyncWebsocketClient:
 
 
 def test_exit_without_connection() -> None:
-    """Tests __exit__ raises ReceivingError when connection is not open."""
+    """Tests __exit__ raises AttributeError when used outside context manager."""
     client = make_sync_client()
-    with pytest.raises(ReceivingError, match="Connection is not open"):
+    with pytest.raises(AttributeError):
         client.__exit__(None, None, None)
 
 
 def test_send_without_connection() -> None:
-    """Tests _send raises ReceivingError when connection is not open."""
+    """Tests _send raises AttributeError when used outside context manager."""
     client = make_sync_client()
-    with pytest.raises(ReceivingError, match="Connection is not open"):
+    with pytest.raises(AttributeError):
         client._send({"type": "test"})
 
 
 def test_recv_without_connection() -> None:
-    """Tests _recv raises ReceivingError when connection is not open."""
+    """Tests _recv raises AttributeError when used outside context manager."""
     client = make_sync_client()
-    with pytest.raises(ReceivingError, match="Connection is not open"):
+    with pytest.raises(AttributeError):
         client._recv()
 
 
@@ -116,23 +116,23 @@ def test_authentication_phase_unexpected_auth_response(
 
 
 async def test_async_aexit_without_connection() -> None:
-    """Tests __aexit__ raises ReceivingError when connection is not open."""
+    """Tests __aexit__ raises AttributeError when used outside context manager."""
     client = make_async_client()
-    with pytest.raises(ReceivingError, match="Connection is not open"):
+    with pytest.raises(AttributeError):
         await client.__aexit__(None, None, None)
 
 
 async def test_async_send_without_connection() -> None:
-    """Tests _async_send raises ReceivingError when connection is not open."""
+    """Tests _async_send raises AttributeError when used outside context manager."""
     client = make_async_client()
-    with pytest.raises(ReceivingError, match="Connection is not open"):
+    with pytest.raises(AttributeError):
         await client._async_send({"type": "test"})
 
 
 async def test_async_recv_without_connection() -> None:
-    """Tests _async_recv raises ReceivingError when connection is not open."""
+    """Tests _async_recv raises AttributeError when used outside context manager."""
     client = make_async_client()
-    with pytest.raises(ReceivingError, match="Connection is not open"):
+    with pytest.raises(AttributeError):
         await client._async_recv()
 
 

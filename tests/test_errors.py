@@ -5,13 +5,10 @@ import os
 import unittest.mock
 from http import HTTPMethod
 
-import aiohttp
-import aiohttp_client_cache.session
+import niquests
 import pytest
-import requests
 from multidict import CIMultiDict
 from multidict import CIMultiDictProxy
-from requests_cache import CachedSession
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
@@ -160,10 +157,10 @@ def make_response(
     status_code: int,
     content: str,
     headers: dict[str, str],
-) -> requests.Response:
-    """Make a :py:class:`requests.Response` object from a status_code, headers, content."""
+) -> niquests.Response:
+    """Make a :py:class:`niquests.Response` object from a status_code, headers, content."""
     return unittest.mock.Mock(
-        spec=requests.Response,
+        spec=niquests.Response,
         status_code=status_code,
         text=content,
         url="http://localhost/api/test",
@@ -179,16 +176,16 @@ def make_async_response(
     status_code: int,
     content: str,
     headers: dict[str, str],
-) -> aiohttp.ClientResponse:
-    """Make an :py:class:`aiohttp.ClientResponse` object from a status_code, headers, content."""
+) -> niquests.Response:
+    """Make a :py:class:`niquests.Response` mock for async processing tests."""
     return unittest.mock.Mock(
-        spec=aiohttp.ClientResponse,
-        status=status_code,
-        method="GET",
+        spec=niquests.Response,
+        status_code=status_code,
+        text=content,
         url="http://localhost/api/test",
-        text=unittest.mock.AsyncMock(return_value=content),
+        request=unittest.mock.Mock(method="GET"),
         headers=CIMultiDictProxy(CIMultiDict(headers)),
-        json=unittest.mock.AsyncMock(
+        json=unittest.mock.Mock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
         ),
     )
@@ -373,33 +370,15 @@ async def test_async_websocket_get_entity_histories_not_supported(
             pass
 
 
-# --- Client: no-cache session ---
-
-
-def test_client_no_cache_session() -> None:
-    """Tests that Client can be created without a cache session."""
+def test_client_default_session() -> None:
+    """Tests that Client creates a niquests.Session by default."""
     token = os.environ["HOMEASSISTANTAPI_TOKEN"]
-    client = Client(HA_URL, token, use_cache=False)
-    assert isinstance(client._session, requests.Session)
-    assert not isinstance(client._session, CachedSession)
+    client = Client(HA_URL, token)
+    assert isinstance(client._session, niquests.Session)
 
 
-def test_client_default_cache_session() -> None:
-    """Tests that Client creates a CachedSession when use_cache=True."""
+async def test_async_client_default_session() -> None:
+    """Tests that AsyncClient creates a niquests.AsyncSession by default."""
     token = os.environ["HOMEASSISTANTAPI_TOKEN"]
-    client = Client(HA_URL, token, use_cache=True)
-    assert isinstance(client._session, CachedSession)
-
-
-async def test_async_client_no_cache_session() -> None:
-    """Tests that AsyncClient can be created without a cache session."""
-    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
-    client = AsyncClient(HA_URL, token, use_cache=False)
-    assert isinstance(client._session, aiohttp.ClientSession)
-
-
-async def test_async_client_default_cache_session() -> None:
-    """Tests that AsyncClient creates a CachedSession when use_cache=True."""
-    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
-    client = AsyncClient(HA_URL, token, use_cache=True)
-    assert isinstance(client._session, aiohttp_client_cache.session.CachedSession)
+    client = AsyncClient(HA_URL, token)
+    assert isinstance(client._session, niquests.AsyncSession)

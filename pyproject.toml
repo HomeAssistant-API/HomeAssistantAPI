@@ -13,13 +13,9 @@ authors = [
     { name = "GrandMoff100", email = "minecraftcrusher100@gmail.com" },
 ]
 dependencies = [
-    "aiohttp>=3,<4",
-    "aiohttp-client-cache>=0,<1",
+    "niquests[ws]>=3",
     "pydantic>=2,<3",
-    "requests>=2,<3",
-    "requests-cache>=1,<2",
     "simplejson>=3,<4",
-    "websockets>=16,<17",
 ]
 
 [project.urls]
@@ -36,7 +32,6 @@ docs = [
 dev = [
     "pre-commit>=4,<5",
     "types-docutils>=0.22",
-    "types-requests>=2,<3",
     "types-simplejson>=3.20",
     "types-toml>=0.10",
     "zuban>=0.6",

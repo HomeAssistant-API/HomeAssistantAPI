@@ -10,10 +10,7 @@ from posixpath import join
 from typing import TYPE_CHECKING
 from typing import Any
 
-from aiohttp import ClientSession
-from aiohttp import TCPConnector
-from aiohttp_client_cache import CacheBackend
-from aiohttp_client_cache.session import CachedSession
+from niquests import AsyncSession
 
 from .baseclient import BaseClient
 from .errors import BadTemplateError
@@ -26,7 +23,7 @@ from .models import AsyncGroup
 from .models import History
 from .models import LogbookEntry
 from .models import State
-from .processing import AsyncResponseType
+from .processing import ResponseType
 from .processing import async_process_response
 from .utils import prepare_entity_id
 
@@ -46,33 +43,26 @@ class AsyncClient(BaseClient):
 
     :param api_url: The location of the api endpoint. e.g. :code:`http://localhost:8123/api` Required.
     :param token: The refresh or long lived access token to authenticate your requests. Required.
-    :param session: A custom :py:class:`aiohttp_client_cache.session.CachedSession` or :py:class:`aiohttp.ClientSession` instance. Optional.
-    :param use_cache: Enable the default in-memory request cache (300s expiry). Ignored if :code:`session` is provided. Default :code:`False`.
+    :param session: A custom :py:class:`niquests.AsyncSession` instance. Optional.
     :param verify_ssl: Whether to verify SSL certificates. Default :code:`True`.
-    :param global_request_kwargs: Kwargs to pass to :meth:`aiohttp.ClientSession.request`. Optional.
+    :param global_request_kwargs: Kwargs to pass to :meth:`niquests.AsyncSession.request`. Optional.
     """  # pylint: disable=line-too-long
 
-    _session: CachedSession | ClientSession
+    _session: AsyncSession
 
     def __init__(
         self,
         *args: Any,
-        session: CachedSession | None = None,
-        use_cache: bool = False,
+        session: AsyncSession | None = None,
         verify_ssl: bool = True,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        connector = TCPConnector(ssl=verify_ssl)
+        self.global_request_kwargs["verify"] = verify_ssl
         if session is not None:
             self._session = session
-        elif use_cache:
-            self._session = CachedSession(
-                cache=CacheBackend(cache_name="default_async_cache", expire_after=300),
-                connector=connector,
-            )
         else:
-            self._session = ClientSession(connector=connector)
+            self._session = AsyncSession()
 
     async def __aenter__(self) -> Self:
         logger.debug("Entering cached async requests session %r", self._session)
@@ -139,7 +129,7 @@ class AsyncClient(BaseClient):
         return data
 
     @staticmethod
-    async def response_logic(response: AsyncResponseType) -> Any:
+    async def response_logic(response: ResponseType) -> Any:
         """Processes custom mimetype content asynchronously."""
         return await async_process_response(response)
 

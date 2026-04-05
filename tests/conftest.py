@@ -7,7 +7,7 @@ from http import HTTPMethod
 
 import pytest
 import pytest_asyncio
-from requests.exceptions import ConnectionError as RequestsConnectionError
+from niquests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
