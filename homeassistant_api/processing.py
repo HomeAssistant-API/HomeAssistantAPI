@@ -58,9 +58,18 @@ def _check_status(info: ResponseInfo, content: str) -> None:
 
 def _extract_info(response: ResponseType) -> ResponseInfo:
     """Extract status code, URL, and method from a response."""
+    if response.status_code is None:
+        msg = "Response is missing status code."
+        raise ValueError(msg)
+    if response.request is None:
+        msg = "Response is missing request information."
+        raise ValueError(msg)
+    if response.url is None:
+        msg = "Response is missing URL information."
+        raise ValueError(msg)
     return ResponseInfo(
         status_code=response.status_code,
-        url=str(response.url),
+        url=response.url,
         method=response.request.method,
     )
 
@@ -70,7 +79,7 @@ def _check_sync_status(response: ResponseType) -> None:
     info = _extract_info(response)
     if info.status_code in (HTTPStatus.OK, HTTPStatus.CREATED):
         return
-    _check_status(info, content=response.text)
+    _check_status(info, content=_parse_text(response))
 
 
 # --- Individual parse functions ---
@@ -87,6 +96,9 @@ def _parse_json(response: ResponseType) -> Any:
 
 def _parse_text(response: ResponseType) -> str:
     """Return the plaintext content of a sync response."""
+    if response.text is None:
+        msg = "Response is missing text content."
+        raise MalformedDataError(msg)
     return response.text
 
 
@@ -104,9 +116,12 @@ _PARSERS: dict[str, Callable[[ResponseType], Any]] = {
 
 def _parse_content(response: ResponseType) -> Any:
     """Look up and call the appropriate parser by content-type."""
-    mimetype = response.headers.get("content-type", "text/plain").split(";")[0]
-    parser = _PARSERS.get(mimetype)
-    if parser is None:
+    content_type = response.headers.get("content-type", "text/plain")
+    if isinstance(content_type, bytes):
+        content_type = content_type.decode("utf-8")
+    mimetype = str(content_type).split(";")[0].strip().lower()
+
+    if (parser := _PARSERS.get(mimetype)) is None:
         msg = f"No response processor found for mimetype {mimetype!r}."
         raise ProcessorNotFoundError(msg)
     return parser(response)

@@ -51,7 +51,7 @@ class BaseDomain(BaseModel):
             msg = "Missing services or domain attribute in json argument."
             raise ValueError(msg)
         domain = cls(domain_id=cast("str", json.get("domain")), **model_kwargs)
-        services = cast("dict[str, dict[str, Any]]", json.get("services"))
+        services = json.get("services")
         if not isinstance(services, dict):
             msg = f"Expected dict for services, got {type(services)}"
             raise TypeError(msg)

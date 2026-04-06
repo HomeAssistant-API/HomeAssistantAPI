@@ -62,9 +62,6 @@ class BaseClient:
         """Prepares and verifies dictionary headers."""
         if headers is None:
             return dict(self._headers)
-        if not isinstance(headers, dict):
-            msg = f"headers must be dict or dict subclass, not type {type(headers)!r}"
-            raise TypeError(msg)
         return {**self._headers, **headers}
 
     @staticmethod

@@ -47,7 +47,7 @@ class Client(BaseClient):
     :param global_request_kwargs: Kwargs to pass to :func:`requests.request`. Optional.
     """  # pylint: disable=line-too-long
 
-    _session: Session | None
+    _session: Session
 
     def __init__(
         self,

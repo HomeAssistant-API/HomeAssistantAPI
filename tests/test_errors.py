@@ -7,8 +7,6 @@ from http import HTTPMethod
 
 import niquests
 import pytest
-from multidict import CIMultiDict
-from multidict import CIMultiDictProxy
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
@@ -165,7 +163,7 @@ def make_response(
         text=content,
         url="http://localhost/api/test",
         request=unittest.mock.Mock(method="GET"),
-        headers=CIMultiDictProxy(CIMultiDict(headers)),
+        headers=headers,
         json=unittest.mock.Mock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
         ),
@@ -184,7 +182,7 @@ def make_async_response(
         text=content,
         url="http://localhost/api/test",
         request=unittest.mock.Mock(method="GET"),
-        headers=CIMultiDictProxy(CIMultiDict(headers)),
+        headers=headers,
         json=unittest.mock.Mock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
         ),
