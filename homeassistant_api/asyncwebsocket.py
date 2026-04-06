@@ -378,7 +378,7 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         """Not supported over WebSocket. Use the REST :py:class:`AsyncClient` instead."""
         msg = "get_entity_histories is not supported over the WebSocket API. Use the REST AsyncClient."
         raise NotImplementedError(msg)
-        yield  # unreachable: makes this a true AsyncGenerator for type checkers
+        yield  # unreachable: makes this a true AsyncGenerator for type checkers  # type: ignore[unreachable]
 
     async def get_domains(self) -> dict[str, AsyncDomain]:
         """
