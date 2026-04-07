@@ -27,10 +27,13 @@ class BaseWebsocketClient:
 
     def __init__(self, api_url: str, token: str, *, max_size: int = 2**24) -> None:
         parsed = urlparse.urlparse(api_url)
-        if parsed.scheme not in {"ws", "wss"}:
-            msg = f"Unknown scheme {parsed.scheme} in {api_url}"
+        if parsed.scheme not in {"ws", "wss", "http", "https"}:
+            msg = f"Unknown scheme {parsed.scheme!r} in {api_url!r}"
             raise ValueError(msg)
-        self.api_url = api_url
+        _scheme_map = {"ws": "ws", "wss": "wss", "http": "ws", "https": "wss"}
+        self.api_url = urlparse.urlunparse(
+            parsed._replace(scheme=_scheme_map[parsed.scheme]),
+        )
         self.token = token.strip()
         self.max_size = max_size
 

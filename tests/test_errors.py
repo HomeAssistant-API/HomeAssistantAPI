@@ -276,9 +276,9 @@ def test_request_timeout_error() -> None:
 
 
 def test_websocket_invalid_scheme() -> None:
-    """Tests that WebsocketClient raises ValueError for non-ws schemes."""
+    """Tests that WebsocketClient raises ValueError for unsupported schemes."""
     with pytest.raises(ValueError, match="Unknown scheme"):
-        WebsocketClient("http://localhost", "token")
+        WebsocketClient("ftp://localhost", "token")
 
 
 def test_error_model_without_optional_fields() -> None:

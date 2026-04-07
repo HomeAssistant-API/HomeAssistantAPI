@@ -14,6 +14,7 @@ authors = [
 ]
 dependencies = [
     "niquests[ws]>=3",
+    "urllib3-future<2.19.902",
     "pydantic>=2,<3",
     "simplejson>=3,<4",
 ]
@@ -34,7 +35,7 @@ dev = [
     "types-docutils>=0.22",
     "types-simplejson>=3.20",
     "types-toml>=0.10",
-    "zuban>=0.6",
+    "zuban>=0.7",
     "ruff>=0.15",
     "pytest-asyncio>=1",
     "pytest-cov>=7",
