@@ -7,6 +7,7 @@ from http import HTTPMethod
 
 import niquests
 import pytest
+from niquests.structures import CaseInsensitiveDict
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
@@ -163,7 +164,7 @@ def make_response(
         text=content,
         url="http://localhost/api/test",
         request=unittest.mock.Mock(method="GET"),
-        headers=headers,
+        headers=CaseInsensitiveDict(headers),
         json=unittest.mock.Mock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
         ),
@@ -182,7 +183,7 @@ def make_async_response(
         text=content,
         url="http://localhost/api/test",
         request=unittest.mock.Mock(method="GET"),
-        headers=headers,
+        headers=CaseInsensitiveDict(headers),
         json=unittest.mock.Mock(
             side_effect=json.JSONDecodeError("This is a fake message", "", 1),
         ),
