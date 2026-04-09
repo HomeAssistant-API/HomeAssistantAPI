@@ -72,12 +72,12 @@ def test_prepare_entity_histories_naive_timestamps() -> None:
         end_timestamp=naive_end,
     )
     # Naive timestamps should get a timezone attached
-    assert "+" in url or "-" in url.split("T")[-1], (
-        "start_timestamp should have timezone offset"
-    )
-    assert "+" in params["end_time"] or "-" in params["end_time"].split("T")[-1], (
-        "end_time should have timezone offset"
-    )
+    start_time = datetime.fromisoformat(url.split("/")[-1])
+    assert start_time.tzinfo is not None, "start_timestamp should have timezone offset"
+    end_time_str = params["end_time"]
+    assert end_time_str is not None
+    end_time = datetime.fromisoformat(end_time_str)
+    assert end_time.tzinfo is not None, "end_time should have timezone offset"
 
 
 # --- BaseClient: prepare_get_logbook_entry_params ---

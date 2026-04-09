@@ -30,7 +30,6 @@ docs = [
     "autodoc-pydantic>=2,<3",
 ]
 dev = [
-    "pre-commit>=4,<5",
     "types-docutils>=0.22",
     "types-simplejson>=3.20",
     "types-toml>=0.10",
@@ -40,6 +39,7 @@ dev = [
     "pytest-cov>=7",
     "pytest>=8",
     "aiosqlite>=0.22",
+    "prek>=0.3.8",
 ]
 
 [tool.pytest.ini_options]
@@ -99,14 +99,9 @@ ignore = [
 [tool.ruff.lint.isort]
 force-single-line = true
 
-[tool.mypy]
-disable_error_code = [
-    "no-untyped-def",
-    "name-defined",
-]
-exclude = [
-    "^docs/"
-]
+[tool.zuban]
+exclude = ["^docs/"]
+untyped_function_return_mode = "inferred"
 
 [tool.hatch.build.targets.wheel]
 packages = ["homeassistant_api"]
