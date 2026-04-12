@@ -40,6 +40,7 @@ dev = [
     "pytest>=8",
     "aiosqlite>=0.22",
     "prek>=0.3.8",
+    "pre-commit>=4.5.1",
 ]
 
 [tool.pytest.ini_options]
@@ -59,7 +60,9 @@ exclude_lines = [
     "except \\(json\\.decoder\\.JSONDecodeError, simplejson.decoder\\.JSONDecodeError\\) as err:",
     "pass",
     "last_updated < \\(now := datetime\\.now\\(\\)\\) - wait",
-    "pragma: no cover"
+    "pragma: no cover",
+    "msg = r?f?\".+\"",
+    "raise \\w+Error\\(msg\\)",
 ]
 
 

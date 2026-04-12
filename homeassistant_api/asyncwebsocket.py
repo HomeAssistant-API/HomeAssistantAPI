@@ -433,9 +433,7 @@ class AsyncWebsocketClient(BaseWebsocketClient):
 
         if result.get("response") is not None:
             msg = "Unexpected response from service without response support"
-            raise ValueError(
-                msg,
-            )
+            raise ValueError(msg)
 
     async def trigger_service_with_response(
         self,
