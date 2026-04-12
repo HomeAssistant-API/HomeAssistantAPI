@@ -57,12 +57,10 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "def __repr__\\(self\\) -> str:",
     "raise RequestTimeoutError\\(",
-    "except \\(json\\.decoder\\.JSONDecodeError, simplejson.decoder\\.JSONDecodeError\\) as err:",
     "pass",
-    "last_updated < \\(now := datetime\\.now\\(\\)\\) - wait",
-    "pragma: no cover",
     "msg = r?f?\".+\"",
     "raise \\w+Error\\(msg\\)",
+    "except RequestsConnectionError:  # noqa: PERF203",
 ]
 
 
