@@ -12,8 +12,8 @@ from homeassistant_api.baseclient import BaseClient
 
 def test_custom_session() -> None:
     with Client(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
         session=niquests.Session(),
     ):
         pass
@@ -21,16 +21,16 @@ def test_custom_session() -> None:
 
 def test_default_session() -> None:
     with Client(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
     ):
         pass
 
 
 async def test_custom_async_session() -> None:
     async with AsyncClient(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
         session=niquests.AsyncSession(),
     ):
         pass
@@ -38,24 +38,24 @@ async def test_custom_async_session() -> None:
 
 async def test_default_async_session() -> None:
     async with AsyncClient(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
     ):
         pass
 
 
 def test_websocket_client_ping() -> None:
     with WebsocketClient(
-        os.environ["HOMEASSISTANTAPI_WS_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_WS_URL", "ws://localhost:8123/api/websocket"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
     ) as client:
         assert client.ping_latency() > 0
 
 
 async def test_async_websocket_client_ping() -> None:
     async with AsyncWebsocketClient(
-        os.environ["HOMEASSISTANTAPI_WS_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_WS_URL", "ws://localhost:8123/api/websocket"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
     ) as client:
         assert (await client.ping_latency()) > 0
 

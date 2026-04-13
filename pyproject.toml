@@ -41,7 +41,14 @@ dev = [
     "aiosqlite>=0.22",
     "prek>=0.3.8",
     "pre-commit>=4.5.1",
+    "pytest-niquests-cassettes",
 ]
+
+[tool.uv.workspace]
+members = ["packages/pytest-niquests-cassettes"]
+
+[tool.uv.sources]
+pytest-niquests-cassettes = { workspace = true }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -98,6 +105,7 @@ ignore = [
     "PLR2004",
     "INP001",
 ]
+"packages/*" = ["SLF001"]
 
 [tool.ruff.lint.isort]
 force-single-line = true

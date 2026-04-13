@@ -47,7 +47,7 @@ def test_get_logbook_entries(cached_client: Client) -> None:
     for entry in cached_client.get_logbook_entries(
         filter_entities="sun.red_sun",
         start_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
-        end_timestamp=datetime.now(UTC),
+        end_timestamp=datetime(2030, 1, 1, tzinfo=UTC),
     ):
         assert entry
 
@@ -57,7 +57,7 @@ async def test_async_get_logbook_entries(async_cached_client: AsyncClient) -> No
     async for entry in async_cached_client.get_logbook_entries(
         filter_entities="sun.red_sun",
         start_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
-        end_timestamp=datetime.now(UTC),
+        end_timestamp=datetime(2030, 1, 1, tzinfo=UTC),
     ):
         assert entry
 
@@ -79,7 +79,7 @@ def test_get_entity_histories(cached_client: Client) -> None:
     histories = list(
         cached_client.get_entity_histories(
             (sun,),
-            end_timestamp=datetime.now(tz=UTC),
+            end_timestamp=datetime(2030, 1, 1, tzinfo=UTC),
             start_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
             significant_changes_only=True,
         ),

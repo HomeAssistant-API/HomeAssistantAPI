@@ -32,8 +32,11 @@ from homeassistant_api.processing import async_process_response
 from homeassistant_api.processing import process_response
 from homeassistant_api.utils import prepare_entity_id
 
-HA_URL = os.environ["HOMEASSISTANTAPI_URL"]
-HA_WS_URL = os.environ["HOMEASSISTANTAPI_WS_URL"]
+HA_URL = os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api")
+HA_WS_URL = os.environ.get(
+    "HOMEASSISTANTAPI_WS_URL",
+    "ws://localhost:8123/api/websocket",
+)
 WRONG_TOKEN = "lolthisisawrongtokenforsure"  # noqa: S105
 
 
@@ -371,13 +374,13 @@ async def test_async_websocket_get_entity_histories_not_supported(
 
 def test_client_default_session() -> None:
     """Tests that Client creates a niquests.Session by default."""
-    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
+    token = os.environ.get("HOMEASSISTANTAPI_TOKEN", "")
     client = Client(HA_URL, token)
     assert isinstance(client._session, niquests.Session)
 
 
 async def test_async_client_default_session() -> None:
     """Tests that AsyncClient creates a niquests.AsyncSession by default."""
-    token = os.environ["HOMEASSISTANTAPI_TOKEN"]
+    token = os.environ.get("HOMEASSISTANTAPI_TOKEN", "")
     client = AsyncClient(HA_URL, token)
     assert isinstance(client._session, niquests.AsyncSession)
