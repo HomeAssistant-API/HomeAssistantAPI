@@ -44,11 +44,8 @@ dev = [
     "nimax",
 ]
 
-[tool.uv.workspace]
-members = ["packages/nimax"]
-
 [tool.uv.sources]
-nimax = { workspace = true }
+nimax = { path = "/home/alogan/pprojects/nimax", editable = true }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
