@@ -1,0 +1,215 @@
+{
+  "nimax_version": "0.1.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://e7.c.lencr.org/108.crl",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Date": [
+            "Mon, 13 Apr 2026 08:09:05 GMT"
+          ],
+          "Content-Type": [
+            "application/pkix-crl"
+          ],
+          "Content-Length": [
+            "58971"
+          ],
+          "Connection": [
+            "keep-alive"
+          ],
+          "x-amz-id-2": [
+            "OfjydEsdf9m7V+Tlpm+2gckE/Yz0yGKMxyK9XyklvJ2UaaMpSEOVi63rHO99EI4dI0KXiGVIM5Ggdxax/UKUqQ=="
+          ],
+          "x-amz-request-id": [
+            "XKCCHX3VKFDK94GA"
+          ],
+          "Last-Modified": [
+            "Mon, 13 Apr 2026 07:55:20 GMT"
+          ],
+          "etag": [
+            "\"bb57d55af27d13aa7a56be8369622ab7\""
+          ],
+          "x-amz-server-side-encryption": [
+            "AES256"
+          ],
+          "x-amz-meta-crlnumber": [
+            "1776066919003521495"
+          ],
+          "cache-control": [
+            "stale-if-error=600"
+          ],
+          "expires": [
+            "Mon, 13 Apr 2026 08:30:19 GMT"
+          ],
+          "x-amz-version-id": [
+            "wIy0xsspoUmWf3OjX0FYOji9k9lpAPer"
+          ],
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Server": [
+            "cloudflare"
+          ],
+          "Age": [
+            "144"
+          ],
+          "cf-cache-status": [
+            "HIT"
+          ],
+          "CF-RAY": [
+            "9eb8fc9028dc1ef3-PDX"
+          ]
+        },
+        "body": null,
+        "protocol": null,
+        "url": "http://e7.c.lencr.org/108.crl"
+      },
+      "recorded_at": "2026-04-13T08:09:05.327753+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "https://ha.krkn.cc/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "server": [
+            "nginx/1.28.2"
+          ],
+          "date": [
+            "Mon, 13 Apr 2026 08:09:05 GMT"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "content-length": [
+            "34"
+          ],
+          "referrer-policy": [
+            "no-referrer"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "x-frame-options": [
+            "SAMEORIGIN"
+          ],
+          "content-encoding": [
+            "deflate"
+          ]
+        },
+        "body": {
+          "string": "{\"message\":\"API running.\"}"
+        },
+        "protocol": null,
+        "url": "https://ha.krkn.cc/api/"
+      },
+      "recorded_at": "2026-04-13T08:09:05.337059+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "https://ha.krkn.cc/api/states/sun.sun",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "server": [
+            "nginx/1.28.2"
+          ],
+          "date": [
+            "Mon, 13 Apr 2026 08:09:05 GMT"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "content-length": [
+            "641"
+          ],
+          "referrer-policy": [
+            "no-referrer"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "x-frame-options": [
+            "SAMEORIGIN"
+          ]
+        },
+        "body": {
+          "string": "{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"next_dawn\":\"2026-04-13T12:59:35.804343+00:00\",\"next_dusk\":\"2026-04-14T03:27:06.838161+00:00\",\"next_midnight\":\"2026-04-13T08:12:52+00:00\",\"next_noon\":\"2026-04-13T20:13:04+00:00\",\"next_rising\":\"2026-04-13T13:30:48.092359+00:00\",\"next_setting\":\"2026-04-14T02:55:46.718486+00:00\",\"elevation\":-35.59,\"azimuth\":356.68,\"rising\":false,\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-13T02:58:29.987568+00:00\",\"last_reported\":\"2026-04-13T08:05:00.088108+00:00\",\"last_updated\":\"2026-04-13T08:02:04.566188+00:00\",\"context\":{\"id\":\"01KP2XSAMP9YPD6GA78ZCJDCN9\",\"parent_id\":null,\"user_id\":null}}"
+        },
+        "protocol": null,
+        "url": "https://ha.krkn.cc/api/states/sun.sun"
+      },
+      "recorded_at": "2026-04-13T08:09:05.345927+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "https://ha.krkn.cc/api/history/period?filter_entity_id=sun.sun",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "server": [
+            "nginx/1.28.2"
+          ],
+          "date": [
+            "Mon, 13 Apr 2026 08:09:05 GMT"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "content-length": [
+            "190"
+          ],
+          "referrer-policy": [
+            "no-referrer"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "x-frame-options": [
+            "SAMEORIGIN"
+          ],
+          "content-encoding": [
+            "deflate"
+          ]
+        },
+        "body": {
+          "string": "[[{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-12T08:09:05.336804+00:00\",\"last_updated\":\"2026-04-12T08:09:05.336804+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"above_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-12T13:31:27.886086+00:00\",\"last_updated\":\"2026-04-12T13:31:27.886086+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-13T02:58:29.987568+00:00\",\"last_updated\":\"2026-04-13T02:58:29.987568+00:00\"}]]"
+        },
+        "protocol": null,
+        "url": "https://ha.krkn.cc/api/history/period?filter_entity_id=sun.sun"
+      },
+      "recorded_at": "2026-04-13T08:09:05.360960+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}

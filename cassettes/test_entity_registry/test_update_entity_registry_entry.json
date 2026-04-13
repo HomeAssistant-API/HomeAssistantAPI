@@ -1,0 +1,67 @@
+{
+  "nimax_version": "0.1.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "wss://ha.krkn.cc/api/websocket",
+      "handshake_recorded_at": "2026-04-13T08:08:59.712119+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.1.2\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI0MTI5Nzc0NjhhOGE0YjdhYjk3MTI4MTVlYzYyNDgxYSIsImlhdCI6MTc3NTAyOTkxMiwiZXhwIjoyMDkwMzg5OTEyfQ.RjvtV0HlOr8voTVkhjDmoz4vNMNybqRPCnbSV79ukOo\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.1.2\"}",
+          "offset_ms": 5
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 5
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 10
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"entity_id\": \"sensor.sun_next_dawn\", \"name\": \"Test Name\", \"id\": 2, \"type\": \"config/entity_registry/update\"}",
+          "offset_ms": 11
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":true,\"result\":{\"entity_entry\":{\"area_id\":null,\"categories\":{},\"config_entry_id\":\"1543e25985b9193f65fd5db85884ff4d\",\"config_subentry_id\":null,\"created_at\":0.0,\"device_id\":\"478eb2264bf26267eb0907a487da7592\",\"disabled_by\":null,\"entity_category\":\"diagnostic\",\"entity_id\":\"sensor.sun_next_dawn\",\"has_entity_name\":true,\"hidden_by\":null,\"icon\":null,\"id\":\"5c11534f89cc17a1b2882fe1a5a2dce5\",\"labels\":[],\"modified_at\":1776067739.712396,\"name\":\"Test Name\",\"options\":{\"conversation\":{\"should_expose\":false},\"cloud.alexa\":{\"should_expose\":false},\"cloud.google_assistant\":{\"should_expose\":false}},\"original_name\":\"Next dawn\",\"platform\":\"sun\",\"translation_key\":\"next_dawn\",\"unique_id\":\"1543e25985b9193f65fd5db85884ff4d-next_dawn\",\"aliases\":[],\"capabilities\":null,\"device_class\":null,\"original_device_class\":\"timestamp\",\"original_icon\":null}}}",
+          "offset_ms": 18
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"entity_id\": \"sensor.sun_next_dawn\", \"name\": null, \"id\": 3, \"type\": \"config/entity_registry/update\"}",
+          "offset_ms": 18
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":3,\"type\":\"result\",\"success\":true,\"result\":{\"entity_entry\":{\"area_id\":null,\"categories\":{},\"config_entry_id\":\"1543e25985b9193f65fd5db85884ff4d\",\"config_subentry_id\":null,\"created_at\":0.0,\"device_id\":\"478eb2264bf26267eb0907a487da7592\",\"disabled_by\":null,\"entity_category\":\"diagnostic\",\"entity_id\":\"sensor.sun_next_dawn\",\"has_entity_name\":true,\"hidden_by\":null,\"icon\":null,\"id\":\"5c11534f89cc17a1b2882fe1a5a2dce5\",\"labels\":[],\"modified_at\":1776067739.720447,\"name\":null,\"options\":{\"conversation\":{\"should_expose\":false},\"cloud.alexa\":{\"should_expose\":false},\"cloud.google_assistant\":{\"should_expose\":false}},\"original_name\":\"Next dawn\",\"platform\":\"sun\",\"translation_key\":\"next_dawn\",\"unique_id\":\"1543e25985b9193f65fd5db85884ff4d-next_dawn\",\"aliases\":[],\"capabilities\":null,\"device_class\":null,\"original_device_class\":\"timestamp\",\"original_icon\":null}}}",
+          "offset_ms": 25
+        }
+      ]
+    }
+  ]
+}

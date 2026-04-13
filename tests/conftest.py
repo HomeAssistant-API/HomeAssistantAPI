@@ -1,3 +1,11 @@
+"""
+Reference implementation of pytest-niquests-cassettes.
+
+Each fixture depends on ``nimax_session`` or ``nimax_async_session``, which
+activates a per-test cassette named after the test module and function.
+Pass ``--record`` to record fresh cassettes from a live HA instance.
+"""
+
 import logging
 import os
 import time
@@ -5,10 +13,10 @@ from collections.abc import AsyncGenerator
 from collections.abc import Generator
 from http import HTTPMethod
 
+import niquests
 import pytest
 import pytest_asyncio
 from niquests.exceptions import ConnectionError as RequestsConnectionError
-from pytest_niquests_cassettes import Cassette
 
 from homeassistant_api import AsyncClient
 from homeassistant_api import AsyncWebsocketClient
@@ -44,35 +52,41 @@ def pytest_sessionstart(session: pytest.Session) -> None:
     raise TimeoutError(msg)
 
 
-@pytest.fixture(name="cached_client", scope="session")
-def setup_cached_client(cassette: Cassette) -> Generator[Client, None, None]:  # noqa: ARG001
-    """Initializes the Client and enters a cached session."""
-    with Client(HA_URL, HA_TOKEN) as client:
+@pytest.fixture(name="cached_client")
+def setup_cached_client(
+    nimax_session: niquests.Session,
+) -> Generator[Client, None, None]:
+    """Sync HTTP client backed by a per-test cassette."""
+    with Client(HA_URL, HA_TOKEN, session=nimax_session) as client:
         yield client
 
 
-@pytest_asyncio.fixture(name="async_cached_client", scope="session")
+@pytest_asyncio.fixture(name="async_cached_client")
 async def setup_async_cached_client(
-    cassette: Cassette,  # noqa: ARG001
+    nimax_async_session: niquests.AsyncSession,
 ) -> AsyncGenerator[AsyncClient, None]:
-    """Initializes the AsyncClient and enters an async cached session."""
-    async with AsyncClient(HA_URL, HA_TOKEN) as client:
+    """Async HTTP client backed by a per-test cassette."""
+    async with AsyncClient(HA_URL, HA_TOKEN, session=nimax_async_session) as client:
         yield client
 
 
-@pytest.fixture(name="websocket_client", scope="session")
+@pytest.fixture(name="websocket_client")
 def setup_websocket_client(
-    cassette: Cassette,  # noqa: ARG001
+    nimax_session: niquests.Session,
 ) -> Generator[WebsocketClient, None, None]:
-    """Initializes the Client and enters a WebSocket session."""
-    with WebsocketClient(HA_WS_URL, HA_TOKEN) as client:
+    """Sync WebSocket client backed by a per-test cassette."""
+    with WebsocketClient(HA_WS_URL, HA_TOKEN, session=nimax_session) as client:
         yield client
 
 
-@pytest_asyncio.fixture(name="async_websocket_client", scope="session")
+@pytest_asyncio.fixture(name="async_websocket_client")
 async def setup_async_websocket_client(
-    cassette: Cassette,  # noqa: ARG001
+    nimax_async_session: niquests.AsyncSession,
 ) -> AsyncGenerator[AsyncWebsocketClient, None]:
-    """Initializes the AsyncWebsocketClient and enters an async WebSocket session."""
-    async with AsyncWebsocketClient(HA_WS_URL, HA_TOKEN) as client:
+    """Async WebSocket client backed by a per-test cassette."""
+    async with AsyncWebsocketClient(
+        HA_WS_URL,
+        HA_TOKEN,
+        session=nimax_async_session,
+    ) as client:
         yield client

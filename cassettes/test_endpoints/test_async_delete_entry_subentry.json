@@ -1,0 +1,55 @@
+{
+  "nimax_version": "0.1.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "wss://ha.krkn.cc/api/websocket",
+      "handshake_recorded_at": "2026-04-13T08:08:56.942003+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.1.2\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI0MTI5Nzc0NjhhOGE0YjdhYjk3MTI4MTVlYzYyNDgxYSIsImlhdCI6MTc3NTAyOTkxMiwiZXhwIjoyMDkwMzg5OTEyfQ.RjvtV0HlOr8voTVkhjDmoz4vNMNybqRPCnbSV79ukOo\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.1.2\"}",
+          "offset_ms": 5
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 5
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 10
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"entry_id\": \"\", \"subentry_id\": \"\", \"id\": 2, \"type\": \"config_entries/subentries/delete\"}",
+          "offset_ms": 10
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":false,\"error\":{\"code\":\"not_found\",\"message\":\"Config entry not found\"}}",
+          "offset_ms": 16
+        }
+      ]
+    }
+  ]
+}

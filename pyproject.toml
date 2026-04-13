@@ -41,14 +41,14 @@ dev = [
     "aiosqlite>=0.22",
     "prek>=0.3.8",
     "pre-commit>=4.5.1",
-    "pytest-niquests-cassettes",
+    "nimax",
 ]
 
 [tool.uv.workspace]
-members = ["packages/pytest-niquests-cassettes"]
+members = ["packages/nimax"]
 
 [tool.uv.sources]
-pytest-niquests-cassettes = { workspace = true }
+nimax = { workspace = true }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
