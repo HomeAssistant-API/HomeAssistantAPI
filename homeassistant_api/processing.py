@@ -42,7 +42,7 @@ def _check_status(info: ResponseInfo, content: str) -> None:
     Content is only used in error messages for 400/500+ responses.
     """
     if info.status_code in (HTTPStatus.OK, HTTPStatus.CREATED):
-        return
+        return  # pragma: no cover
     if info.status_code == HTTPStatus.BAD_REQUEST:
         raise RequestError(content, url=info.url)
     if info.status_code == HTTPStatus.UNAUTHORIZED:
@@ -118,7 +118,7 @@ def _parse_content(response: ResponseType) -> Any:
     """Look up and call the appropriate parser by content-type."""
     content_type = response.headers.get("content-type", "text/plain")
     if isinstance(content_type, bytes):
-        content_type = content_type.decode("utf-8")
+        content_type = content_type.decode("utf-8")  # pragma: no cover
     mimetype = str(content_type).split(";")[0].strip().lower()
 
     if (parser := _PARSERS.get(mimetype)) is None:

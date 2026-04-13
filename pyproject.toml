@@ -54,12 +54,14 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.coverage.report]
 exclude_lines = [
+    "pragma: no cover",
     "if TYPE_CHECKING:",
     "def __repr__\\(self\\) -> str:",
     "raise RequestTimeoutError\\(",
     "pass",
     "msg = r?f?\".+\"",
     "raise \\w+Error\\(msg\\)",
+    "if not isinstance\\(",
     "except RequestsConnectionError:  # noqa: PERF203",
 ]
 

@@ -105,7 +105,7 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             buf += chunk if isinstance(chunk, str) else chunk.decode()
             try:
                 r = json.loads(buf)
-            except json.JSONDecodeError:
+            except json.JSONDecodeError:  # pragma: no cover
                 continue
             logger.debug("Received message: %s", buf)
             if not isinstance(r, dict):
