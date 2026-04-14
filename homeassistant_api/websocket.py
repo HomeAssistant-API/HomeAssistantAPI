@@ -27,6 +27,7 @@ from homeassistant_api.models.config_entries import DisableEnableResult
 from homeassistant_api.models.config_entries import FlowResult
 from homeassistant_api.models.entity_registry import EntityRegistryEntry
 from homeassistant_api.models.entity_registry import EntityRegistryEntryExtended
+from homeassistant_api.models.entity_registry import EntityRegistryUpdateParams
 from homeassistant_api.models.entity_registry import EntityRegistryUpdateResult
 from homeassistant_api.models.states import Context
 from homeassistant_api.models.websocket import AuthInvalid
@@ -686,8 +687,7 @@ class WebsocketClient(BaseWebsocketClient):
 
     def update_entity_registry_entry(
         self,
-        entity_id: str,
-        **kwargs: Any,
+        parameters: EntityRegistryUpdateParams,
     ) -> EntityRegistryUpdateResult:
         """
         Update an entity registry entry.
@@ -697,8 +697,7 @@ class WebsocketClient(BaseWebsocketClient):
         result = self.recv_result_dict(
             self.send(
                 "config/entity_registry/update",
-                entity_id=entity_id,
-                **kwargs,
+                **parameters,
             ),
         )
         return EntityRegistryUpdateResult.from_json(result)
