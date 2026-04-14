@@ -1,6 +1,6 @@
 """Models for Home Assistant entity registry responses."""
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -9,7 +9,7 @@ from .base import BaseModel
 from .base import DatetimeIsoField
 
 
-class EntityDisabledBy(str, Enum):
+class EntityDisabledBy(StrEnum):
     """What disabled an entity."""
 
     CONFIG_ENTRY = "config_entry"
@@ -19,14 +19,14 @@ class EntityDisabledBy(str, Enum):
     USER = "user"
 
 
-class EntityHiddenBy(str, Enum):
+class EntityHiddenBy(StrEnum):
     """What hid an entity."""
 
     INTEGRATION = "integration"
     USER = "user"
 
 
-class EntityCategory(str, Enum):
+class EntityCategory(StrEnum):
     """Category of an entity."""
 
     CONFIG = "config"

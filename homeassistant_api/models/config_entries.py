@@ -1,12 +1,12 @@
 """File for models used in responses from config entries."""
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from .base import BaseModel
 
 
-class FlowResultType(Enum):
+class FlowResultType(StrEnum):
     """Result type for a data entry flow."""
 
     FORM = "form"
@@ -79,7 +79,7 @@ class DisableEnableResult(BaseModel):
     require_restart: bool
 
 
-class IntegrationTypes(Enum):
+class IntegrationTypes(StrEnum):
     """Types of integrations."""
 
     ENTITY = "entity"
@@ -92,7 +92,7 @@ class IntegrationTypes(Enum):
     VIRTUAL = "virtual"
 
 
-class ConfigEntryState(str, Enum):
+class ConfigEntryState(StrEnum):
     """Config entry state."""
 
     LOADED = "loaded"
@@ -105,7 +105,7 @@ class ConfigEntryState(str, Enum):
     UNLOAD_IN_PROGRESS = "unload_in_progress"
 
 
-class ConfigEntryDisabler(Enum):
+class ConfigEntryDisabler(StrEnum):
     """What disabled a config entry."""
 
     USER = "user"
@@ -144,7 +144,7 @@ class ConfigSubEntry(BaseModel):
     unique_id: str | None
 
 
-class ConfigEntryChange(str, Enum):
+class ConfigEntryChange(StrEnum):
     """What was changed in a config entry."""
 
     ADDED = "added"
