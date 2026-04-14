@@ -61,7 +61,7 @@ class EntityRegistryEntry(BaseModel):
 class EntityRegistryEntryExtended(EntityRegistryEntry):
     """Extended entity registry entry as returned by ``config/entity_registry/get`` and ``update``."""
 
-    aliases: list[str] = Field(default_factory=list)
+    aliases: list[str] | tuple[None] = Field(default_factory=list)
     capabilities: dict[str, Any] | None = None
     device_class: str | None = None
     original_device_class: str | None = None
