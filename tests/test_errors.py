@@ -40,25 +40,37 @@ HA_WS_URL = os.environ.get(
 WRONG_TOKEN = "lolthisisawrongtokenforsure"  # noqa: S105
 
 
-def test_unauthorized() -> None:
-    with pytest.raises(UnauthorizedError), Client(HA_URL, WRONG_TOKEN):
+def test_unauthorized(nimax_session: niquests.Session) -> None:
+    with (
+        pytest.raises(UnauthorizedError),
+        Client(HA_URL, WRONG_TOKEN, session=nimax_session),
+    ):
         pass
 
 
-def test_websocket_unauthorized() -> None:
-    with pytest.raises(UnauthorizedError), WebsocketClient(HA_WS_URL, WRONG_TOKEN):
+def test_websocket_unauthorized(nimax_session: niquests.Session) -> None:
+    with (
+        pytest.raises(UnauthorizedError),
+        WebsocketClient(HA_WS_URL, WRONG_TOKEN, session=nimax_session),
+    ):
         pass
 
 
-async def test_async_websocket_unauthorized() -> None:
+async def test_async_websocket_unauthorized(
+    nimax_async_session: niquests.AsyncSession,
+) -> None:
     with pytest.raises(UnauthorizedError):
-        async with AsyncWebsocketClient(HA_WS_URL, WRONG_TOKEN):
+        async with AsyncWebsocketClient(
+            HA_WS_URL,
+            WRONG_TOKEN,
+            session=nimax_async_session,
+        ):
             pass
 
 
-async def test_async_unauthorized() -> None:
+async def test_async_unauthorized(nimax_async_session: niquests.AsyncSession) -> None:
     with pytest.raises(UnauthorizedError):
-        async with AsyncClient(HA_URL, WRONG_TOKEN):
+        async with AsyncClient(HA_URL, WRONG_TOKEN, session=nimax_async_session):
             pass
 
 
