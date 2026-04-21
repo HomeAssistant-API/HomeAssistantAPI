@@ -40,26 +40,19 @@ jobs:
   code_functionality:
     name: "Code Functionality"
     runs-on: ubuntu-latest
-    environment: "Test Suite"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: Pre Docker Setup
-        run: |
-          mkdir volumes/coverage
-      - name: Run Test Environment
-        run: |
-          docker compose up --build --exit-code-from tests
-        env:
-          HOMEASSISTANTAPI_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk"  # This is non-sensitive data
-      - name: Post Docker Setup
-        run: |
-          sudo chown -R $USER volumes
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      - name: Install Dependencies
+        run: uv sync --group dev
+      - name: Run Tests
+        run: uv run pytest --cov --cov-report xml:coverage.xml
       - name: Upload Coverage Report
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./volumes/coverage/coverage.xml
-          verbose: true
+          files: coverage.xml
