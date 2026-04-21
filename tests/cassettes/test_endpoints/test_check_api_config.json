@@ -1,0 +1,98 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "34"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"message\":\"API running.\"}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/"
+      },
+      "recorded_at": "2026-04-21T02:58:30.456438+00:00"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "uri": "http://localhost:8123/api/config/core/check_config",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "56"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"result\":\"valid\",\"errors\":null,\"warnings\":null}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/config/core/check_config"
+      },
+      "recorded_at": "2026-04-21T02:58:30.458906+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}

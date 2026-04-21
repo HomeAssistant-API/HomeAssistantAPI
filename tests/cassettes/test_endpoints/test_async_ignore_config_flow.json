@@ -1,0 +1,55 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "ws://localhost:8123/api/websocket",
+      "handshake_recorded_at": "2026-04-21T02:58:30.707207+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"flow_id\": \"\", \"title\": \"\", \"id\": 2, \"type\": \"config_entries/ignore_flow\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":false,\"error\":{\"code\":\"not_found\",\"message\":\"Config entry not found\"}}",
+          "offset_ms": 1
+        }
+      ]
+    }
+  ]
+}

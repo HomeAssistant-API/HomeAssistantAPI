@@ -1,0 +1,98 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "34"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:33 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"message\":\"API running.\"}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/"
+      },
+      "recorded_at": "2026-04-21T02:58:33.099079+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/events",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "218"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:33 GMT"
+          ]
+        },
+        "body": {
+          "string": "[{\"event\":\"*\",\"listener_count\":1},{\"event\":\"logging_changed\",\"listener_count\":1},{\"event\":\"entity_registry_updated\",\"listener_count\":6},{\"event\":\"homeassistant_start\",\"listener_count\":1},{\"event\":\"homeassistant_stop\",\"listener_count\":52},{\"event\":\"core_config_updated\",\"listener_count\":3},{\"event\":\"floor_registry_updated\",\"listener_count\":1},{\"event\":\"label_registry_updated\",\"listener_count\":3},{\"event\":\"device_registry_updated\",\"listener_count\":2},{\"event\":\"labs_updated\",\"listener_count\":5},{\"event\":\"component_loaded\",\"listener_count\":1},{\"event\":\"category_registry_updated\",\"listener_count\":1},{\"event\":\"homeassistant_final_write\",\"listener_count\":5},{\"event\":\"homeassistant_close\",\"listener_count\":6},{\"event\":\"state_changed\",\"listener_count\":3},{\"event\":\"user_removed\",\"listener_count\":1}]"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/events"
+      },
+      "recorded_at": "2026-04-21T02:58:33.100635+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}

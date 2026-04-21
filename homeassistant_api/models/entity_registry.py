@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any
 
 from pydantic import Field
+from pydantic import field_validator
 
 from .base import BaseModel
 from .base import DatetimeIsoField
@@ -63,6 +64,12 @@ class EntityRegistryEntryExtended(EntityRegistryEntry):
 
     aliases: list[str] = Field(default_factory=list)
     capabilities: dict[str, Any] | None = None
+
+    @field_validator("aliases", mode="before")
+    @classmethod
+    def _drop_none_aliases(cls, v: list) -> list:
+        return [a for a in v if a is not None]
+
     device_class: str | None = None
     original_device_class: str | None = None
     original_icon: str | None = None

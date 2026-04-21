@@ -44,8 +44,9 @@ dev = [
     "nimax",
 ]
 
-[tool.uv.sources]
-nimax = { path = "/home/alogan/pprojects/nimax", editable = true }
+[tool.nimax]
+cassette_library_dir = "tests/cassettes"
+match_on = ["method", "uri"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

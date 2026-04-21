@@ -1,0 +1,98 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "34"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"message\":\"API running.\"}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/"
+      },
+      "recorded_at": "2026-04-21T02:58:30.892738+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/states",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "2708"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "[{\"entity_id\":\"zone.home\",\"state\":\"0\",\"attributes\":{\"latitude\":52.3731339,\"longitude\":4.8903147,\"radius\":100,\"passive\":false,\"persons\":[],\"editable\":true,\"icon\":\"mdi:home\",\"friendly_name\":\"Testing Server\"},\"last_changed\":\"2026-04-21T01:51:30.350164+00:00\",\"last_reported\":\"2026-04-21T01:51:30.350164+00:00\",\"last_updated\":\"2026-04-21T01:51:30.350164+00:00\",\"context\":{\"id\":\"01KPPVRHHENK82VRW7705GA5FS\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"person.test_user\",\"state\":\"unknown\",\"attributes\":{\"editable\":true,\"id\":\"test_user\",\"device_trackers\":[],\"user_id\":\"e85fc7b7b8924dc9b024ce90ad23799e\",\"friendly_name\":\"Test User\"},\"last_changed\":\"2026-04-21T01:51:30.362446+00:00\",\"last_reported\":\"2026-04-21T01:51:31.845948+00:00\",\"last_updated\":\"2026-04-21T01:51:31.844364+00:00\",\"context\":{\"id\":\"01KPPVRK04YQR5A8QNCNB1FW24\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_2\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.739566+00:00\",\"last_reported\":\"2026-04-21T01:51:30.739566+00:00\",\"last_updated\":\"2026-04-21T01:51:30.739566+00:00\",\"context\":{\"id\":\"01KPPVRHXKQYT57JJS87ARBR18\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_2\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.739785+00:00\",\"last_reported\":\"2026-04-21T01:51:30.739785+00:00\",\"last_updated\":\"2026-04-21T01:51:30.739785+00:00\",\"context\":{\"id\":\"01KPPVRHXK55V9T0KGYSY09D3K\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_3\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.740027+00:00\",\"last_reported\":\"2026-04-21T01:51:30.740027+00:00\",\"last_updated\":\"2026-04-21T01:51:30.740027+00:00\",\"context\":{\"id\":\"01KPPVRHXMNZXYFMKZJSNGAV95\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_3\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.740251+00:00\",\"last_reported\":\"2026-04-21T01:51:30.740251+00:00\",\"last_updated\":\"2026-04-21T01:51:30.740251+00:00\",\"context\":{\"id\":\"01KPPVRHXMB3DYMAWN7PHYN69X\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_4\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.740486+00:00\",\"last_reported\":\"2026-04-21T01:51:30.740486+00:00\",\"last_updated\":\"2026-04-21T01:51:30.740486+00:00\",\"context\":{\"id\":\"01KPPVRHXMZ9V1A8XK5QDTAKDP\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_4\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.740713+00:00\",\"last_reported\":\"2026-04-21T01:51:30.740713+00:00\",\"last_updated\":\"2026-04-21T01:51:30.740713+00:00\",\"context\":{\"id\":\"01KPPVRHXMCTWV0M1N8DAANCY4\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_5\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.740933+00:00\",\"last_reported\":\"2026-04-21T01:51:30.740933+00:00\",\"last_updated\":\"2026-04-21T01:51:30.740933+00:00\",\"context\":{\"id\":\"01KPPVRHXMYYG74M4RPN3K5FV1\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_5\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.741174+00:00\",\"last_reported\":\"2026-04-21T01:51:30.741174+00:00\",\"last_updated\":\"2026-04-21T01:51:30.741174+00:00\",\"context\":{\"id\":\"01KPPVRHXN41KGJ7QKY2X7T61F\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_6\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.741412+00:00\",\"last_reported\":\"2026-04-21T01:51:30.741412+00:00\",\"last_updated\":\"2026-04-21T01:51:30.741412+00:00\",\"context\":{\"id\":\"01KPPVRHXNA7VK1D3SV5YSZA5C\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_6\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.741652+00:00\",\"last_reported\":\"2026-04-21T01:51:30.741652+00:00\",\"last_updated\":\"2026-04-21T01:51:30.741652+00:00\",\"context\":{\"id\":\"01KPPVRHXNM75E5VC8Q9F2SDMP\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_7\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.741910+00:00\",\"last_reported\":\"2026-04-21T01:51:30.741910+00:00\",\"last_updated\":\"2026-04-21T01:51:30.741910+00:00\",\"context\":{\"id\":\"01KPPVRHXNHZVZMWAW66E5RS4W\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_7\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.742192+00:00\",\"last_reported\":\"2026-04-21T01:51:30.742192+00:00\",\"last_updated\":\"2026-04-21T01:51:30.742192+00:00\",\"context\":{\"id\":\"01KPPVRHXPFBMF04KXSHY5QVDN\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_8\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.742450+00:00\",\"last_reported\":\"2026-04-21T01:51:30.742450+00:00\",\"last_updated\":\"2026-04-21T01:51:30.742450+00:00\",\"context\":{\"id\":\"01KPPVRHXPBG4M7PDSZXR7QWE7\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_8\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.742692+00:00\",\"last_reported\":\"2026-04-21T01:51:30.742692+00:00\",\"last_updated\":\"2026-04-21T01:51:30.742692+00:00\",\"context\":{\"id\":\"01KPPVRHXPMJMDNZT34W47EJMP\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_9\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.742944+00:00\",\"last_reported\":\"2026-04-21T01:51:30.742944+00:00\",\"last_updated\":\"2026-04-21T01:51:30.742944+00:00\",\"context\":{\"id\":\"01KPPVRHXP9P94RAQ4ZMDV8J0M\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_9\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.744207+00:00\",\"last_reported\":\"2026-04-21T01:51:30.744207+00:00\",\"last_updated\":\"2026-04-21T01:51:30.744207+00:00\",\"context\":{\"id\":\"01KPPVRHXRNQE8HGGZ28JCJF42\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_10\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:30.744488+00:00\",\"last_reported\":\"2026-04-21T01:51:30.744488+00:00\",\"last_updated\":\"2026-04-21T01:51:30.744488+00:00\",\"context\":{\"id\":\"01KPPVRHXRTZ1NAZWDJ4EPKG4N\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_10\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:30.744750+00:00\",\"last_reported\":\"2026-04-21T01:51:30.744750+00:00\",\"last_updated\":\"2026-04-21T01:51:30.744750+00:00\",\"context\":{\"id\":\"01KPPVRHXRKAGJECJZ60HD00C5\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.sun_next_dawn\",\"state\":\"2026-04-21T03:45:01+00:00\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Sun Next dawn\"},\"last_changed\":\"2026-04-21T02:58:30.694874+00:00\",\"last_reported\":\"2026-04-21T02:58:30.694874+00:00\",\"last_updated\":\"2026-04-21T02:58:30.694874+00:00\",\"context\":{\"id\":\"01KPPZK7N6W1WFPM8QQ4FJXM0V\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.sun_next_dusk\",\"state\":\"2026-04-21T19:34:41+00:00\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Sun Next dusk\"},\"last_changed\":\"2026-04-21T02:58:30.694949+00:00\",\"last_reported\":\"2026-04-21T02:58:30.694949+00:00\",\"last_updated\":\"2026-04-21T02:58:30.694949+00:00\",\"context\":{\"id\":\"01KPPZK7N64E2JRX9KBD5FTXZD\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.sun_next_midnight\",\"state\":\"2026-04-21T23:38:57+00:00\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Sun Next midnight\"},\"last_changed\":\"2026-04-21T02:58:30.695014+00:00\",\"last_reported\":\"2026-04-21T02:58:30.695014+00:00\",\"last_updated\":\"2026-04-21T02:58:30.695014+00:00\",\"context\":{\"id\":\"01KPPZK7N79YT9DFB621KVAAW3\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.sun_next_noon\",\"state\":\"2026-04-21T11:39:14+00:00\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Sun Next noon\"},\"last_changed\":\"2026-04-21T02:58:30.695086+00:00\",\"last_reported\":\"2026-04-21T02:58:30.695086+00:00\",\"last_updated\":\"2026-04-21T02:58:30.695086+00:00\",\"context\":{\"id\":\"01KPPZK7N76N7VRN27TMDCKS2N\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.sun_next_rising\",\"state\":\"2026-04-21T04:25:11+00:00\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Sun Next rising\"},\"last_changed\":\"2026-04-21T02:58:30.695150+00:00\",\"last_reported\":\"2026-04-21T02:58:30.695150+00:00\",\"last_updated\":\"2026-04-21T02:58:30.695150+00:00\",\"context\":{\"id\":\"01KPPZK7N7WDJ5VHA4DNTKCSY2\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.sun_next_setting\",\"state\":\"2026-04-21T18:54:15+00:00\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Sun Next setting\"},\"last_changed\":\"2026-04-21T02:58:30.695213+00:00\",\"last_reported\":\"2026-04-21T02:58:30.695213+00:00\",\"last_updated\":\"2026-04-21T02:58:30.695213+00:00\",\"context\":{\"id\":\"01KPPZK7N7W6EF4A44CF7YD3QF\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"conversation.home_assistant\",\"state\":\"unknown\",\"attributes\":{\"friendly_name\":\"Home Assistant\",\"supported_features\":1},\"last_changed\":\"2026-04-21T01:51:31.333588+00:00\",\"last_reported\":\"2026-04-21T01:51:31.333588+00:00\",\"last_updated\":\"2026-04-21T01:51:31.333588+00:00\",\"context\":{\"id\":\"01KPPVRJG5BEYVSD95HCWM5WXC\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"weather.forecast_home\",\"state\":\"partlycloudy\",\"attributes\":{\"temperature\":0.4,\"dew_point\":-2.9,\"temperature_unit\":\"°C\",\"humidity\":80,\"cloud_coverage\":29.7,\"uv_index\":0.0,\"pressure\":1024.7,\"pressure_unit\":\"hPa\",\"wind_bearing\":49.0,\"wind_speed\":18.0,\"wind_speed_unit\":\"km/h\",\"visibility_unit\":\"km\",\"precipitation_unit\":\"mm\",\"attribution\":\"Weather forecast from met.no, delivered by the Norwegian Meteorological Institute.\",\"friendly_name\":\"Forecast Home\",\"supported_features\":3},\"last_changed\":\"2026-04-21T01:51:31.841539+00:00\",\"last_reported\":\"2026-04-21T01:51:31.847217+00:00\",\"last_updated\":\"2026-04-21T01:51:31.841539+00:00\",\"context\":{\"id\":\"01KPPVRK01NBBRWMPYTPJ0Q7CQ\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"event.backup_automatic_backup\",\"state\":\"unknown\",\"attributes\":{\"event_types\":[\"completed\",\"failed\",\"in_progress\"],\"event_type\":null,\"friendly_name\":\"Backup Automatic backup\"},\"last_changed\":\"2026-04-21T01:51:31.855174+00:00\",\"last_reported\":\"2026-04-21T01:51:31.855243+00:00\",\"last_updated\":\"2026-04-21T01:51:31.855174+00:00\",\"context\":{\"id\":\"01KPPVRK0FZ18VMTZHSW824DH4\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.backup_backup_manager_state\",\"state\":\"idle\",\"attributes\":{\"options\":[\"idle\",\"create_backup\",\"blocked\",\"receive_backup\",\"restore_backup\"],\"device_class\":\"enum\",\"friendly_name\":\"Backup Backup Manager state\"},\"last_changed\":\"2026-04-21T01:51:31.855576+00:00\",\"last_reported\":\"2026-04-21T01:51:31.855635+00:00\",\"last_updated\":\"2026-04-21T01:51:31.855576+00:00\",\"context\":{\"id\":\"01KPPVRK0FQCJ9TY7VSTTCBPDW\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.backup_next_scheduled_automatic_backup\",\"state\":\"unknown\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Backup Next scheduled automatic backup\"},\"last_changed\":\"2026-04-21T01:51:31.855771+00:00\",\"last_reported\":\"2026-04-21T01:51:31.855819+00:00\",\"last_updated\":\"2026-04-21T01:51:31.855771+00:00\",\"context\":{\"id\":\"01KPPVRK0FR3JBKXNTYJAQ4Y0Q\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.backup_last_successful_automatic_backup\",\"state\":\"unknown\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Backup Last successful automatic backup\"},\"last_changed\":\"2026-04-21T01:51:31.855948+00:00\",\"last_reported\":\"2026-04-21T01:51:31.856007+00:00\",\"last_updated\":\"2026-04-21T01:51:31.855948+00:00\",\"context\":{\"id\":\"01KPPVRK0F7F4X6BX2X6R6FXS5\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sensor.backup_last_attempted_automatic_backup\",\"state\":\"unknown\",\"attributes\":{\"device_class\":\"timestamp\",\"friendly_name\":\"Backup Last attempted automatic backup\"},\"last_changed\":\"2026-04-21T01:51:31.856153+00:00\",\"last_reported\":\"2026-04-21T01:51:31.856200+00:00\",\"last_updated\":\"2026-04-21T01:51:31.856153+00:00\",\"context\":{\"id\":\"01KPPVRK0GFFZS3EDSM99EB93A\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sun.red_sun\",\"state\":\"In the palm of my hand.\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:55:07.237500+00:00\",\"last_reported\":\"2026-04-21T02:55:07.237500+00:00\",\"last_updated\":\"2026-04-21T02:55:07.237500+00:00\",\"context\":{\"id\":\"01KPPZD0Z5ZZVJ3FSA5B82TXEK\",\"parent_id\":null,\"user_id\":\"e85fc7b7b8924dc9b024ce90ad23799e\"}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_11\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test\"},\"last_changed\":\"2026-04-21T01:51:54.180970+00:00\",\"last_reported\":\"2026-04-21T01:51:54.181042+00:00\",\"last_updated\":\"2026-04-21T01:51:54.180970+00:00\",\"context\":{\"id\":\"01KPPVS8T4XE4XDMTECDMY224C\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"input_boolean.smoke_registry_remove_test_async_11\",\"state\":\"off\",\"attributes\":{\"editable\":true,\"friendly_name\":\"smoke_registry_remove_test_async\"},\"last_changed\":\"2026-04-21T01:51:54.210289+00:00\",\"last_reported\":\"2026-04-21T01:51:54.210364+00:00\",\"last_updated\":\"2026-04-21T01:51:54.210289+00:00\",\"context\":{\"id\":\"01KPPVS8V2NMMTNFP14HC232Y1\",\"parent_id\":null,\"user_id\":null}},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"next_dawn\":\"2026-04-21T03:45:01.401629+00:00\",\"next_dusk\":\"2026-04-21T19:34:41.134215+00:00\",\"next_midnight\":\"2026-04-21T23:38:57+00:00\",\"next_noon\":\"2026-04-21T11:39:14+00:00\",\"next_rising\":\"2026-04-21T04:25:11.997956+00:00\",\"next_setting\":\"2026-04-21T18:54:15.247749+00:00\",\"elevation\":-12.87,\"azimuth\":50.1,\"rising\":true,\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:58:30.694375+00:00\",\"last_reported\":\"2026-04-21T02:58:30.694375+00:00\",\"last_updated\":\"2026-04-21T02:58:30.694375+00:00\",\"context\":{\"id\":\"01KPPZK7N6E57Y9G46N8YKSHDA\",\"parent_id\":null,\"user_id\":null}}]"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/states"
+      },
+      "recorded_at": "2026-04-21T02:58:30.893815+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}

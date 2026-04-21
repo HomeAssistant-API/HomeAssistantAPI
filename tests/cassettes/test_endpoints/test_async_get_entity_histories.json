@@ -1,0 +1,141 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "34"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"message\":\"API running.\"}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/"
+      },
+      "recorded_at": "2026-04-21T02:58:30.427861+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/states/sun.sun",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "639"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"next_dawn\":\"2026-04-21T03:45:01.401629+00:00\",\"next_dusk\":\"2026-04-21T19:34:41.134215+00:00\",\"next_midnight\":\"2026-04-21T23:38:57+00:00\",\"next_noon\":\"2026-04-21T11:39:14+00:00\",\"next_rising\":\"2026-04-21T04:25:11.997956+00:00\",\"next_setting\":\"2026-04-21T18:54:15.247749+00:00\",\"elevation\":-13.02,\"azimuth\":49.81,\"rising\":true,\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:55:06.207470+00:00\",\"last_reported\":\"2026-04-21T02:58:21.247287+00:00\",\"last_updated\":\"2026-04-21T02:57:12.977047+00:00\",\"context\":{\"id\":\"01KPPZGVRHTX3QD40M1KRA1Q8E\",\"parent_id\":null,\"user_id\":null}}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/states/sun.sun"
+      },
+      "recorded_at": "2026-04-21T02:58:30.429011+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/history/period?filter_entity_id=sun.sun",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "459"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:30 GMT"
+          ]
+        },
+        "body": {
+          "string": "[[{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-20T02:58:30.429513+00:00\",\"last_updated\":\"2026-04-20T02:58:30.429513+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T01:51:31.247873+00:00\",\"last_updated\":\"2026-04-21T01:51:31.247873+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T01:51:53.903872+00:00\",\"last_updated\":\"2026-04-21T01:51:53.903872+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T01:51:53.906573+00:00\",\"last_updated\":\"2026-04-21T01:51:53.906573+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T01:51:53.913278+00:00\",\"last_updated\":\"2026-04-21T01:51:53.913278+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T01:51:53.915127+00:00\",\"last_updated\":\"2026-04-21T01:51:53.915127+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T01:51:55.084844+00:00\",\"last_updated\":\"2026-04-21T01:51:55.084844+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T01:51:55.094790+00:00\",\"last_updated\":\"2026-04-21T01:51:55.094790+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T01:51:55.110192+00:00\",\"last_updated\":\"2026-04-21T01:51:55.110192+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T01:51:55.112527+00:00\",\"last_updated\":\"2026-04-21T01:51:55.112527+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:48:31.001566+00:00\",\"last_updated\":\"2026-04-21T02:48:31.001566+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:48:31.004039+00:00\",\"last_updated\":\"2026-04-21T02:48:31.004039+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:48:31.013509+00:00\",\"last_updated\":\"2026-04-21T02:48:31.013509+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:48:31.016501+00:00\",\"last_updated\":\"2026-04-21T02:48:31.016501+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:55:04.542192+00:00\",\"last_updated\":\"2026-04-21T02:55:04.542192+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:55:04.557678+00:00\",\"last_updated\":\"2026-04-21T02:55:04.557678+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:55:04.565397+00:00\",\"last_updated\":\"2026-04-21T02:55:04.565397+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:55:04.568086+00:00\",\"last_updated\":\"2026-04-21T02:55:04.568086+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:55:06.194407+00:00\",\"last_updated\":\"2026-04-21T02:55:06.194407+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:55:06.196543+00:00\",\"last_updated\":\"2026-04-21T02:55:06.196543+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"\",\"attributes\":{},\"last_changed\":\"2026-04-21T02:55:06.204598+00:00\",\"last_updated\":\"2026-04-21T02:55:06.204598+00:00\"},{\"entity_id\":\"sun.sun\",\"state\":\"below_horizon\",\"attributes\":{\"friendly_name\":\"Sun\"},\"last_changed\":\"2026-04-21T02:55:06.207470+00:00\",\"last_updated\":\"2026-04-21T02:55:06.207470+00:00\"}]]"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/history/period?filter_entity_id=sun.sun"
+      },
+      "recorded_at": "2026-04-21T02:58:30.430853+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}

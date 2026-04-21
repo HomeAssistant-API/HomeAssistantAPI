@@ -1,0 +1,138 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "34"
+          ],
+          "Content-Encoding": [
+            "deflate"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:33 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"message\":\"API running.\"}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/"
+      },
+      "recorded_at": "2026-04-21T02:58:33.069442+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/states/person.test_user",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "421"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:33 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"entity_id\":\"person.test_user\",\"state\":\"unknown\",\"attributes\":{\"editable\":true,\"id\":\"test_user\",\"device_trackers\":[],\"user_id\":\"e85fc7b7b8924dc9b024ce90ad23799e\",\"friendly_name\":\"Test User\"},\"last_changed\":\"2026-04-21T01:51:30.362446+00:00\",\"last_reported\":\"2026-04-21T01:51:31.845948+00:00\",\"last_updated\":\"2026-04-21T01:51:31.844364+00:00\",\"context\":{\"id\":\"01KPPVRK04YQR5A8QNCNB1FW24\",\"parent_id\":null,\"user_id\":null}}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/states/person.test_user"
+      },
+      "recorded_at": "2026-04-21T02:58:33.070567+00:00"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/states/person.test_user",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "421"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 02:58:33 GMT"
+          ]
+        },
+        "body": {
+          "string": "{\"entity_id\":\"person.test_user\",\"state\":\"unknown\",\"attributes\":{\"editable\":true,\"id\":\"test_user\",\"device_trackers\":[],\"user_id\":\"e85fc7b7b8924dc9b024ce90ad23799e\",\"friendly_name\":\"Test User\"},\"last_changed\":\"2026-04-21T01:51:30.362446+00:00\",\"last_reported\":\"2026-04-21T01:51:31.845948+00:00\",\"last_updated\":\"2026-04-21T01:51:31.844364+00:00\",\"context\":{\"id\":\"01KPPVRK04YQR5A8QNCNB1FW24\",\"parent_id\":null,\"user_id\":null}}"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/states/person.test_user"
+      },
+      "recorded_at": "2026-04-21T02:58:33.070567+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}
