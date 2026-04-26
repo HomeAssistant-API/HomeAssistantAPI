@@ -2,8 +2,10 @@
 
 from enum import Enum
 from typing import Any
+from typing import TypedDict
 
 from pydantic import Field
+from typing_extensions import NotRequired
 
 from .base import BaseModel
 from .base import DatetimeIsoField
@@ -59,7 +61,7 @@ class EntityRegistryEntry(BaseModel):
 
 
 class EntityRegistryEntryExtended(EntityRegistryEntry):
-    """Extended entity registry entry as returned by ``config/entity_registry/get`` and ``update``."""
+    """Extended entity registry entry as returned by ``config/entity_registry/get``."""
 
     aliases: list[str] = Field(default_factory=list)
     capabilities: dict[str, Any] | None = None
@@ -74,3 +76,22 @@ class EntityRegistryUpdateResult(BaseModel):
     entity_entry: EntityRegistryEntryExtended
     reload_delay: int | None = None
     require_restart: bool = False
+
+
+class EntityRegistryUpdateParams(TypedDict):
+    """Parameters used in ``config/entity_registry/update``."""
+
+    aliases: NotRequired[list[str]]
+    area_id: NotRequired[str | None]
+    categories: NotRequired[dict[str, str]]
+    device_class: NotRequired[str | None]
+    disabled_by: NotRequired[EntityHiddenBy | None]
+    entity_id: str
+    hidden_by: NotRequired[EntityHiddenBy | None]
+    icon: NotRequired[str | None]
+    labels: NotRequired[list[str]]
+    name: NotRequired[str | None]
+    new_entity_id: NotRequired[str]
+    # options and options_domain are inclusive, meaning only both or none of them have to be defined
+    options_domain: NotRequired[str]
+    options: NotRequired[dict[str, Any]]

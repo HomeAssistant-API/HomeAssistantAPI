@@ -4,6 +4,7 @@ from homeassistant_api import AsyncWebsocketClient
 from homeassistant_api import WebsocketClient
 from homeassistant_api.models.entity_registry import EntityRegistryEntry
 from homeassistant_api.models.entity_registry import EntityRegistryEntryExtended
+from homeassistant_api.models.entity_registry import EntityRegistryUpdateParams
 from homeassistant_api.models.entity_registry import EntityRegistryUpdateResult
 
 # A stable, always-present entity for read/update tests
@@ -29,14 +30,21 @@ def test_get_entity_registry_entry(websocket_client: WebsocketClient) -> None:
 
 def test_update_entity_registry_entry(websocket_client: WebsocketClient) -> None:
     result = websocket_client.update_entity_registry_entry(
-        _TEST_ENTITY_ID,
-        name="Test Name",
+        EntityRegistryUpdateParams(
+            entity_id=_TEST_ENTITY_ID,
+            name="Test Name",
+        ),
     )
     assert isinstance(result, EntityRegistryUpdateResult)
     assert result.entity_entry.entity_id == _TEST_ENTITY_ID
     assert result.entity_entry.name == "Test Name"
     # Restore original state
-    websocket_client.update_entity_registry_entry(_TEST_ENTITY_ID, name=None)
+    websocket_client.update_entity_registry_entry(
+        EntityRegistryUpdateParams(
+            entity_id=_TEST_ENTITY_ID,
+            name=None,
+        ),
+    )
 
 
 def test_remove_entity_registry_entry(websocket_client: WebsocketClient) -> None:
@@ -72,16 +80,20 @@ async def test_async_update_entity_registry_entry(
     async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     result = await async_websocket_client.update_entity_registry_entry(
-        _TEST_ENTITY_ID,
-        name="Async Test Name",
+        EntityRegistryUpdateParams(
+            entity_id=_TEST_ENTITY_ID,
+            name="Async Test Name",
+        ),
     )
     assert isinstance(result, EntityRegistryUpdateResult)
     assert result.entity_entry.entity_id == _TEST_ENTITY_ID
     assert result.entity_entry.name == "Async Test Name"
     # Restore original state
     await async_websocket_client.update_entity_registry_entry(
-        _TEST_ENTITY_ID,
-        name=None,
+        EntityRegistryUpdateParams(
+            entity_id=_TEST_ENTITY_ID,
+            name=None,
+        ),
     )
 
 
