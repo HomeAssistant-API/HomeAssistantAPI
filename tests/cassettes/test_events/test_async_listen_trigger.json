@@ -1,0 +1,103 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "ws://localhost:8123/api/websocket",
+      "handshake_recorded_at": "2026-04-21T02:58:32.439403+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"template\": \"{{ (now() + timedelta(seconds=1)) }}\", \"report_errors\": true, \"id\": 2, \"type\": \"render_template\"}",
+          "offset_ms": 2
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 4
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"event\",\"event\":{\"result\":\"2026-04-20 21:58:33.443265-05:00\",\"listeners\":{\"all\":false,\"entities\":[],\"domains\":[],\"time\":true}}}",
+          "offset_ms": 4
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"subscription\": 2, \"id\": 3, \"type\": \"unsubscribe_events\"}",
+          "offset_ms": 4
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":3,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 5
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"trigger\": {\"platform\": \"time\", \"at\": \"21:58:33\"}, \"id\": 4, \"type\": \"subscribe_trigger\"}",
+          "offset_ms": 5
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":4,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 6
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":4,\"type\":\"event\",\"event\":{\"variables\":{\"trigger\":{\"id\":\"0\",\"idx\":\"0\",\"alias\":null,\"platform\":\"time\",\"now\":\"2026-04-20T21:58:33.052019-05:00\",\"description\":\"time\",\"entity_id\":null}},\"context\":null}}",
+          "offset_ms": 613
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"subscription\": 4, \"id\": 5, \"type\": \"unsubscribe_events\"}",
+          "offset_ms": 613
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":5,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 613
+        }
+      ]
+    }
+  ]
+}

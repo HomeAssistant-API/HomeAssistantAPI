@@ -1,0 +1,85 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "ws://localhost:8123/api/websocket",
+      "handshake_recorded_at": "2026-04-21T02:58:31.141099+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"event_type\": \"async_test_event\", \"id\": 2, \"type\": \"subscribe_events\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"event_type\": \"async_test_event\", \"event_data\": {\"message\": \"Triggered by async websocket client\"}, \"id\": 3, \"type\": \"fire_event\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"event\",\"event\":{\"event_type\":\"async_test_event\",\"data\":{\"message\":\"Triggered by async websocket client\"},\"origin\":\"LOCAL\",\"time_fired\":\"2026-04-21T02:58:31.142560+00:00\",\"context\":{\"id\":\"01KPPZK836PKVHDVST6Q57043B\",\"parent_id\":null,\"user_id\":\"e85fc7b7b8924dc9b024ce90ad23799e\"}},\"id\":2}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":3,\"type\":\"result\",\"success\":true,\"result\":{\"context\":{\"id\":\"01KPPZK836PKVHDVST6Q57043B\",\"parent_id\":null,\"user_id\":\"e85fc7b7b8924dc9b024ce90ad23799e\"}}}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"subscription\": 2, \"id\": 4, \"type\": \"unsubscribe_events\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":4,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 2
+        }
+      ]
+    }
+  ]
+}

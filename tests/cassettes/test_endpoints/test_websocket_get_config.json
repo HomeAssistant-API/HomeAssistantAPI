@@ -1,0 +1,55 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "ws://localhost:8123/api/websocket",
+      "handshake_recorded_at": "2026-04-21T02:58:30.479007+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"id\": 2, \"type\": \"get_config\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":true,\"result\":{\"allowlist_external_dirs\":[\"/media\",\"/config/www\"],\"allowlist_external_urls\":[],\"components\":[\"climate\",\"lock\",\"fan\",\"update\",\"stt\",\"homeassistant.scene\",\"backup\",\"remote\",\"network\",\"system_health\",\"brands\",\"history\",\"labs\",\"date\",\"input_boolean\",\"http\",\"image_processing\",\"humidity\",\"sun.binary_sensor\",\"intent\",\"met.weather\",\"search\",\"sun.sensor\",\"conversation\",\"valve\",\"air_quality\",\"temperature\",\"button\",\"diagnostics\",\"notify\",\"switch\",\"humidifier\",\"device_automation\",\"weather\",\"application_credentials\",\"auth\",\"repairs\",\"timer\",\"onboarding\",\"datetime\",\"vacuum\",\"illuminance\",\"event\",\"gate\",\"ffmpeg\",\"radio_browser\",\"media_source\",\"frontend\",\"logbook\",\"power\",\"api\",\"hardware\",\"binary_sensor\",\"battery\",\"person\",\"siren\",\"cover\",\"number\",\"input_button\",\"sensor\",\"wake_word\",\"sun\",\"water_heater\",\"camera\",\"file_upload\",\"media_player\",\"assist_satellite\",\"lovelace\",\"door\",\"lawn_mower\",\"counter\",\"motion\",\"image_upload\",\"geo_location\",\"automation\",\"infrared\",\"zone\",\"select\",\"alarm_control_panel\",\"trace\",\"image\",\"web_rtc\",\"persistent_notification\",\"window\",\"input_text\",\"schedule\",\"garage_door\",\"input_datetime\",\"ai_task\",\"websocket_api\",\"recorder\",\"script\",\"input_select\",\"analytics\",\"occupancy\",\"device_tracker\",\"system_log\",\"input_number\",\"tts\",\"backup.sensor\",\"tag\",\"logger\",\"text\",\"backup.event\",\"time\",\"scene\",\"moisture\",\"assist_pipeline\",\"config\",\"blueprint\",\"light\",\"homeassistant\",\"met\"],\"config_dir\":\"/config\",\"config_source\":\"storage\",\"country\":\"US\",\"currency\":\"USD\",\"debug\":false,\"elevation\":1000,\"external_url\":null,\"internal_url\":null,\"language\":\"en\",\"latitude\":52.3731339,\"location_name\":\"Testing Server\",\"longitude\":4.8903147,\"radius\":100,\"recovery_mode\":false,\"safe_mode\":false,\"state\":\"RUNNING\",\"time_zone\":\"America/Chicago\",\"unit_system\":{\"length\":\"km\",\"accumulated_precipitation\":\"mm\",\"area\":\"m²\",\"mass\":\"g\",\"pressure\":\"Pa\",\"temperature\":\"°C\",\"volume\":\"L\",\"wind_speed\":\"m/s\"},\"version\":\"2026.4.3\",\"whitelist_external_dirs\":[\"/media\",\"/config/www\"]}}",
+          "offset_ms": 2
+        }
+      ]
+    }
+  ]
+}

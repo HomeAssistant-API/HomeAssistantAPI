@@ -10,52 +10,58 @@ from homeassistant_api import WebsocketClient
 from homeassistant_api.baseclient import BaseClient
 
 
-def test_custom_session() -> None:
+def test_custom_session(nimax_session: niquests.Session) -> None:
     with Client(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
-        session=niquests.Session(),
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
+        session=nimax_session,
     ):
         pass
 
 
-def test_default_session() -> None:
+def test_default_session(nimax_session: niquests.Session) -> None:  # noqa: ARG001
     with Client(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
     ):
         pass
 
 
-async def test_custom_async_session() -> None:
+async def test_custom_async_session(nimax_async_session: niquests.AsyncSession) -> None:
     async with AsyncClient(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
-        session=niquests.AsyncSession(),
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
+        session=nimax_async_session,
     ):
         pass
 
 
-async def test_default_async_session() -> None:
+async def test_default_async_session(
+    nimax_async_session: niquests.AsyncSession,  # noqa: ARG001
+) -> None:
     async with AsyncClient(
-        os.environ["HOMEASSISTANTAPI_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_URL", "http://localhost:8123/api"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
     ):
         pass
 
 
-def test_websocket_client_ping() -> None:
+def test_websocket_client_ping(nimax_session: niquests.Session) -> None:
     with WebsocketClient(
-        os.environ["HOMEASSISTANTAPI_WS_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_WS_URL", "ws://localhost:8123/api/websocket"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
+        session=nimax_session,
     ) as client:
         assert client.ping_latency() > 0
 
 
-async def test_async_websocket_client_ping() -> None:
+async def test_async_websocket_client_ping(
+    nimax_async_session: niquests.AsyncSession,
+) -> None:
     async with AsyncWebsocketClient(
-        os.environ["HOMEASSISTANTAPI_WS_URL"],
-        os.environ["HOMEASSISTANTAPI_TOKEN"],
+        os.environ.get("HOMEASSISTANTAPI_WS_URL", "ws://localhost:8123/api/websocket"),
+        os.environ.get("HOMEASSISTANTAPI_TOKEN", ""),
+        session=nimax_async_session,
     ) as client:
         assert (await client.ping_latency()) > 0
 

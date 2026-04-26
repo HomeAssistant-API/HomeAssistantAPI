@@ -52,6 +52,9 @@ WS clients accept a `max_size` parameter (default 16 MB) to handle large respons
 
 - Unified method signatures across all four client classes for consistency
 - Expanded ruff lint rules to `ALL` (from just E, F, W)
-- Test coverage improved to ~99%
+- Test coverage at 100%
 - Modernized type annotations throughout
 - Response content is now read lazily, eliminating internal `_buffer` access hacks
+- Migrated HTTP/async/WebSocket transport from `requests`/`aiohttp`/`websockets` to `niquests`
+- Cassette-based testing via [`nimax`](https://pypi.org/project/nimax/) — tests replay pre-recorded HTTP cassettes and no longer require a running Home Assistant instance
+- CI simplified: dropped Docker Compose, pytest runs directly against cassettes

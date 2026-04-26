@@ -56,10 +56,39 @@ After that you are now ready to make your changes to the codebase!
 
 Testing
 ********
-In order to test your changes you need to have an API URL, and a Long Lived Access Token.
-Follow the :ref:`Quickstart Section <access_token_setup>` for getting those.
-If you setup the Development Environment then your API URL will most likely be something along the lines of :code:`https://localhost:8123/api`.
-Then you can test your changes by passing the API URL, and Long Lived Access Token to the :class:`homeassistant_api.Client` object.
+
+Tests use pre-recorded cassettes so you do **not** need a running Home Assistant instance to run the test suite.
+Each test has its own cassette stored under :code:`tests/cassettes/<module>/<test_name>.json`.
+
+Running the test suite
+=======================
+
+.. code-block:: bash
+
+   $ uv run pytest
+
+Recording cassettes for a new test
+=====================================
+
+If you add a new test that makes real HTTP or WebSocket requests, you need to record its cassette against a live Home Assistant instance.
+
+1. Get an API URL and a Long-Lived Access Token by following the :ref:`Quickstart Section <access_token_setup>`.
+2. Export the environment variables:
+
+   .. code-block:: bash
+
+      $ export HOMEASSISTANTAPI_URL="http://<your-ha-host>:8123/api"
+      $ export HOMEASSISTANTAPI_WS_URL="ws://<your-ha-host>:8123/api/websocket"
+      $ export HOMEASSISTANTAPI_TOKEN="<your-token>"
+
+3. Run pytest with the :code:`--record` flag to record cassettes:
+
+   .. code-block:: bash
+
+      $ uv run pytest --record
+
+   This records a fresh :code:`.json` cassette for every test.
+   Commit the cassette files alongside your test so CI can replay them without a live server.
 
 .. _styling:
 
@@ -69,7 +98,7 @@ Code Styling Guidelines
 In order to make sure that our code is easy to read, and navigate.
 As well as to stop stupid mistakes like typos, undefined variables, etc.
 We enforce code standards.
-Using the tools, :code:`ruff`, :code:`zuban`, :code:`pytest`, and :code:`docker`, we make make sure that our code quality is top notch, and that are changes work everywhere.
+Using the tools, :code:`ruff`, :code:`zuban`, and :code:`pytest`, we make sure that our code quality is top notch and that changes work everywhere.
 You can those tools manually yourself, but they also run automatically when you open a PR.
 
 Merging Your Contributions
