@@ -8,8 +8,6 @@ services:
   tests:
     build:
       context: .
-      args:
-        BUILD_FROM: "python:3.9"
     image: homeassistant-tests:latest
     volumes:
       - ./volumes/coverage:/app/coverage:rw

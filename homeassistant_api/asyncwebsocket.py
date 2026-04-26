@@ -7,7 +7,7 @@ import time
 from typing import TYPE_CHECKING
 from typing import Any
 
-from niquests import Session
+from niquests import AsyncSession
 from pydantic import ValidationError
 from typing_extensions import Self
 
@@ -15,12 +15,12 @@ from homeassistant_api.basewebsocket import BaseWebsocketClient
 from homeassistant_api.errors import ReceivingError
 from homeassistant_api.errors import ResponseError
 from homeassistant_api.errors import UnauthorizedError
+from homeassistant_api.models import AsyncDomain
+from homeassistant_api.models import AsyncEntity
+from homeassistant_api.models import AsyncGroup
 from homeassistant_api.models import ConfigEntry
 from homeassistant_api.models import ConfigEntryEvent
 from homeassistant_api.models import ConfigSubEntry
-from homeassistant_api.models import Domain
-from homeassistant_api.models import Entity
-from homeassistant_api.models import Group
 from homeassistant_api.models import History
 from homeassistant_api.models import State
 from homeassistant_api.models.config_entries import DisableEnableResult
@@ -42,18 +42,18 @@ from homeassistant_api.models.websocket import TemplateEvent
 from homeassistant_api.utils import prepare_entity_id
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import AsyncGenerator
     from datetime import datetime
     from types import TracebackType
 
-    from urllib3.contrib.webextensions.protocol import ExtensionFromHTTP
+    from urllib3.contrib.webextensions._async.protocol import AsyncExtensionFromHTTP
 
 logger = logging.getLogger(__name__)
 
 
-class WebsocketClient(BaseWebsocketClient):
-    _session: Session
-    _ws: ExtensionFromHTTP
+class AsyncWebsocketClient(BaseWebsocketClient):
+    _session: AsyncSession
+    _ws: AsyncExtensionFromHTTP
 
     def __init__(
         self,
@@ -61,48 +61,45 @@ class WebsocketClient(BaseWebsocketClient):
         token: str,
         *,
         max_size: int = 2**24,
-        session: Session | None = None,
+        session: AsyncSession | None = None,
     ) -> None:
         super().__init__(api_url, token, max_size=max_size)
-        self._session = session if session is not None else Session()
+        self._session = session if session is not None else AsyncSession()
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.api_url!r})"
-
-    def __enter__(self) -> Self:
-        self._session.__enter__()
-        resp = self._session.get(self.api_url)
+    async def __aenter__(self) -> Self:
+        await self._session.__aenter__()
+        resp = await self._session.get(self.api_url)
         resp.raise_for_status()
         if resp.extension is None:
             msg = "Server did not upgrade to WebSocket"
             raise ReceivingError(msg)
         self._ws = resp.extension
-        okay = self.authentication_phase()
+        okay = await self.authentication_phase()
         logger.info("Authenticated with Home Assistant (%s)", okay.ha_version)
-        self.supported_features_phase()
+        await self.supported_features_phase()
         return self
 
-    def __exit__(
+    async def __aexit__(
         self,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        self._ws.close()
+        await self._ws.close()
         del self._ws
-        self._session.__exit__(exc_type, exc_value, traceback)
+        await self._session.__aexit__(exc_type, exc_value, traceback)
 
-    def _send(self, data: dict[str, Any]) -> None:
+    async def _async_send(self, data: dict[str, Any]) -> None:
         """Send a message to the websocket server."""
         if data.get("type") != "auth":
             logger.debug(f"Sending message: {data}")
-        self._ws.send_payload(json.dumps(data))
+        await self._ws.send_payload(json.dumps(data))
 
-    def _recv(self) -> dict[str, Any]:
+    async def _async_recv(self) -> dict[str, Any]:
         """Receive a complete JSON message from the websocket server, buffering fragments."""
         buf = ""
         while True:
-            chunk = self._ws.next_payload()
+            chunk = await self._ws.next_payload()
             if chunk is None:
                 msg = "WebSocket connection closed"
                 raise ReceivingError(msg)
@@ -117,7 +114,7 @@ class WebsocketClient(BaseWebsocketClient):
                 raise TypeError(msg)
             return r
 
-    def send(self, msg_type: str, *, include_id: bool = True, **data: Any) -> int:
+    async def send(self, msg_type: str, *, include_id: bool = True, **data: Any) -> int:
         """
         Send a command message to the websocket server and wait for a "result" response.
 
@@ -127,25 +124,28 @@ class WebsocketClient(BaseWebsocketClient):
             data["id"] = self._request_id()
 
         data["type"] = msg_type
-        self._send(data)
+        await self._async_send(data)
 
-        if "id" not in data:
-            return -1  # non-command messages don't have an id
-        if not isinstance(data["id"], int):
-            msg = f"Expected int for message id, got {type(data['id'])}"
-            raise TypeError(msg)
-        if data["type"] == "ping":
-            self._ping_responses[data["id"]] = PingResponse(
-                start=time.perf_counter_ns(),
-                id=data["id"],
-                type="pong",
-            )
-        else:
-            self._event_responses[data["id"]] = []
-            self._result_responses[data["id"]] = None
-        return data["id"]
+        if "id" in data:
+            if not isinstance(data["id"], int):
+                msg = f"Expected int for message id, got {type(data['id'])}"
+                raise TypeError(msg)
+            if data["type"] == "ping":
+                self._ping_responses[data["id"]] = PingResponse(
+                    start=time.perf_counter_ns(),
+                    id=data["id"],
+                    type="pong",
+                )
+            else:
+                self._event_responses[data["id"]] = []
+                self._result_responses[data["id"]] = None
+            return data["id"]
+        return -1  # non-command messages don't have an id
 
-    def recv(self, msg_id: int) -> EventResponse | ResultResponse | PingResponse | None:
+    async def recv(
+        self,
+        msg_id: int,
+    ) -> EventResponse | ResultResponse | PingResponse | None:
         """Receive a response to a message from the websocket server."""
         while True:
             ## have we received a message with the id we're looking for?
@@ -160,64 +160,64 @@ class WebsocketClient(BaseWebsocketClient):
                 return self._ping_responses.pop(msg_id)
 
             ## if not, keep receiving messages until we do
-            self.handle_recv(self._recv())
+            self.handle_recv(await self._async_recv())
 
-    def recv_result(self, msg_id: int) -> ResultResponse:
+    async def recv_result(self, msg_id: int) -> ResultResponse:
         """Receive a ResultResponse, raising TypeError if the response is not a ResultResponse."""
-        resp = self.recv(msg_id)
+        resp = await self.recv(msg_id)
         if not isinstance(resp, ResultResponse):
             msg = f"Expected ResultResponse, got {type(resp).__name__}"
             raise TypeError(msg)
         return resp
 
-    def recv_result_dict(self, msg_id: int) -> dict[str, Any]:
+    async def recv_result_dict(self, msg_id: int) -> dict[str, Any]:
         """Receive a ResultResponse and return its result as a dict."""
-        resp = self.recv_result(msg_id)
+        resp = await self.recv_result(msg_id)
         if not isinstance(resp.result, dict):
             msg = f"Expected dict result, got {type(resp.result).__name__}"
             raise TypeError(msg)
         return resp.result
 
-    def recv_result_list(self, msg_id: int) -> list[dict[str, Any]]:
+    async def recv_result_list(self, msg_id: int) -> list[dict[str, Any]]:
         """Receive a ResultResponse and return its result as a list."""
-        resp = self.recv_result(msg_id)
+        resp = await self.recv_result(msg_id)
         if not isinstance(resp.result, list):
             msg = f"Expected list result, got {type(resp.result).__name__}"
             raise TypeError(msg)
         return resp.result
 
-    def recv_event(self, msg_id: int) -> EventResponse:
+    async def recv_event(self, msg_id: int) -> EventResponse:
         """Receive an EventResponse, raising TypeError if the response is not an EventResponse."""
-        resp = self.recv(msg_id)
+        resp = await self.recv(msg_id)
         if not isinstance(resp, EventResponse):
             msg = f"Expected EventResponse, got {type(resp).__name__}"
             raise TypeError(msg)
         return resp
 
-    def recv_ping(self, msg_id: int) -> PingResponse:
+    async def recv_ping(self, msg_id: int) -> PingResponse:
         """Receive a PingResponse, raising TypeError if the response is not a PingResponse."""
-        resp = self.recv(msg_id)
+        resp = await self.recv(msg_id)
         if not isinstance(resp, PingResponse):
             msg = f"Expected PingResponse, got {type(resp).__name__}"
             raise TypeError(msg)
         return resp
 
-    def authentication_phase(self) -> AuthOk:
+    async def authentication_phase(self) -> AuthOk:
         """Authenticate with the websocket server."""
         # Capture the first message from the server saying we need to authenticate
         try:
-            welcome = AuthRequired.model_validate(self._recv())
+            welcome = AuthRequired.model_validate(await self._async_recv())
             logger.debug(f"Received welcome message: {welcome}")
         except ValidationError as e:
             msg = "Unexpected response during authentication"
             raise ResponseError(msg) from e
 
         # Send our authentication token
-        self.send("auth", access_token=self.token, include_id=False)
+        await self.send("auth", access_token=self.token, include_id=False)
         logger.debug("Sent auth message")
 
         # Check the response
-        resp = self._recv()
+        resp = await self._async_recv()
         try:
             return AuthOk.model_validate(resp)
         except ValidationError:
@@ -231,46 +231,57 @@ class WebsocketClient(BaseWebsocketClient):
             msg = f"Unexpected response during authentication: {resp}"
             raise ResponseError(msg) from e
 
-    def supported_features_phase(self) -> None:
+    async def supported_features_phase(self) -> None:
         """Get the supported features from the websocket server."""
-        resp = self.recv_result(self.send("supported_features", features={}))
+        resp = await self.recv_result(
+            await self.send(
+                "supported_features",
+                features={
+                    # "coalesce_messages": 42, # including this key sets it to True  # noqa: ERA001
+                },
+            ),
+        )
         if resp.result is not None:
             msg = "Expected None result for unsubscribe"
             raise ValueError(msg)
 
-    def ping_latency(self) -> float:
+    async def ping_latency(self) -> float:
         """Get the latency (in milliseconds) of the connection by sending a ping message."""
-        pong = self.recv_ping(self.send("ping"))
+        pong = await self.recv_ping(await self.send("ping"))
         if pong.end is None:
             msg = "Pong response missing end timestamp"
             raise ValueError(msg)
         return (pong.end - pong.start) / 1_000_000
 
-    def get_rendered_template(self, template: str) -> str:
+    async def get_rendered_template(self, template: str) -> str:
         """
         Renders a Jinja2 template with Home Assistant context data.
         See https://www.home-assistant.io/docs/configuration/templating.
 
         Sends command :code:`{"type": "render_template", ...}`.
         """
-        msg_id = self.send("render_template", template=template, report_errors=True)
-        self.recv_result(msg_id)
-        second = self.recv_event(msg_id)
-        self._unsubscribe(msg_id)
+        msg_id = await self.send(
+            "render_template",
+            template=template,
+            report_errors=True,
+        )
+        await self.recv_result(msg_id)
+        second = await self.recv_event(msg_id)
+        await self._async_unsubscribe(msg_id)
         if not isinstance(second.event, TemplateEvent):
             msg = f"Expected TemplateEvent, got {type(second.event).__name__}"
             raise TypeError(msg)
         return str(second.event.result)
 
-    def get_config(self) -> dict[str, Any]:
+    async def get_config(self) -> dict[str, Any]:
         """
         Returns the configuration of Home Assistant.
 
         Sends command :code:`{"type": "get_config", ...}`.
         """
-        return self.recv_result_dict(self.send("get_config"))
+        return await self.recv_result_dict(await self.send("get_config"))
 
-    def get_states(self) -> tuple[State, ...]:
+    async def get_states(self) -> tuple[State, ...]:
         """
         Gets the states of all entities within Home Assistant.
 
@@ -278,10 +289,10 @@ class WebsocketClient(BaseWebsocketClient):
         """
         return tuple(
             State.from_json(state)
-            for state in self.recv_result_list(self.send("get_states"))
+            for state in await self.recv_result_list(await self.send("get_states"))
         )
 
-    def get_state(  # pylint: disable=duplicate-code
+    async def get_state(  # pylint: disable=duplicate-code
         self,
         *,
         entity_id: str | None = None,
@@ -301,43 +312,43 @@ class WebsocketClient(BaseWebsocketClient):
             entity_id=entity_id,
         )
 
-        for state in self.get_states():
+        for state in await self.get_states():
             if state.entity_id == entity_id:
                 return state
         msg = f"Entity {entity_id} not found!"
         raise ValueError(msg)
 
-    def get_entities(self) -> dict[str, Group]:
+    async def get_entities(self) -> dict[str, AsyncGroup]:
         """
-        Fetches all entities from the Websocket API and returns them as a dictionary of :py:class:`Group`'s.
+        Fetches all entities from the Websocket API and returns them as a dictionary of :py:class:`AsyncGroup`'s.
         For example :code:`light.living_room` would be in the group :code:`light` (i.e. :code:`get_entities()["light"].living_room`).
         """
-        entities: dict[str, Group] = {}
-        for state in self.get_states():
+        entities: dict[str, AsyncGroup] = {}
+        for state in await self.get_states():
             group_id, entity_slug = state.entity_id.split(".")
             if group_id not in entities:
-                entities[group_id] = Group(
+                entities[group_id] = AsyncGroup(
                     group_id=group_id,
                     client=self,
                 )
             entities[group_id]._add_entity(entity_slug, state)  # noqa: SLF001
         return entities
 
-    def get_entity(
+    async def get_entity(
         self,
         group_id: str | None = None,
         slug: str | None = None,
         entity_id: str | None = None,
-    ) -> Entity | None:
+    ) -> AsyncEntity | None:
         """
-        Returns an :py:class:`Entity` model for an :code:`entity_id`.
+        Returns an :py:class:`AsyncEntity` model for an :code:`entity_id`.
 
         Note: The WebSocket API has no single-entity state command, so this fetches all states and filters.
         """
         if group_id is not None and slug is not None:
-            state = self.get_state(group_id=group_id, slug=slug)
+            state = await self.get_state(group_id=group_id, slug=slug)
         elif entity_id is not None:
-            state = self.get_state(entity_id=entity_id)
+            state = await self.get_state(entity_id=entity_id)
         else:
             help_msg = (
                 "Use keyword arguments to pass entity_id. "
@@ -346,35 +357,39 @@ class WebsocketClient(BaseWebsocketClient):
             msg = f"Neither group_id and slug or entity_id provided. {help_msg}"
             raise ValueError(msg)
         split_group_id, split_slug = state.entity_id.split(".")
-        group = Group(group_id=split_group_id, client=self)
+        group = AsyncGroup(
+            group_id=split_group_id,
+            client=self,
+        )
         group._add_entity(split_slug, state)  # noqa: SLF001
         return group.get_entity(split_slug)
 
-    def set_state(self, state: State) -> State:
-        """Not supported over WebSocket. Use the REST :py:class:`Client` instead."""
-        msg = "set_state is not supported over the WebSocket API. Use the REST Client."
+    async def set_state(self, state: State) -> State:
+        """Not supported over WebSocket. Use the REST :py:class:`AsyncClient` instead."""
+        msg = "set_state is not supported over the WebSocket API. Use the REST AsyncClient."
         raise NotImplementedError(msg)
 
-    def get_entity_histories(
+    async def get_entity_histories(
         self,
-        entities: tuple[Entity, ...] | None = None,
-        start_timestamp: datetime | None = None,
-        end_timestamp: datetime | None = None,
-        significant_changes_only: bool = False,
-    ) -> Generator[History, None, None]:
-        """Not supported over WebSocket. Use the REST :py:class:`Client` instead."""
-        msg = "get_entity_histories is not supported over the WebSocket API. Use the REST Client."
+        entities: tuple[AsyncEntity, ...] | None = None,  # noqa: ARG002
+        start_timestamp: datetime | None = None,  # noqa: ARG002
+        end_timestamp: datetime | None = None,  # noqa: ARG002
+        significant_changes_only: bool = False,  # noqa: ARG002
+    ) -> AsyncGenerator[History, None]:
+        """Not supported over WebSocket. Use the REST :py:class:`AsyncClient` instead."""
+        msg = "get_entity_histories is not supported over the WebSocket API. Use the REST AsyncClient."
         raise NotImplementedError(msg)
+        yield  # unreachable: makes this a true AsyncGenerator for type checkers  # type: ignore[unreachable]
 
-    def get_domains(self) -> dict[str, Domain]:
+    async def get_domains(self) -> dict[str, AsyncDomain]:
         """
-        Fetches all service :py:class:`Domain`'s from the API.
+        Fetches all service :py:class:`AsyncDomain`'s from the API.
 
         Sends command :code:`{"type": "get_services", ...}`.
         """
-        result = self.recv_result_dict(self.send("get_services"))
+        result = await self.recv_result_dict(await self.send("get_services"))
         domains = (
-            Domain.from_json_with_client(
+            AsyncDomain.from_json_with_client(
                 {"domain": item[0], "services": item[1]},
                 client=self,
             )
@@ -382,15 +397,15 @@ class WebsocketClient(BaseWebsocketClient):
         )
         return {domain.domain_id: domain for domain in domains}
 
-    def get_domain(self, domain_id: str) -> Domain | None:
+    async def get_domain(self, domain_id: str) -> AsyncDomain | None:
         """
-        Fetches all :py:class:`Service`'s under a particular service :py:class:`Domain`.
+        Fetches all :py:class:`AsyncService`'s under a particular service :py:class:`AsyncDomain`.
 
         Note: The WebSocket API has no single-domain command, so this fetches all domains and filters.
         """
-        return self.get_domains().get(domain_id)
+        return (await self.get_domains()).get(domain_id)
 
-    def trigger_service(
+    async def trigger_service(
         self,
         domain: str,
         service: str,
@@ -411,17 +426,17 @@ class WebsocketClient(BaseWebsocketClient):
             "return_response": False,
         }
 
-        result = self.recv_result_dict(
-            self.send("call_service", include_id=True, **params),
+        result = await self.recv_result_dict(
+            await self.send("call_service", include_id=True, **params),
         )
 
         # TODO: handle result["context"] ?
-        if result.get("response") is not None:
-            # response should always be empty
-            msg = f"got unexpected response: {result.get('response')}"
-            raise TypeError(msg)
 
-    def trigger_service_with_response(
+        if result.get("response") is not None:
+            msg = "Unexpected response from service without response support"
+            raise ValueError(msg)
+
+    async def trigger_service_with_response(
         self,
         domain: str,
         service: str,
@@ -443,17 +458,17 @@ class WebsocketClient(BaseWebsocketClient):
             "return_response": True,
         }
 
-        result = self.recv_result_dict(
-            self.send("call_service", include_id=True, **params),
+        result = await self.recv_result_dict(
+            await self.send("call_service", include_id=True, **params),
         )
 
         return result["response"]
 
-    @contextlib.contextmanager
-    def listen_events(
+    @contextlib.asynccontextmanager
+    async def listen_events(
         self,
         event_type: str | None = None,
-    ) -> Generator[Generator[FiredEvent | FiredTrigger, None, None], None, None]:
+    ) -> AsyncGenerator[AsyncGenerator[FiredEvent | FiredTrigger, None], None]:
         """
         Listen for all events of a certain type.
 
@@ -461,15 +476,15 @@ class WebsocketClient(BaseWebsocketClient):
 
         .. code-block:: python
 
-            with ws_client.listen_events("test_event") as events:
-                for i, event in zip(range(2), events):  # to only wait for two events to be received
+            async with ws_client.listen_events("test_event") as events:
+                async for i, event in zip(range(2), events):  # to only wait for two events to be received
                     print(event)
         """
-        subscription = self._subscribe_events(event_type)
-        yield self._wait_for(subscription)
-        self._unsubscribe(subscription)
+        subscription = await self._async_subscribe_events(event_type)
+        yield self._async_wait_for(subscription)
+        await self._async_unsubscribe(subscription)
 
-    def _subscribe_events(self, event_type: str | None) -> int:
+    async def _async_subscribe_events(self, event_type: str | None) -> int:
         """
         Subscribe to all events of a certain type.
 
@@ -477,16 +492,18 @@ class WebsocketClient(BaseWebsocketClient):
         Sends command :code:`{"type": "subscribe_events", ...}`.
         """
         params = {"event_type": event_type} if event_type else {}
-        return self.recv_result(
-            self.send("subscribe_events", include_id=True, **params),
+        return (
+            await self.recv_result(
+                await self.send("subscribe_events", include_id=True, **params),
+            )
         ).id
 
-    @contextlib.contextmanager
-    def listen_trigger(
+    @contextlib.asynccontextmanager
+    async def listen_trigger(
         self,
         trigger: str,
         **trigger_fields: Any,
-    ) -> Generator[Generator[dict[str, Any], None, None], None, None]:
+    ) -> AsyncGenerator[AsyncGenerator[dict[str, Any], None], None]:
         """
         Listen to a Home Assistant trigger.
         Allows additional trigger keyword parameters with :code:`**kwargs` (i.e. passing :code:`tag_id=...` for NFC tag triggers).
@@ -500,12 +517,12 @@ class WebsocketClient(BaseWebsocketClient):
             - trigger: state
               entity_id: light.kitchen
 
-        To subscribe to that same state trigger with :py:class:`WebsocketClient` instead
+        To subscribe to that same state trigger with :py:class:`AsyncWebsocketClient` instead
 
         .. code-block:: python
 
-            with ws_client.listen_trigger("state", entity_id="light.kitchen") as trigger:
-                for event in trigger:  # will iterate until we manually break out of the loop
+            async with ws_client.listen_trigger("state", entity_id="light.kitchen") as trigger:
+                async for event in trigger:  # will iterate until we manually break out of the loop
                     print(event)
                     if <some_condition>:
                         break
@@ -513,60 +530,63 @@ class WebsocketClient(BaseWebsocketClient):
 
         Woohoo! We can now listen to triggers in Python code!
         """
-        subscription = self._subscribe_trigger(trigger, **trigger_fields)
+        subscription = await self._async_subscribe_trigger(trigger, **trigger_fields)
         yield (
             fired_trigger.variables
-            for fired_trigger in self._wait_for(subscription)
+            async for fired_trigger in self._async_wait_for(subscription)
             if isinstance(fired_trigger, FiredTrigger)
         )
-        self._unsubscribe(subscription)
+        await self._async_unsubscribe(subscription)
 
-    def _subscribe_trigger(self, trigger: str, **trigger_fields: Any) -> int:
+    async def _async_subscribe_trigger(
+        self,
+        trigger: str,
+        **trigger_fields: Any,
+    ) -> int:
         """
         Return the subscription id of the trigger we subscribe to.
 
         Sends command :code:`{"type": "subscribe_trigger", ...}`.
         """
-        result = self.recv(
-            self.send(
-                "subscribe_trigger",
-                trigger={"platform": trigger, **trigger_fields},
-            ),
-        )
-        if result is None:
-            msg = "No response received for subscribe_trigger"
-            raise TypeError(msg)
-        return result.id
+        return (
+            await self.recv_result(
+                await self.send(
+                    "subscribe_trigger",
+                    trigger={"platform": trigger, **trigger_fields},
+                ),
+            )
+        ).id
 
-    def _wait_for(
+    async def _async_wait_for(
         self,
         subscription_id: int,
-    ) -> Generator[FiredEvent | FiredTrigger, None, None]:
+    ) -> AsyncGenerator[FiredEvent | FiredTrigger, None]:
         """
         An iterator that waits for events of a certain type.
         """
         while True:
-            event_resp = self.recv_event(subscription_id)
+            event_resp = await self.recv_event(subscription_id)
+            # TODO: DISCUSS Change of behavior here. before anything received would get yielded
             if isinstance(event_resp.event, FiredEvent | FiredTrigger):
                 yield event_resp.event
 
-    def _unsubscribe(self, subscription_id: int) -> None:
+    async def _async_unsubscribe(self, subcription_id: int) -> None:
         """
         Unsubscribe from all events of a certain type.
 
         Sends command :code:`{"type": "unsubscribe_events", ...}`.
         """
         try:
-            resp = self.recv_result(
-                self.send("unsubscribe_events", subscription=subscription_id),
+            resp = await self.recv_result(
+                await self.send("unsubscribe_events", subscription=subcription_id),
             )
             if resp.result is not None:
-                msg = f"leftover events {resp.result}"
-                raise TypeError(msg)
+                msg = "Expected None result for unsubscribe"
+                raise ValueError(msg)
         finally:
-            self._event_responses.pop(subscription_id, None)
+            self._event_responses.pop(subcription_id, None)
 
-    def get_config_entries(self) -> tuple[ConfigEntry, ...]:
+    async def get_config_entries(self) -> tuple[ConfigEntry, ...]:
         """
         Get all config entries.
 
@@ -574,17 +594,19 @@ class WebsocketClient(BaseWebsocketClient):
         """
         return tuple(
             ConfigEntry.from_json(entry)
-            for entry in self.recv_result_list(self.send("config_entries/get"))
+            for entry in await self.recv_result_list(
+                await self.send("config_entries/get"),
+            )
         )
 
-    def disable_config_entry(self, entry_id: str) -> DisableEnableResult:
+    async def disable_config_entry(self, entry_id: str) -> DisableEnableResult:
         """
         Disable a config entry.
 
         Sends command :code:`{"type": "config_entries/disable", ...}`.
         """
-        result = self.recv_result_dict(
-            self.send(
+        result = await self.recv_result_dict(
+            await self.send(
                 "config_entries/disable",
                 entry_id=entry_id,
                 disabled_by="user",
@@ -592,14 +614,14 @@ class WebsocketClient(BaseWebsocketClient):
         )
         return DisableEnableResult.from_json(result)
 
-    def enable_config_entry(self, entry_id: str) -> DisableEnableResult:
+    async def enable_config_entry(self, entry_id: str) -> DisableEnableResult:
         """
         Enable a config entry.
 
         Sends command :code:`{"type": "config_entries/disable", ...}`.
         """
-        result = self.recv_result_dict(
-            self.send(
+        result = await self.recv_result_dict(
+            await self.send(
                 "config_entries/disable",
                 entry_id=entry_id,
                 disabled_by=None,
@@ -607,21 +629,21 @@ class WebsocketClient(BaseWebsocketClient):
         )
         return DisableEnableResult.from_json(result)
 
-    def ignore_config_flow(self, flow_id: str, title: str) -> None:
+    async def ignore_config_flow(self, flow_id: str, title: str) -> None:
         """
         Ignore a config flow.
 
         Sends command :code:`{"type": "config_entries/ignore_flow", ...}`.
         """
-        self.recv(
-            self.send(
+        await self.recv(
+            await self.send(
                 "config_entries/ignore_flow",
                 flow_id=flow_id,
                 title=title,
             ),
         )
 
-    def get_nonuser_flows_in_progress(self) -> tuple[FlowResult, ...]:
+    async def get_nonuser_flows_in_progress(self) -> tuple[FlowResult, ...]:
         """
         Get non-user config flows in progress.
 
@@ -629,10 +651,12 @@ class WebsocketClient(BaseWebsocketClient):
         """
         return tuple(
             FlowResult.from_json(flow)
-            for flow in self.recv_result_list(self.send("config_entries/flow/progress"))
+            for flow in await self.recv_result_list(
+                await self.send("config_entries/flow/progress"),
+            )
         )
 
-    def get_entry_subentries(self, entry_id: str) -> tuple[ConfigSubEntry, ...]:
+    async def get_entry_subentries(self, entry_id: str) -> tuple[ConfigSubEntry, ...]:
         """
         Get subentries for a config entry.
 
@@ -640,19 +664,19 @@ class WebsocketClient(BaseWebsocketClient):
         """
         return tuple(
             ConfigSubEntry.from_json(subentry)
-            for subentry in self.recv_result_list(
-                self.send("config_entries/subentries/list", entry_id=entry_id),
+            for subentry in await self.recv_result_list(
+                await self.send("config_entries/subentries/list", entry_id=entry_id),
             )
         )
 
-    def delete_entry_subentry(self, entry_id: str, subentry_id: str) -> None:
+    async def delete_entry_subentry(self, entry_id: str, subentry_id: str) -> None:
         """
         Delete a subentry from a config entry.
 
         Sends command :code:`{"type": "config_entries/subentries/delete", ...}`.
         """
-        self.recv(
-            self.send(
+        await self.recv(
+            await self.send(
                 "config_entries/subentries/delete",
                 entry_id=entry_id,
                 subentry_id=subentry_id,
@@ -661,7 +685,7 @@ class WebsocketClient(BaseWebsocketClient):
 
     # ── Entity Registry ─────────────────────────────────────────
 
-    def list_entity_registry(self) -> tuple[EntityRegistryEntry, ...]:
+    async def list_entity_registry(self) -> tuple[EntityRegistryEntry, ...]:
         """
         List all entity registry entries.
 
@@ -669,23 +693,26 @@ class WebsocketClient(BaseWebsocketClient):
         """
         return tuple(
             EntityRegistryEntry.from_json(entry)
-            for entry in self.recv_result_list(
-                self.send("config/entity_registry/list"),
+            for entry in await self.recv_result_list(
+                await self.send("config/entity_registry/list"),
             )
         )
 
-    def get_entity_registry_entry(self, entity_id: str) -> EntityRegistryEntryExtended:
+    async def get_entity_registry_entry(
+        self,
+        entity_id: str,
+    ) -> EntityRegistryEntryExtended:
         """
         Get a single entity registry entry.
 
         Sends command :code:`{"type": "config/entity_registry/get", ...}`.
         """
-        result = self.recv_result_dict(
-            self.send("config/entity_registry/get", entity_id=entity_id),
+        result = await self.recv_result_dict(
+            await self.send("config/entity_registry/get", entity_id=entity_id),
         )
         return EntityRegistryEntryExtended.from_json(result)
 
-    def update_entity_registry_entry(
+    async def update_entity_registry_entry(
         self,
         parameters: EntityRegistryUpdateParams,
     ) -> EntityRegistryUpdateResult:
@@ -694,48 +721,50 @@ class WebsocketClient(BaseWebsocketClient):
 
         Sends command :code:`{"type": "config/entity_registry/update", ...}`.
         """
-        result = self.recv_result_dict(
-            self.send(
+        result = await self.recv_result_dict(
+            await self.send(
                 "config/entity_registry/update",
                 **parameters,
             ),
         )
         return EntityRegistryUpdateResult.from_json(result)
 
-    def remove_entity_registry_entry(self, entity_id: str) -> None:
+    async def remove_entity_registry_entry(self, entity_id: str) -> None:
         """
         Remove an entity from the entity registry.
 
         Sends command :code:`{"type": "config/entity_registry/remove", ...}`.
         """
-        self.recv(
-            self.send("config/entity_registry/remove", entity_id=entity_id),
+        await self.recv(
+            await self.send("config/entity_registry/remove", entity_id=entity_id),
         )
 
-    @contextlib.contextmanager
-    def listen_config_entries(
+    @contextlib.asynccontextmanager
+    async def listen_config_entries(
         self,
-    ) -> Generator[Generator[list[ConfigEntryEvent], None, None], None, None]:
+    ) -> AsyncGenerator[AsyncGenerator[list[ConfigEntryEvent], None], None]:
         """
         Listen for config entry changes.
 
         Sends command :code:`{"type": "config_entries/subscribe", ...}`.
         """
-        subscription = self.recv_result(self.send("config_entries/subscribe")).id
-        yield self._wait_for_config_entries(subscription)
-        self._unsubscribe(subscription)
+        subscription = (
+            await self.recv_result(await self.send("config_entries/subscribe"))
+        ).id
+        yield self._async_wait_for_config_entries(subscription)
+        await self._async_unsubscribe(subscription)
 
-    def _wait_for_config_entries(
+    async def _async_wait_for_config_entries(
         self,
         subscription_id: int,
-    ) -> Generator[list[ConfigEntryEvent], None, None]:
-        """An iterator that waits for config entry events."""
+    ) -> AsyncGenerator[list[ConfigEntryEvent], None]:
+        """An async iterator that waits for config entry events."""
         while True:
-            event_resp = self.recv_event(subscription_id)
+            event_resp = await self.recv_event(subscription_id)
             if isinstance(event_resp.event, list):
                 yield [ConfigEntryEvent.from_json(entry) for entry in event_resp.event]
 
-    def fire_event(self, event_type: str, **event_data: Any) -> Context:
+    async def fire_event(self, event_type: str, **event_data: Any) -> Context:
         """
         Fires a given event_type within Home Assistant.
 
@@ -744,7 +773,7 @@ class WebsocketClient(BaseWebsocketClient):
         params: dict[str, Any] = {"event_type": event_type}
         if event_data:
             params["event_data"] = event_data
-        result = self.recv_result_dict(
-            self.send("fire_event", include_id=True, **params),
+        result = await self.recv_result_dict(
+            await self.send("fire_event", include_id=True, **params),
         )
         return Context.from_json(result["context"])

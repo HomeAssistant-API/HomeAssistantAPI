@@ -2,90 +2,72 @@
 
 from __future__ import annotations
 
-import gc
-import inspect
-from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Coroutine,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from enum import StrEnum
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from pydantic import Field
+from typing_extensions import Self
+from typing_extensions import override
 
 from homeassistant_api.errors import RequestError
-from homeassistant_api.utils import JSONType
+from homeassistant_api.errors import ResponseError
 
 from .base import BaseModel
-from .states import State
 
 if TYPE_CHECKING:
-    from homeassistant_api import Client, WebsocketClient
+    from homeassistant_api import AsyncClient
+    from homeassistant_api import AsyncWebsocketClient
+    from homeassistant_api import Client
+    from homeassistant_api import WebsocketClient
+
+    from .states import State
 
 
-class Domain(BaseModel):
+class BaseDomain(BaseModel):
     """Model representing the domain that services belong to."""
 
-    def __init__(
-        self,
-        *args,
-        _client: Optional[Union["Client", "WebsocketClient"]] = None,
-        **kwargs,
-    ) -> None:
-        super().__init__(*args, **kwargs)
-        if _client is None:
-            raise ValueError("No client passed.")
-        object.__setattr__(self, "_client", _client)
-
-    _client: Union["Client", "WebsocketClient"]
     domain_id: str = Field(
         ...,
         description="The name of the domain that services belong to. "
         "(e.g. :code:`frontend` in :code:`frontend.reload_themes`",
     )
-    services: Dict[str, "Service"] = Field(
-        {},
+    services: dict[str, BaseService] = Field(
+        default_factory=dict,
         description="A dictionary of all services belonging to the domain indexed by their names",
     )
 
     @classmethod
-    def from_json(
-        cls, json: Dict[str, JSONType], client: Union["Client", "WebsocketClient"]
-    ) -> "Domain":
-        """Constructs Domain and Service models from json data."""
+    @override
+    def from_json(cls, json: dict[str, Any] | Any | None, **kwargs: Any) -> Self:
+        msg = f"`{cls.__name__}` does not support `from_json()`. Use `from_json_with_client()`"
+        raise NotImplementedError(msg)
+
+    @classmethod
+    def _build_from_json(cls, json: dict[str, Any], **model_kwargs: Any) -> Self:
+        """Shared construction logic for Domain models from json data."""
         if "domain" not in json or "services" not in json:
-            raise ValueError("Missing services or domain attribute in json argument.")
-        domain = cls(domain_id=cast(str, json.get("domain")), _client=client)
-        services = cast(dict[str, dict[str, JSONType]], json.get("services"))
-        assert isinstance(services, dict)
+            msg = "Missing services or domain attribute in json argument."
+            raise ValueError(msg)
+        domain = cls(domain_id=cast("str", json.get("domain")), **model_kwargs)
+        services = json.get("services")
+        if not isinstance(services, dict):
+            msg = f"Expected dict for services, got {type(services)}"
+            raise TypeError(msg)
         for service_id, data in services.items():
             domain._add_service(service_id, **data)
         return domain
 
-    def _add_service(self, service_id: str, **data) -> None:
+    def _add_service(self, service_id: str, **data: Any) -> None:
         """Registers services into a domain to be used or accessed. Used internally."""
-        # raise ValueError(data)
-        self.services.update(
-            {
-                service_id: Service(
-                    service_id=service_id,
-                    domain=self,
-                    **data,
-                )
-            }
-        )
+        raise NotImplementedError
 
-    def get_service(self, service_id: str) -> Optional["Service"]:
+    def get_service(self, service_id: str) -> BaseService | None:
         """Return a Service with the given service_id, returns None if no such service exists"""
         return self.services.get(service_id)
 
-    def __getattr__(self, attr: str):
+    def __getattr__(self, attr: str) -> Any:
         """Allows services accessible as attributes"""
         if attr in self.services:
             return self.get_service(attr)
@@ -98,6 +80,50 @@ class Domain(BaseModel):
                 raise e from err
 
 
+class Domain(BaseDomain):
+    """Sync domain that creates sync Service instances."""
+
+    client: Client | WebsocketClient = Field(exclude=True, repr=False)
+
+    @classmethod
+    def from_json_with_client(
+        cls,
+        json: dict[str, Any],
+        client: Client | WebsocketClient,
+    ) -> Domain:
+        """Constructs Domain and Service models from json data."""
+        return cls._build_from_json(json, client=client)
+
+    def _add_service(self, service_id: str, **data: Any) -> None:
+        self.services[service_id] = Service(
+            service_id=service_id,
+            domain=self,
+            **data,
+        )
+
+
+class AsyncDomain(BaseDomain):
+    """Async domain that creates async Service instances."""
+
+    client: AsyncClient | AsyncWebsocketClient = Field(exclude=True, repr=False)
+
+    @classmethod
+    def from_json_with_client(
+        cls,
+        json: dict[str, Any],
+        client: AsyncClient | AsyncWebsocketClient,
+    ) -> AsyncDomain:
+        """Constructs Domain and Service models from json data."""
+        return cls._build_from_json(json, client=client)
+
+    def _add_service(self, service_id: str, **data: Any) -> None:
+        self.services[service_id] = AsyncService(
+            service_id=service_id,
+            domain=self,
+            **data,
+        )
+
+
 # Sources:
 # https://developers.home-assistant.io/docs/dev_101_services/
 # https://www.home-assistant.io/docs/blueprint/selectors/#date-selector
@@ -107,58 +133,58 @@ class Domain(BaseModel):
 
 # Helpers
 class ServiceFieldSelectorEntityFilter(BaseModel):
-    integration: Optional[str] = None
-    domain: Optional[Union[List[str], str]] = None
-    device_class: Optional[Union[List[str], str]] = None
-    supported_features: Optional[Union[List[int], int]] = None
+    integration: str | None = None
+    domain: list[str] | str | None = None
+    device_class: list[str] | str | None = None
+    supported_features: list[int] | int | None = None
 
 
 class ServiceFieldSelectorDeviceFilter(BaseModel):
-    integration: Optional[str] = None
-    manufacturer: Optional[str] = None
-    model: Optional[str] = None
-    model_id: Optional[str] = None
+    integration: str | None = None
+    manufacturer: str | None = None
+    model: str | None = None
+    model_id: str | None = None
 
 
 class CropOptions(BaseModel):
     round: bool
-    type: Optional[str] = None  # "image/jpeg" / "image/png"
-    quality: Optional[Union[int, float]] = None
-    aspectRatio: Optional[Union[int, float]] = None
+    type: str | None = None  # "image/jpeg" / "image/png"
+    quality: int | float | None = None
+    aspect_ratio: int | float | None = Field(default=None, alias="aspectRatio")
 
 
 class SelectBoxOptionImage(BaseModel):
     src: str
-    src_dark: Optional[str] = None
-    flip_rtl: Optional[bool] = None
+    src_dark: str | None = None
+    flip_rtl: bool | None = None
 
 
-class ServiceFieldSelectorNumberMode(str, Enum):
+class ServiceFieldSelectorNumberMode(StrEnum):
     BOX = "box"
     SLIDER = "slider"
 
 
-class ServiceFieldSelectorSelectMode(str, Enum):
+class ServiceFieldSelectorSelectMode(StrEnum):
     LIST = "list"
     DROPDOWN = "dropdown"
     BOX = "box"
 
 
-class ServiceFieldSelectorQRCodeErrorCorrectionLevel(str, Enum):
+class ServiceFieldSelectorQRCodeErrorCorrectionLevel(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     QUARTILE = "quartile"
     HIGH = "high"
 
 
-class ServiceFieldSelectorTextType(str, Enum):
+class ServiceFieldSelectorTextType(StrEnum):
     NUMBER = "number"
     TEXT = "text"
     SEARCH = "search"
     TEL = "tel"
     URL = "url"
     EMAIL = "email"
-    PASSWORD = "password"
+    PASSWORD = "password"  # noqa: S105
     DATE = "date"
     MONTH = "month"
     WEEK = "week"
@@ -169,22 +195,22 @@ class ServiceFieldSelectorTextType(str, Enum):
 
 # Selectors
 class ServiceFieldSelectorAction(BaseModel):
-    optionsInSidebar: Optional[bool] = None
+    options_in_sidebar: bool | None = Field(default=None, alias="optionsInSidebar")
 
 
 class ServiceFieldSelectorAddon(BaseModel):
-    name: Optional[str] = None
-    slug: Optional[str] = None
+    name: str | None = None
+    slug: str | None = None
 
 
 class ServiceFieldSelectorArea(BaseModel):
-    entity: Optional[
-        Union[List[ServiceFieldSelectorEntityFilter], ServiceFieldSelectorEntityFilter]
-    ] = None
-    device: Optional[
-        Union[List[ServiceFieldSelectorDeviceFilter], ServiceFieldSelectorDeviceFilter]
-    ] = None
-    multiple: Optional[bool] = None
+    entity: (
+        list[ServiceFieldSelectorEntityFilter] | ServiceFieldSelectorEntityFilter | None
+    ) = None
+    device: (
+        list[ServiceFieldSelectorDeviceFilter] | ServiceFieldSelectorDeviceFilter | None
+    ) = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorAreasDisplay(BaseModel):
@@ -192,17 +218,17 @@ class ServiceFieldSelectorAreasDisplay(BaseModel):
 
 
 class ServiceFieldSelectorAttribute(BaseModel):
-    entity_id: Optional[Union[List[str], str]] = None
-    hide_attributes: Optional[List[str]] = None
+    entity_id: list[str] | str | None = None
+    hide_attributes: list[str] | None = None
 
 
 class ServiceFieldSelectorAssistPipeline(BaseModel):
-    include_last_used: Optional[bool] = None
+    include_last_used: bool | None = None
 
 
 class ServiceFieldSelectorBackground(BaseModel):
-    original: Optional[bool] = None
-    crop: Optional[CropOptions] = None
+    original: bool | None = None
+    crop: CropOptions | None = None
 
 
 class ServiceFieldSelectorBackupLocation(BaseModel):
@@ -214,9 +240,9 @@ class ServiceFieldSelectorBoolean(BaseModel):
 
 
 class ServiceFieldSelectorButtonToggle(BaseModel):
-    options: List[Union[str, ServiceFieldSelectorSelectOption]]
-    translation_key: Optional[str] = None
-    sort: Optional[bool] = None
+    options: list[str | ServiceFieldSelectorSelectOption]
+    translation_key: str | None = None
+    sort: bool | None = None
 
 
 class ServiceFieldSelectorColorRGB(BaseModel):
@@ -224,34 +250,34 @@ class ServiceFieldSelectorColorRGB(BaseModel):
 
 
 class ServiceFieldSelectorColorTemp(BaseModel):
-    unit: Optional[str] = None
-    min: Optional[Union[int, float]] = None
-    max: Optional[Union[int, float]] = None
-    min_mireds: Optional[Union[int, float]] = None
-    max_mireds: Optional[Union[int, float]] = None
+    unit: str | None = None
+    min: int | float | None = None
+    max: int | float | None = None
+    min_mireds: int | float | None = None
+    max_mireds: int | float | None = None
 
 
 class ServiceFieldSelectorCondition(BaseModel):
-    optionsInSidebar: Optional[bool] = None
+    options_in_sidebar: bool | None = Field(default=None, alias="optionsInSidebar")
 
 
 class ServiceFieldSelectorConfigEntry(BaseModel):
-    integration: Optional[str] = None
+    integration: str | None = None
 
 
 class ServiceFieldSelectorConstant(BaseModel):
-    label: Optional[str] = None
-    value: Union[str, int, float, bool]
-    translation_key: Optional[str] = None
+    label: str | None = None
+    value: str | int | float | bool
+    translation_key: str | None = None
 
 
 class ServiceFieldSelectorConversationAgent(BaseModel):
-    language: Optional[str] = None  # filtering by language not supported
+    language: str | None = None  # filtering by language not supported
 
 
 class ServiceFieldSelectorCountry(BaseModel):
-    countries: List[str]
-    no_sort: Optional[bool] = None
+    countries: list[str]
+    no_sort: bool | None = None
 
 
 class ServiceFieldSelectorDate(BaseModel):
@@ -263,50 +289,50 @@ class ServiceFieldSelectorDateTime(BaseModel):
 
 
 class ServiceFieldSelectorDevice(BaseModel):
-    entity: Optional[
-        Union[List[ServiceFieldSelectorEntityFilter], ServiceFieldSelectorEntityFilter]
-    ] = None
-    filter: Optional[
-        Union[List[ServiceFieldSelectorDeviceFilter], ServiceFieldSelectorDeviceFilter]
-    ] = None
-    multiple: Optional[bool] = None
+    entity: (
+        list[ServiceFieldSelectorEntityFilter] | ServiceFieldSelectorEntityFilter | None
+    ) = None
+    filter: (
+        list[ServiceFieldSelectorDeviceFilter] | ServiceFieldSelectorDeviceFilter | None
+    ) = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorDeviceLegacy(ServiceFieldSelectorDevice):
-    integration: Optional[str] = None
-    manufacturer: Optional[str] = None
-    model: Optional[str] = None
+    integration: str | None = None
+    manufacturer: str | None = None
+    model: str | None = None
 
 
 class ServiceFieldSelectorDuration(BaseModel):
-    enable_day: Optional[bool] = None
-    enable_millisecond: Optional[bool] = None
+    enable_day: bool | None = None
+    enable_millisecond: bool | None = None
 
 
 class ServiceFieldSelectorEntity(BaseModel):
-    multiple: Optional[bool] = None
-    include_entities: Optional[List[str]] = None
-    exclude_entities: Optional[List[str]] = None
-    filter: Optional[
-        Union[List[ServiceFieldSelectorEntityFilter], ServiceFieldSelectorEntityFilter]
-    ] = None
-    reorder: Optional[bool] = None
+    multiple: bool | None = None
+    include_entities: list[str] | None = None
+    exclude_entities: list[str] | None = None
+    filter: (
+        list[ServiceFieldSelectorEntityFilter] | ServiceFieldSelectorEntityFilter | None
+    ) = None
+    reorder: bool | None = None
 
 
 class ServiceFieldSelectorEntityLegacy(ServiceFieldSelectorEntity):
-    integration: Optional[str] = None
-    domain: Optional[Union[List[str], str]] = None
-    device_class: Optional[Union[List[str], str]] = None
+    integration: str | None = None
+    domain: list[str] | str | None = None
+    device_class: list[str] | str | None = None
 
 
 class ServiceFieldSelectorFloor(BaseModel):
-    entity: Optional[
-        Union[List[ServiceFieldSelectorEntityFilter], ServiceFieldSelectorEntityFilter]
-    ] = None
-    device: Optional[
-        Union[List[ServiceFieldSelectorDeviceFilter], ServiceFieldSelectorDeviceFilter]
-    ] = None
-    multiple: Optional[bool] = None
+    entity: (
+        list[ServiceFieldSelectorEntityFilter] | ServiceFieldSelectorEntityFilter | None
+    ) = None
+    device: (
+        list[ServiceFieldSelectorDeviceFilter] | ServiceFieldSelectorDeviceFilter | None
+    ) = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorFile(BaseModel):
@@ -314,33 +340,33 @@ class ServiceFieldSelectorFile(BaseModel):
 
 
 class ServiceFieldSelectorIcon(BaseModel):
-    placeholder: Optional[str] = None
-    fallbackPath: Optional[str] = None
+    placeholder: str | None = None
+    fallback_path: str | None = Field(default=None, alias="fallbackPath")
 
 
 class ServiceFieldSelectorImage(BaseModel):
-    original: Optional[bool] = None
-    crop: Optional[CropOptions] = None
+    original: bool | None = None
+    crop: CropOptions | None = None
 
 
 class ServiceFieldSelectorLabel(BaseModel):
-    multiple: Optional[bool] = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorLanguage(BaseModel):
-    languages: Optional[List[str]] = None
-    native_name: Optional[bool] = None
-    no_sort: Optional[bool] = None
+    languages: list[str] | None = None
+    native_name: bool | None = None
+    no_sort: bool | None = None
 
 
 class ServiceFieldSelectorLocation(BaseModel):
-    radius: Optional[bool] = None
-    radius_readonly: Optional[bool] = None
-    icon: Optional[str] = None
+    radius: bool | None = None
+    radius_readonly: bool | None = None
+    icon: str | None = None
 
 
 class ServiceFieldSelectorMedia(BaseModel):
-    accept: Optional[List[str]] = None
+    accept: list[str] | None = None
     multiple: bool = False
 
 
@@ -349,55 +375,53 @@ class ServiceFieldSelectorNavigation(BaseModel):
 
 
 class ServiceFieldSelectorNumber(BaseModel):
-    min: Optional[Union[int, float]] = None
-    max: Optional[Union[int, float]] = None
-    step: Optional[Union[Union[int, float], str]] = None
-    unit_of_measurement: Optional[str] = None
-    mode: Optional[ServiceFieldSelectorNumberMode] = None
-    slider_ticks: Optional[bool] = None
-    translation_key: Optional[str] = None
+    min: int | float | None = None
+    max: int | float | None = None
+    step: int | float | str | None = None
+    unit_of_measurement: str | None = None
+    mode: ServiceFieldSelectorNumberMode | None = None
+    slider_ticks: bool | None = None
+    translation_key: str | None = None
 
 
 class ServiceFieldSelectorObjectField(BaseModel):
     selector: ServiceFieldSelector
-    label: Optional[str] = None
-    required: Optional[bool] = None
+    label: str | None = None
+    required: bool | None = None
 
 
 class ServiceFieldSelectorObject(BaseModel):
-    label_field: Optional[str] = None
-    description_field: Optional[str] = None
-    translation_key: Optional[str] = None
-    fields: Optional[Dict[str, ServiceFieldSelectorObjectField]] = None
-    multiple: Optional[bool] = None
+    label_field: str | None = None
+    description_field: str | None = None
+    translation_key: str | None = None
+    fields: dict[str, ServiceFieldSelectorObjectField] | None = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorQRCode(BaseModel):
     data: str
-    scale: Optional[Union[int, float]] = None
-    error_correction_level: Optional[ServiceFieldSelectorQRCodeErrorCorrectionLevel] = (
-        None
-    )
-    center_image: Optional[str] = None
+    scale: int | float | None = None
+    error_correction_level: ServiceFieldSelectorQRCodeErrorCorrectionLevel | None = None
+    center_image: str | None = None
 
 
 class ServiceFieldSelectorSelectOption(BaseModel):
     label: str
     value: Any
-    description: Optional[str] = None
-    image: Optional[Union[str, SelectBoxOptionImage]] = None
-    disable: Optional[bool] = None
+    description: str | None = None
+    image: str | SelectBoxOptionImage | None = None
+    disable: bool | None = None
 
 
 class ServiceFieldSelectorSelect(BaseModel):
-    multiple: Optional[bool] = None
-    custom_value: Optional[bool] = None
-    mode: Optional[ServiceFieldSelectorSelectMode] = None
-    options: List[Union[str, ServiceFieldSelectorSelectOption]]
-    translation_key: Optional[str] = None
-    sort: Optional[bool] = None
-    reorder: Optional[bool] = None
-    box_max_columns: Optional[int] = None
+    multiple: bool | None = None
+    custom_value: bool | None = None
+    mode: ServiceFieldSelectorSelectMode | None = None
+    options: list[str | ServiceFieldSelectorSelectOption]
+    translation_key: str | None = None
+    sort: bool | None = None
+    reorder: bool | None = None
+    box_max_columns: int | None = None
 
 
 class ServiceFieldSelectorSelector(BaseModel):
@@ -410,25 +434,25 @@ class ServiceFieldSelectorStateOption(BaseModel):
 
 
 class ServiceFieldSelectorState(BaseModel):
-    extra_options: Optional[List[ServiceFieldSelectorStateOption]] = None
-    entity_id: Optional[Union[str, List[str]]] = None
-    attribute: Optional[str] = None
-    hide_states: Optional[List[str]] = None
-    multiple: Optional[bool] = None
+    extra_options: list[ServiceFieldSelectorStateOption] | None = None
+    entity_id: str | list[str] | None = None
+    attribute: str | None = None
+    hide_states: list[str] | None = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorStatistic(BaseModel):
-    device_class: Optional[str] = None
-    multiple: Optional[bool] = None
+    device_class: str | None = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorTarget(BaseModel):
-    entity: Optional[
-        Union[List[ServiceFieldSelectorEntityFilter], ServiceFieldSelectorEntityFilter]
-    ] = None
-    device: Optional[
-        Union[List[ServiceFieldSelectorDeviceFilter], ServiceFieldSelectorDeviceFilter]
-    ] = None
+    entity: (
+        list[ServiceFieldSelectorEntityFilter] | ServiceFieldSelectorEntityFilter | None
+    ) = None
+    device: (
+        list[ServiceFieldSelectorDeviceFilter] | ServiceFieldSelectorDeviceFilter | None
+    ) = None
 
 
 class ServiceFieldSelectorTemplate(BaseModel):
@@ -436,24 +460,24 @@ class ServiceFieldSelectorTemplate(BaseModel):
 
 
 class ServiceFieldSelectorSTT(BaseModel):
-    language: Optional[str] = None
+    language: str | None = None
 
 
 class ServiceFieldSelectorText(BaseModel):
-    multiline: Optional[bool] = None
-    type: Optional[ServiceFieldSelectorTextType] = None
-    prefix: Optional[str] = None
-    suffix: Optional[str] = None
-    autocomplete: Optional[str] = None
-    multiple: Optional[bool] = None
+    multiline: bool | None = None
+    type: ServiceFieldSelectorTextType | None = None
+    prefix: str | None = None
+    suffix: str | None = None
+    autocomplete: str | None = None
+    multiple: bool | None = None
 
 
 class ServiceFieldSelectorTheme(BaseModel):
-    include_default: Optional[bool] = None
+    include_default: bool | None = None
 
 
 class ServiceFieldSelectorTime(BaseModel):
-    no_second: Optional[bool] = None
+    no_second: bool | None = None
 
 
 class ServiceFieldSelectorTrigger(BaseModel):
@@ -461,12 +485,12 @@ class ServiceFieldSelectorTrigger(BaseModel):
 
 
 class ServiceFieldSelectorTTS(BaseModel):
-    language: Optional[str] = None
+    language: str | None = None
 
 
 class ServiceFieldSelectorTTSVoice(BaseModel):
-    engineId: Optional[str] = None
-    language: Optional[str] = None
+    engine_id: str | None = Field(default=None, alias="engineId")
+    language: str | None = None
 
 
 class ServiceFieldSelectorUIAction(BaseModel):
@@ -474,180 +498,163 @@ class ServiceFieldSelectorUIAction(BaseModel):
 
 
 class ServiceFieldSelectorUIColor(BaseModel):
-    default_color: Optional[str] = None
-    include_none: Optional[bool] = None
-    include_state: Optional[bool] = None
+    default_color: str | None = None
+    include_none: bool | None = None
+    include_state: bool | None = None
 
 
 class ServiceFieldSelectorUIStateContext(BaseModel):
-    entity_id: Optional[str] = None
-    allow_name: Optional[bool] = None
+    entity_id: str | None = None
+    allow_name: bool | None = None
 
 
 class ServiceFieldSelector(BaseModel):
-    action: Optional[ServiceFieldSelectorAction] = None
-    addon: Optional[ServiceFieldSelectorAddon] = None
-    area: Optional[ServiceFieldSelectorArea] = None
-    areas_display: Optional[ServiceFieldSelectorAreasDisplay] = None
-    attribute: Optional[ServiceFieldSelectorAttribute] = None
-    assist_pipeline: Optional[ServiceFieldSelectorAssistPipeline] = None
-    backup_location: Optional[ServiceFieldSelectorBackupLocation] = None
-    background: Optional[ServiceFieldSelectorBackground] = None
-    boolean: Optional[ServiceFieldSelectorBoolean] = None
-    button_toggle: Optional[ServiceFieldSelectorButtonToggle] = None
-    color_rgb: Optional[ServiceFieldSelectorColorRGB] = None
-    color_temp: Optional[ServiceFieldSelectorColorTemp] = None
-    condition: Optional[ServiceFieldSelectorCondition] = None
-    config_entry: Optional[ServiceFieldSelectorConfigEntry] = None
-    constant: Optional[ServiceFieldSelectorConstant] = None
-    conversation_agent: Optional[ServiceFieldSelectorConversationAgent] = None
-    country: Optional[ServiceFieldSelectorCountry] = None
-    date: Optional[ServiceFieldSelectorDate] = None
-    datetime: Optional[ServiceFieldSelectorDateTime] = None
-    device: Optional[
-        Union[ServiceFieldSelectorDevice, ServiceFieldSelectorDeviceLegacy]
-    ] = None
-    duration: Optional[ServiceFieldSelectorDuration] = None
-    entity: Optional[
-        Union[ServiceFieldSelectorEntity, ServiceFieldSelectorEntityLegacy]
-    ] = None
-    floor: Optional[ServiceFieldSelectorFloor] = None
-    file: Optional[ServiceFieldSelectorFile] = None
-    icon: Optional[ServiceFieldSelectorIcon] = None
-    image: Optional[ServiceFieldSelectorImage] = None
-    label: Optional[ServiceFieldSelectorLabel] = None
-    language: Optional[ServiceFieldSelectorLanguage] = None
-    location: Optional[ServiceFieldSelectorLocation] = None
-    media: Optional[ServiceFieldSelectorMedia] = None
-    navigation: Optional[ServiceFieldSelectorNavigation] = None
-    number: Optional[ServiceFieldSelectorNumber] = None
-    object: Optional[ServiceFieldSelectorObject] = None
-    qr_code: Optional[ServiceFieldSelectorQRCode] = None
-    select: Optional[ServiceFieldSelectorSelect] = None
-    selector: Optional[ServiceFieldSelectorSelector] = None
-    state: Optional[ServiceFieldSelectorState] = None
-    statistic: Optional[ServiceFieldSelectorStatistic] = None
-    target: Optional[ServiceFieldSelectorTarget] = None
-    template: Optional[ServiceFieldSelectorTemplate] = None
-    stt: Optional[ServiceFieldSelectorSTT] = None
-    text: Optional[ServiceFieldSelectorText] = None
-    theme: Optional[ServiceFieldSelectorTheme] = None
-    time: Optional[ServiceFieldSelectorTime] = None
-    trigger: Optional[ServiceFieldSelectorTrigger] = None
-    tts: Optional[ServiceFieldSelectorTTS] = None
-    tts_voice: Optional[ServiceFieldSelectorTTSVoice] = None
-    ui_action: Optional[ServiceFieldSelectorUIAction] = None
-    ui_color: Optional[ServiceFieldSelectorUIColor] = None
-    ui_state_content: Optional[ServiceFieldSelectorUIStateContext] = None
+    action: ServiceFieldSelectorAction | None = None
+    addon: ServiceFieldSelectorAddon | None = None
+    area: ServiceFieldSelectorArea | None = None
+    areas_display: ServiceFieldSelectorAreasDisplay | None = None
+    attribute: ServiceFieldSelectorAttribute | None = None
+    assist_pipeline: ServiceFieldSelectorAssistPipeline | None = None
+    backup_location: ServiceFieldSelectorBackupLocation | None = None
+    background: ServiceFieldSelectorBackground | None = None
+    boolean: ServiceFieldSelectorBoolean | None = None
+    button_toggle: ServiceFieldSelectorButtonToggle | None = None
+    color_rgb: ServiceFieldSelectorColorRGB | None = None
+    color_temp: ServiceFieldSelectorColorTemp | None = None
+    condition: ServiceFieldSelectorCondition | None = None
+    config_entry: ServiceFieldSelectorConfigEntry | None = None
+    constant: ServiceFieldSelectorConstant | None = None
+    conversation_agent: ServiceFieldSelectorConversationAgent | None = None
+    country: ServiceFieldSelectorCountry | None = None
+    date: ServiceFieldSelectorDate | None = None
+    datetime: ServiceFieldSelectorDateTime | None = None
+    device: ServiceFieldSelectorDevice | ServiceFieldSelectorDeviceLegacy | None = None
+    duration: ServiceFieldSelectorDuration | None = None
+    entity: ServiceFieldSelectorEntity | ServiceFieldSelectorEntityLegacy | None = None
+    floor: ServiceFieldSelectorFloor | None = None
+    file: ServiceFieldSelectorFile | None = None
+    icon: ServiceFieldSelectorIcon | None = None
+    image: ServiceFieldSelectorImage | None = None
+    label: ServiceFieldSelectorLabel | None = None
+    language: ServiceFieldSelectorLanguage | None = None
+    location: ServiceFieldSelectorLocation | None = None
+    media: ServiceFieldSelectorMedia | None = None
+    navigation: ServiceFieldSelectorNavigation | None = None
+    number: ServiceFieldSelectorNumber | None = None
+    object: ServiceFieldSelectorObject | None = None
+    qr_code: ServiceFieldSelectorQRCode | None = None
+    select: ServiceFieldSelectorSelect | None = None
+    selector: ServiceFieldSelectorSelector | None = None
+    state: ServiceFieldSelectorState | None = None
+    statistic: ServiceFieldSelectorStatistic | None = None
+    target: ServiceFieldSelectorTarget | None = None
+    template: ServiceFieldSelectorTemplate | None = None
+    stt: ServiceFieldSelectorSTT | None = None
+    text: ServiceFieldSelectorText | None = None
+    theme: ServiceFieldSelectorTheme | None = None
+    time: ServiceFieldSelectorTime | None = None
+    trigger: ServiceFieldSelectorTrigger | None = None
+    tts: ServiceFieldSelectorTTS | None = None
+    tts_voice: ServiceFieldSelectorTTSVoice | None = None
+    ui_action: ServiceFieldSelectorUIAction | None = None
+    ui_color: ServiceFieldSelectorUIColor | None = None
+    ui_state_content: ServiceFieldSelectorUIStateContext | None = None
 
 
 # Service bases
 class ServiceFieldFilter(BaseModel):
-    supported_features: Optional[Union[List[int], int]] = (
+    supported_features: list[int] | int | None = (
         None  # Bitset (any needs to be supported [or all within specified list])
     )
-    attribute: Optional[Dict[str, Union[List[str], str]]] = None
+    attribute: dict[str, list[str] | str] | None = None
 
 
 class ServiceField(BaseModel):
     """Model for service parameters/fields."""
 
-    description: Optional[str] = None
-    example: Optional[JSONType] = None
-    default: Optional[JSONType] = None
-    name: Optional[str] = None
-    required: Optional[bool] = None
-    advanced: Optional[bool] = None
-    selector: Optional[ServiceFieldSelector] = None
-    filter: Optional[ServiceFieldFilter] = None
+    description: str | None = None
+    example: Any | None = None
+    default: Any | None = None
+    name: str | None = None
+    required: bool | None = None
+    advanced: bool | None = None
+    selector: ServiceFieldSelector | None = None
+    filter: ServiceFieldFilter | None = None
 
 
 class ServiceFieldCollection(BaseModel):
-    collapsed: Optional[bool] = None
-    fields: Dict[str, ServiceField]
+    collapsed: bool | None = None
+    fields: dict[str, ServiceField]
 
 
 class ServiceResponse(BaseModel):
-    optional: Optional[bool] = None
+    optional: bool | None = None
 
 
-class Service(BaseModel):
+class BaseService(BaseModel):
     """Model representing services from homeassistant"""
 
     service_id: str
+    name: str | None = None
+    description: str | None = None
+    fields: dict[str, ServiceField | ServiceFieldCollection] | None = None
+    target: ServiceFieldSelectorTarget | None = None
+    response: ServiceResponse | None = None
+
+
+class Service(BaseService):
+    """Sync service with sync trigger method."""
+
     domain: Domain = Field(exclude=True, repr=False)
-    name: Optional[str] = None
-    description: Optional[str] = None
-    fields: Optional[Dict[str, Union[ServiceField, ServiceFieldCollection]]] = None
-    target: Optional[ServiceFieldSelectorTarget] = None
-    response: Optional[ServiceResponse] = None
 
-    def trigger(self, **service_data) -> Union[
-        Tuple[State, ...],
-        Tuple[Tuple[State, ...], dict[str, JSONType]],
-        dict[str, JSONType],
-        None,
-    ]:
+    def trigger(
+        self,
+        **service_data: Any,
+    ) -> (
+        tuple[State, ...]
+        | tuple[tuple[State, ...], dict[str, Any]]
+        | dict[str, Any]
+        | None
+    ):
         """Triggers the service associated with this object."""
         try:
-            return self.domain._client.trigger_service_with_response(
+            return self.domain.client.trigger_service_with_response(
                 self.domain.domain_id,
                 self.service_id,
                 **service_data,
             )
-        except RequestError:
-            return self.domain._client.trigger_service(
+        except (RequestError, ResponseError):
+            return self.domain.client.trigger_service(
                 self.domain.domain_id,
                 self.service_id,
                 **service_data,
             )
 
-    async def async_trigger(
-        self, **service_data
-    ) -> Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]]:
+
+class AsyncService(BaseService):
+    """Async service with async trigger method."""
+
+    domain: AsyncDomain = Field(exclude=True, repr=False)
+
+    async def trigger(
+        self,
+        **service_data: Any,
+    ) -> (
+        tuple[State, ...]
+        | tuple[tuple[State, ...], dict[str, Any]]
+        | dict[str, Any]
+        | None
+    ):
         """Triggers the service associated with this object."""
-        from homeassistant_api import WebsocketClient  # prevent circular import
-
-        if isinstance(self.domain._client, WebsocketClient):
-            raise NotImplementedError(
-                "WebsocketClient does not support async/await syntax."
-            )
         try:
-            return await self.domain._client.async_trigger_service_with_response(
+            return await self.domain.client.trigger_service_with_response(
                 self.domain.domain_id,
                 self.service_id,
                 **service_data,
             )
-        except RequestError:
-            return await self.domain._client.async_trigger_service(
+        except (RequestError, ResponseError):
+            return await self.domain.client.trigger_service(
                 self.domain.domain_id,
                 self.service_id,
                 **service_data,
             )
-
-    def __call__(self, **service_data) -> Union[
-        Union[
-            Tuple[State, ...],
-            Tuple[Tuple[State, ...], dict[str, JSONType]],
-            dict[str, JSONType],
-            None,
-        ],
-        Coroutine[
-            Any,
-            Any,
-            Union[Tuple[State, ...], Tuple[Tuple[State, ...], dict[str, JSONType]]],
-        ],
-    ]:
-        """
-        Triggers the service associated with this object.
-        """
-        assert (frame := inspect.currentframe()) is not None
-        assert (parent_frame := frame.f_back) is not None
-        try:
-            if inspect.iscoroutinefunction(
-                caller := gc.get_referrers(parent_frame.f_code)[0]
-            ) or inspect.iscoroutine(caller):
-                return self.async_trigger(**service_data)
-        except IndexError:  # pragma: no cover
-            pass
-        return self.trigger(**service_data)

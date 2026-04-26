@@ -1,20 +1,13 @@
-ARG BUILD_FROM
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm AS dependencies
+WORKDIR /app
+COPY pyproject.toml README.md ./
+RUN uv sync --group dev
 
-FROM ${BUILD_FROM} AS base
+FROM python:3.13-bookworm
 ENV PYTHONPATH=.
 WORKDIR /app
+COPY --from=dependencies /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 COPY ./ /app/
 
-FROM base AS dependencies
-RUN pip install --upgrade pip wheel
-RUN pip install poetry
-RUN python3 -m venv .venv && \
-    . .venv/bin/activate && \
-    poetry install --with testing && \
-    deactivate
-
-FROM base AS final
-COPY --from=dependencies /app/.venv /app/.venv
-
 ENTRYPOINT [ "sh", "entrypoint.sh" ]
-

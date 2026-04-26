@@ -1,7 +1,5 @@
 """Module for custom error classes"""
 
-from typing import Optional, Union
-
 
 class HomeassistantAPIError(Exception):
     """Base class for custom errors"""
@@ -11,19 +9,23 @@ class RequestError(HomeassistantAPIError):
     """Error raised when an issue occurs when requesting to Homeassistant."""
 
     def __init__(
-        self, data: Optional[str], /, url: str, message: Optional[str] = None
+        self,
+        data: str | None,
+        /,
+        url: str,
+        message: str | None = None,
     ) -> None:
         if message is not None:
             super().__init__(
                 message
                 + f" {url!r}"
-                + (f" with data: {data!r}" if data is not None else "")
+                + (f" with data: {data!r}" if data is not None else ""),
             )
         elif data is None:
             super().__init__(f"An error occurred while making the request to {url!r}")
         else:
             super().__init__(
-                f"An error occurred while making the request to {url!r} with data: {data!r}"
+                f"An error occurred while making the request to {url!r} with data: {data!r}",
             )
 
 
@@ -61,20 +63,20 @@ class ParameterMissingError(HomeassistantAPIError):
 class InternalServerError(HomeassistantAPIError):
     """Error raised when Home Assistant says that it got itself in trouble."""
 
-    def __init__(self, status_code: int, content: Union[str, bytes]) -> None:
+    def __init__(self, status_code: int, content: str | bytes) -> None:
         super().__init__(
             f"Home Assistant returned a response with an error status code {status_code!r}.\n"
             f"{content!r}\n"
             "If this happened, "
             "please report it at https://github.com/GrandMoff100/HomeAssistantAPI/issues "
-            "with the request status code and the request content. Thanks!"
+            "with the request status code and the request content. Thanks!",
         )
 
 
 class UnauthorizedError(HomeassistantAPIError):
     """Error raised when an invalid token in used to authenticate with homeassistant."""
 
-    def __init__(self, message: Optional[str] = None) -> None:
+    def __init__(self, message: str | None = None) -> None:
         super().__init__(message or "Invalid authentication token")
 
 

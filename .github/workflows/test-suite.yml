@@ -4,7 +4,6 @@ on:
     paths:
       - "**.py"
       - "pyproject.toml"
-      - "poetry.lock"
   pull_request:
     branches:
       - master
@@ -12,7 +11,6 @@ on:
     paths:
       - "**.py"
       - "pyproject.toml"
-      - "poetry.lock"
   workflow_dispatch:
 
 jobs:
@@ -23,19 +21,21 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.9"
+          python-version: "3.11"
       - name: Checkout
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
       - name: Install Dependencies
-        run: |
-          pip install poetry
-          poetry install --with styling
-      - name: Run Ruff
-        run: poetry run ruff homeassistant_api
-      - name: Run MyPy
-        run: poetry run mypy homeassistant_api --show-error-codes
+        run: uv sync --group dev
+      - name: Run Ruff format
+        run: uv run ruff format homeassistant_api
+      - name: Run Ruff linting
+        run: uv run ruff check homeassistant_api
+      - name: Run Zuban
+        run: uv run zuban check homeassistant_api
 
   code_functionality:
     name: "Code Functionality"

@@ -55,14 +55,14 @@ Installation with pip is really easy and will install the dependencies this proj
    # To install the latest stable version from PyPI
    $ pip install homeassistant_api
 
-   # To install the latest dev version (you'll need to use poetry because pip, by itself, does not understand poetry dependencies.)
-   $ poetry add git+https://github.com/GrandMoff100/HomeassistantAPI
+   # To install the latest dev version
+   $ pip install git+https://github.com/GrandMoff100/HomeassistantAPI
 
 
 Installing with :code:`git`
 ----------------------------------
 
-To install with git we're going to clone the repository and then run :code:`$ poetry install` like so.
+To install with git we're going to clone the repository and then run :code:`$ uv sync` like so.
 
 .. code-block:: bash
 
@@ -70,13 +70,13 @@ To install with git we're going to clone the repository and then run :code:`$ po
    git clone https://github.com/GrandMoff100/HomeassistantAPI
 
    # CD into your project
-   cd <path/to/my/awesome/homeassistant/project>
+   cd HomeAssistantAPI
 
-   # Install poetry
-   python -m pip install poetry
+   # Install uv (see https://docs.astral.sh/uv/ for other methods)
+   python -m pip install uv
 
-   # Run poetry install
-   python -m poetry install ~/HomeAssistantAPI
+   # Install dependencies
+   uv sync
 
 
 Then you should be all set to start using the library!
