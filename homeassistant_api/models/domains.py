@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import cast
@@ -159,25 +159,25 @@ class SelectBoxOptionImage(BaseModel):
     flip_rtl: bool | None = None
 
 
-class ServiceFieldSelectorNumberMode(str, Enum):
+class ServiceFieldSelectorNumberMode(StrEnum):
     BOX = "box"
     SLIDER = "slider"
 
 
-class ServiceFieldSelectorSelectMode(str, Enum):
+class ServiceFieldSelectorSelectMode(StrEnum):
     LIST = "list"
     DROPDOWN = "dropdown"
     BOX = "box"
 
 
-class ServiceFieldSelectorQRCodeErrorCorrectionLevel(str, Enum):
+class ServiceFieldSelectorQRCodeErrorCorrectionLevel(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     QUARTILE = "quartile"
     HIGH = "high"
 
 
-class ServiceFieldSelectorTextType(str, Enum):
+class ServiceFieldSelectorTextType(StrEnum):
     NUMBER = "number"
     TEXT = "text"
     SEARCH = "search"
