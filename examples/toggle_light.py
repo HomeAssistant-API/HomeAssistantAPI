@@ -6,13 +6,16 @@ api_url = os.getenv("API_URL")
 token = os.getenv("TOKEN")
 
 
-if api_url is not None and token is not None:
+def main() -> None:
     # Intitializes the main Client
     client = Client(api_url, token)
     # Verifies the extistence of the specified server and opens efficient ClientSessions.
     with client:
-        # Gets the cover service domain
         light = client.get_domain("light")
-        assert light is not None
-        # Triggers the service with a specific garage door
-        print(light.toggle(entity_id="light.light_bulb_1"))
+        if light is None:
+            return
+        print(light.model_dump())  # noqa: T201
+
+
+if __name__ == "__main__":
+    main()

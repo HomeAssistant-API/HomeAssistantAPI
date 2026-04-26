@@ -1,16 +1,20 @@
 import os
+from datetime import datetime
 
-import aiohttp_client_cache.session
-import requests_cache
+import niquests
 
-from homeassistant_api import Client, WebsocketClient
+from homeassistant_api import AsyncClient
+from homeassistant_api import AsyncWebsocketClient
+from homeassistant_api import Client
+from homeassistant_api import WebsocketClient
+from homeassistant_api.baseclient import BaseClient
 
 
-def test_custom_cached_session() -> None:
+def test_custom_session() -> None:
     with Client(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        cache_session=requests_cache.CachedSession(),
+        session=niquests.Session(),
     ):
         pass
 
@@ -19,32 +23,23 @@ def test_default_session() -> None:
     with Client(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        cache_session=False,
     ):
         pass
 
 
-async def test_custom_async_cached_session() -> None:
-    async with Client(
+async def test_custom_async_session() -> None:
+    async with AsyncClient(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        async_cache_session=aiohttp_client_cache.session.CachedSession(
-            cache=aiohttp_client_cache.SQLiteBackend(
-                cache_name="test_custom_async_cached_session.sqlite",
-                expire_after=10,
-            ),
-        ),
-        use_async=True,
+        session=niquests.AsyncSession(),
     ):
         pass
 
 
 async def test_default_async_session() -> None:
-    async with Client(
+    async with AsyncClient(
         os.environ["HOMEASSISTANTAPI_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        async_cache_session=False,
-        use_async=True,
     ):
         pass
 
@@ -58,9 +53,52 @@ def test_websocket_client_ping() -> None:
 
 
 async def test_async_websocket_client_ping() -> None:
-    async with WebsocketClient(
+    async with AsyncWebsocketClient(
         os.environ["HOMEASSISTANTAPI_WS_URL"],
         os.environ["HOMEASSISTANTAPI_TOKEN"],
-        use_async=True,
     ) as client:
-        assert (await client.async_ping_latency()) > 0
+        assert (await client.ping_latency()) > 0
+
+
+# --- BaseClient: prepare_get_entity_histories_params with naive timestamps ---
+
+
+def test_prepare_entity_histories_naive_timestamps() -> None:
+    """Tests that naive (tzinfo=None) timestamps are converted to local timezone."""
+    naive_start = datetime(2024, 1, 1, 12, 0, 0)  # noqa: DTZ001
+    naive_end = datetime(2024, 6, 1, 12, 0, 0)  # noqa: DTZ001
+    params, url = BaseClient.prepare_get_entity_histories_params(
+        start_timestamp=naive_start,
+        end_timestamp=naive_end,
+    )
+    # Naive timestamps should get a timezone attached
+    start_time = datetime.fromisoformat(url.split("/")[-1])
+    assert start_time.tzinfo is not None, "start_timestamp should have timezone offset"
+    end_time_str = params["end_time"]
+    assert end_time_str is not None
+    end_time = datetime.fromisoformat(end_time_str)
+    assert end_time.tzinfo is not None, "end_time should have timezone offset"
+
+
+# --- BaseClient: prepare_get_logbook_entry_params ---
+
+
+def test_prepare_logbook_entry_no_start_timestamp() -> None:
+    """Tests logbook params without a start_timestamp return base 'logbook' path."""
+    params, url = BaseClient.prepare_get_logbook_entry_params(
+        filter_entities=["light.kitchen", "light.bedroom"],
+        end_timestamp=datetime(2024, 6, 1, 12, 0, 0),  # noqa: DTZ001
+    )
+    assert url == "logbook"
+    assert "light.kitchen,light.bedroom" in params["entity"]
+    assert "end_time" in params
+
+
+def test_prepare_logbook_entry_string_timestamps() -> None:
+    """Tests logbook params with string timestamps pass through unchanged."""
+    params, url = BaseClient.prepare_get_logbook_entry_params(
+        start_timestamp="2024-01-01T00:00:00",
+        end_timestamp="2024-06-01T00:00:00",
+    )
+    assert "2024-01-01T00:00:00" in url
+    assert params["end_time"] == "2024-06-01T00:00:00"

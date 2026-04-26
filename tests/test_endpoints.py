@@ -1,16 +1,22 @@
 """Module for making sure endpoints that should succeed, do indeed succeed."""
 
 import logging
+from datetime import UTC
 from datetime import datetime
 
 import pytest
 
+from homeassistant_api import AsyncClient
+from homeassistant_api import AsyncWebsocketClient
 from homeassistant_api import Client
-from homeassistant_api.errors import RequestError
+from homeassistant_api import WebsocketClient
+from homeassistant_api.errors import ResponseError
 from homeassistant_api.models import ConfigEntryDisabler
+from homeassistant_api.models.events import AsyncEvent
 from homeassistant_api.models.events import Event
 from homeassistant_api.models.states import State
-from homeassistant_api.websocket import WebsocketClient
+
+logger = logging.getLogger(__name__)
 
 
 def test_get_error_log(cached_client: Client) -> None:
@@ -18,9 +24,9 @@ def test_get_error_log(cached_client: Client) -> None:
     assert cached_client.get_error_log()
 
 
-async def test_async_get_error_log(async_cached_client: Client) -> None:
+async def test_async_get_error_log(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/error_log` endpoint."""
-    assert await async_cached_client.async_get_error_log()
+    assert await async_cached_client.get_error_log()
 
 
 def test_get_config(cached_client: Client) -> None:
@@ -28,9 +34,9 @@ def test_get_config(cached_client: Client) -> None:
     assert cached_client.get_config().get("state") in {"RUNNING", "NOT_RUNNING"}
 
 
-async def test_async_get_config(async_cached_client: Client) -> None:
+async def test_async_get_config(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/config` endpoint."""
-    assert (await async_cached_client.async_get_config()).get("state") in {
+    assert (await async_cached_client.get_config()).get("state") in {
         "RUNNING",
         "NOT_RUNNING",
     }
@@ -40,18 +46,18 @@ def test_get_logbook_entries(cached_client: Client) -> None:
     """Tests the `GET /api/logbook/<timestamp>` endpoint."""
     for entry in cached_client.get_logbook_entries(
         filter_entities="sun.red_sun",
-        start_timestamp=datetime(2020, 1, 1),
-        end_timestamp=datetime.now(),
+        start_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
+        end_timestamp=datetime.now(UTC),
     ):
         assert entry
 
 
-async def test_async_get_logbook_entries(async_cached_client: Client) -> None:
+async def test_async_get_logbook_entries(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/logbook/<timestamp>` endpoint."""
-    async for entry in async_cached_client.async_get_logbook_entries(
+    async for entry in async_cached_client.get_logbook_entries(
         filter_entities="sun.red_sun",
-        start_timestamp=datetime(2020, 1, 1),
-        end_timestamp=datetime.now(),
+        start_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
+        end_timestamp=datetime.now(UTC),
     ):
         assert entry
 
@@ -61,9 +67,9 @@ def test_get_entity(cached_client: Client) -> None:
     assert cached_client.get_entity(entity_id="sun.sun")
 
 
-async def test_async_get_entity(async_cached_client: Client) -> None:
+async def test_async_get_entity(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/states/<entity_id>` endpoint."""
-    assert await async_cached_client.async_get_entity(entity_id="sun.sun")
+    assert await async_cached_client.get_entity(entity_id="sun.sun")
 
 
 def test_get_entity_histories(cached_client: Client) -> None:
@@ -73,23 +79,22 @@ def test_get_entity_histories(cached_client: Client) -> None:
     histories = list(
         cached_client.get_entity_histories(
             (sun,),
-            end_timestamp=datetime.now(),
-            start_timestamp=datetime(2020, 1, 1),
+            end_timestamp=datetime.now(tz=UTC),
+            start_timestamp=datetime(2020, 1, 1, tzinfo=UTC),
             significant_changes_only=True,
-        )
+        ),
     )
     assert histories, "No history found."
     assert histories[0].states, "No states in entity history found."
     assert isinstance(histories[0].states[0], State)
 
 
-async def test_async_get_entity_histories(async_cached_client: Client) -> None:
+async def test_async_get_entity_histories(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/history/period/<timestamp>` endpoint."""
-    sun = await async_cached_client.async_get_entity(entity_id="sun.sun")
+    sun = await async_cached_client.get_entity(entity_id="sun.sun")
     assert sun is not None
     histories = [
-        history
-        async for history in async_cached_client.async_get_entity_histories((sun,))
+        history async for history in async_cached_client.get_entity_histories((sun,))
     ]
     assert histories, "No history found."
     assert histories[0].states, "No states in entity history found."
@@ -99,7 +104,7 @@ async def test_async_get_entity_histories(async_cached_client: Client) -> None:
 def test_get_rendered_template(cached_client: Client) -> None:
     """Tests the `POST /api/template` endpoint."""
     rendered_template = cached_client.get_rendered_template(
-        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.',
     )
     assert rendered_template in {
         "The sun is above the horizon.",
@@ -107,10 +112,10 @@ def test_get_rendered_template(cached_client: Client) -> None:
     }
 
 
-async def test_async_get_rendered_template(async_cached_client: Client) -> None:
+async def test_async_get_rendered_template(async_cached_client: AsyncClient) -> None:
     """Tests the `POST /api/template` endpoint."""
-    rendered_template = await async_cached_client.async_get_rendered_template(
-        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+    rendered_template = await async_cached_client.get_rendered_template(
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.',
     )
     assert rendered_template in {
         "The sun is above the horizon.",
@@ -121,7 +126,7 @@ async def test_async_get_rendered_template(async_cached_client: Client) -> None:
 def test_websocket_get_rendered_template(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "render_template"` websocket command."""
     rendered_template = websocket_client.get_rendered_template(
-        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.',
     )
     assert rendered_template in {
         "The sun is above the horizon.",
@@ -130,11 +135,11 @@ def test_websocket_get_rendered_template(websocket_client: WebsocketClient) -> N
 
 
 async def test_async_websocket_get_rendered_template(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "render_template"` websocket command."""
-    rendered_template = await async_websocket_client.async_get_rendered_template(
-        'The sun is {{ states("sun.sun").replace("_", " the ") }}.'
+    rendered_template = await async_websocket_client.get_rendered_template(
+        'The sun is {{ states("sun.sun").replace("_", " the ") }}.',
     )
     assert rendered_template in {
         "The sun is above the horizon.",
@@ -147,9 +152,9 @@ def test_check_api_config(cached_client: Client) -> None:
     assert cached_client.check_api_config()
 
 
-async def test_async_check_api_config(async_cached_client: Client) -> None:
+async def test_async_check_api_config(async_cached_client: AsyncClient) -> None:
     """Tests the `POST /api/config/core/check_config` endpoint."""
-    assert await async_cached_client.async_check_api_config()
+    assert await async_cached_client.check_api_config()
 
 
 def test_get_entities(cached_client: Client) -> None:
@@ -158,9 +163,9 @@ def test_get_entities(cached_client: Client) -> None:
     assert "sun" in entities
 
 
-async def test_async_get_entities(async_cached_client: Client) -> None:
+async def test_async_get_entities(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/states` endpoint."""
-    entities = await async_cached_client.async_get_entities()
+    entities = await async_cached_client.get_entities()
     assert "sun" in entities
 
 
@@ -172,10 +177,10 @@ def test_websocket_get_config(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_config(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "get_config"` websocket command."""
-    config = await async_websocket_client.async_get_config()
+    config = await async_websocket_client.get_config()
     assert isinstance(config, dict)
     assert config.get("state") in {"RUNNING", "NOT_RUNNING"}
 
@@ -204,55 +209,57 @@ def test_websocket_get_entity_by_entity_id(websocket_client: WebsocketClient) ->
 def test_websocket_get_entity_no_args(websocket_client: WebsocketClient) -> None:
     """Tests WebsocketClient.get_entity raises ValueError with no arguments."""
     with pytest.raises(
-        ValueError, match="Neither group_id and slug or entity_id provided"
+        ValueError,
+        match="Neither group_id and slug or entity_id provided",
     ):
         websocket_client.get_entity()
 
 
 async def test_async_websocket_get_state(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
-    """Tests async WebsocketClient.async_get_state with entity_id."""
-    state = await async_websocket_client.async_get_state(entity_id="sun.sun")
+    """Tests AsyncWebsocketClient.get_state with entity_id."""
+    state = await async_websocket_client.get_state(entity_id="sun.sun")
     assert state.entity_id == "sun.sun"
     assert state.state in {"above_horizon", "below_horizon"}
 
 
 async def test_async_websocket_get_entity_by_group_slug(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
-    """Tests async WebsocketClient.async_get_entity with group_id and slug."""
-    entity = await async_websocket_client.async_get_entity(group_id="sun", slug="sun")
+    """Tests AsyncWebsocketClient.get_entity with group_id and slug."""
+    entity = await async_websocket_client.get_entity(group_id="sun", slug="sun")
     assert entity is not None
     assert entity.entity_id == "sun.sun"
 
 
 async def test_async_websocket_get_entity_by_entity_id(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
-    """Tests async WebsocketClient.async_get_entity with entity_id."""
-    entity = await async_websocket_client.async_get_entity(entity_id="sun.sun")
+    """Tests AsyncWebsocketClient.get_entity with entity_id."""
+    entity = await async_websocket_client.get_entity(entity_id="sun.sun")
     assert entity is not None
     assert entity.entity_id == "sun.sun"
 
 
 async def test_async_websocket_get_entity_no_args(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
-    """Tests async WebsocketClient.async_get_entity raises ValueError with no arguments."""
+    """Tests AsyncWebsocketClient.get_entity raises ValueError with no arguments."""
     with pytest.raises(
-        ValueError, match="Neither group_id and slug or entity_id provided"
+        ValueError,
+        match="Neither group_id and slug or entity_id provided",
     ):
-        await async_websocket_client.async_get_entity()
+        await async_websocket_client.get_entity()
 
 
 async def test_async_websocket_get_state_not_found(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
-    """Tests async WebsocketClient.async_get_state raises ValueError for nonexistent entity."""
+    """Tests AsyncWebsocketClient.get_state raises ValueError for nonexistent entity."""
     with pytest.raises(ValueError, match="not found"):
-        await async_websocket_client.async_get_state(
-            entity_id="fake.nonexistent_entity_12345"
+        await async_websocket_client.get_state(
+            entity_id="fake.nonexistent_entity_12345",
         )
 
 
@@ -269,10 +276,10 @@ def test_websocket_get_entities(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_entities(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "get_entities"` websocket command."""
-    entities = await async_websocket_client.async_get_entities()
+    entities = await async_websocket_client.get_entities()
     assert "sun" in entities
 
 
@@ -282,9 +289,9 @@ def test_get_domains(cached_client: Client) -> None:
     assert "homeassistant" in domains
 
 
-async def test_async_get_domains(async_cached_client: Client) -> None:
+async def test_async_get_domains(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/services` endpoint."""
-    domains = await async_cached_client.async_get_domains()
+    domains = await async_cached_client.get_domains()
     assert "homeassistant" in domains
 
 
@@ -295,10 +302,10 @@ def test_websocket_get_domains(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_domains(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "get_domains"` websocket command."""
-    domains = await async_websocket_client.async_get_domains()
+    domains = await async_websocket_client.get_domains()
     assert "homeassistant" in domains
 
 
@@ -309,9 +316,9 @@ def test_get_domain(cached_client: Client) -> None:
     assert domain.services
 
 
-async def test_async_get_domain(async_cached_client: Client) -> None:
+async def test_async_get_domain(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/services` endpoint."""
-    domain = await async_cached_client.async_get_domain("homeassistant")
+    domain = await async_cached_client.get_domain("homeassistant")
     assert domain is not None
     assert domain.services
 
@@ -324,10 +331,10 @@ def test_websocket_get_domain(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_domain(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "get_domain"` websocket command."""
-    domain = await async_websocket_client.async_get_domain("homeassistant")
+    domain = await async_websocket_client.get_domain("homeassistant")
     assert domain is not None
     assert domain.services
 
@@ -340,10 +347,10 @@ def test_get_nonuser_flows_in_progress(websocket_client: WebsocketClient) -> Non
 
 
 async def test_async_get_nonuser_flows_in_progress(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/flow/progress"` websocket command."""
-    flows = await async_websocket_client.async_get_nonuser_flows_in_progress()
+    flows = await async_websocket_client.get_nonuser_flows_in_progress()
     assert not flows
 
 
@@ -353,15 +360,16 @@ def test_disable_enable_config_entry(websocket_client: WebsocketClient) -> None:
     entry = websocket_client.get_config_entries()[0]
     assert entry.disabled_by is None
 
-    # Disable entry
-    websocket_client.disable_config_entry(entry.entry_id)
+    try:
+        # Disable entry
+        websocket_client.disable_config_entry(entry.entry_id)
 
-    # Check that it was disabled
-    disabled_entry = websocket_client.get_config_entries()[0]
-    assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
-
-    # Re-enable
-    websocket_client.enable_config_entry(entry.entry_id)
+        # Check that it was disabled
+        disabled_entry = websocket_client.get_config_entries()[0]
+        assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+    finally:
+        # Always re-enable to avoid breaking other tests
+        websocket_client.enable_config_entry(entry.entry_id)
 
     # Check that it was enabled
     enabled_entry = websocket_client.get_config_entries()[0]
@@ -369,36 +377,37 @@ def test_disable_enable_config_entry(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_disable_enable_config_entry(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/disable"` websocket command."""
-    entry = (await async_websocket_client.async_get_config_entries())[0]
+    entry = (await async_websocket_client.get_config_entries())[0]
     assert entry.disabled_by is None
 
-    await async_websocket_client.async_disable_config_entry(entry.entry_id)
+    try:
+        await async_websocket_client.disable_config_entry(entry.entry_id)
 
-    disabled_entry = (await async_websocket_client.async_get_config_entries())[0]
-    assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+        disabled_entry = (await async_websocket_client.get_config_entries())[0]
+        assert disabled_entry.disabled_by is ConfigEntryDisabler.USER
+    finally:
+        await async_websocket_client.enable_config_entry(entry.entry_id)
 
-    await async_websocket_client.async_enable_config_entry(entry.entry_id)
-
-    enabled_entry = (await async_websocket_client.async_get_config_entries())[0]
+    enabled_entry = (await async_websocket_client.get_config_entries())[0]
     assert enabled_entry.disabled_by is None
 
 
 def test_ignore_config_flow(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
     # Currently not able to test as no flows are in progress. Send invalid parameters and handle that error
-    with pytest.raises(RequestError, match="Config entry not found"):
+    with pytest.raises(ResponseError, match="Config entry not found"):
         websocket_client.ignore_config_flow("", "")
 
 
 async def test_async_ignore_config_flow(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/ignore_flow"` websocket command."""
-    with pytest.raises(RequestError, match="Config entry not found"):
-        await async_websocket_client.async_ignore_config_flow("", "")
+    with pytest.raises(ResponseError, match="Config entry not found"):
+        await async_websocket_client.ignore_config_flow("", "")
 
 
 def test_get_config_entries(websocket_client: WebsocketClient) -> None:
@@ -431,10 +440,10 @@ def test_get_config_entries(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_get_config_entries(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/get"` websocket command."""
-    entries = await async_websocket_client.async_get_config_entries()
+    entries = await async_websocket_client.get_config_entries()
     assert len(entries) == 4
 
     sun = entries[0]
@@ -456,46 +465,46 @@ def test_get_entry_subentries(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_get_entry_subentries(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/subentries/list"` websocket command."""
-    sun = (await async_websocket_client.async_get_config_entries())[0]
+    sun = (await async_websocket_client.get_config_entries())[0]
     assert sun
-    assert not await async_websocket_client.async_get_entry_subentries(sun.entry_id)
+    assert not await async_websocket_client.get_entry_subentries(sun.entry_id)
 
 
 def test_delete_entry_subentry(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
     # Currently not able to test as no entries with subentries available. Send invalid parameters and handle that error
-    with pytest.raises(RequestError, match="Config entry not found"):
+    with pytest.raises(ResponseError, match="Config entry not found"):
         websocket_client.delete_entry_subentry("", "")
 
 
 async def test_async_delete_entry_subentry(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "config_entries/subentries/delete"` websocket command."""
-    with pytest.raises(RequestError, match="Config entry not found"):
-        await async_websocket_client.async_delete_entry_subentry("", "")
+    with pytest.raises(ResponseError, match="Config entry not found"):
+        await async_websocket_client.delete_entry_subentry("", "")
 
 
 def test_trigger_service(cached_client: Client) -> None:
     """Tests the `POST /api/services/<domain>/<service>` endpoint."""
     notify = cached_client.get_domain("notify")
     assert notify is not None
-    resp = notify.persistent_notification(
+    resp = notify.persistent_notification.trigger(
         message="Your API Test Suite just said hello!",
         title="Test Suite Notifcation",
     )
-    logging.info(resp)
+    logger.info(resp)
     assert isinstance(resp, tuple)
 
 
-async def test_async_trigger_service(async_cached_client: Client) -> None:
+async def test_async_trigger_service(async_cached_client: AsyncClient) -> None:
     """Tests the `POST /api/services/<domain>/<service>` endpoint."""
-    notify = await async_cached_client.async_get_domain("notify")
+    notify = await async_cached_client.get_domain("notify")
     assert notify is not None
-    resp = await notify.persistent_notification(
+    resp = await notify.persistent_notification.trigger(
         message="Your API Test Suite just said hello!",
         title="Test Suite Notifcation (Async)",
     )
@@ -506,21 +515,23 @@ def test_websocket_trigger_service(websocket_client: WebsocketClient) -> None:
     """Tests the `"type": "trigger_service"` websocket command."""
     notify = websocket_client.get_domain("notify")
     assert notify is not None
-    resp = notify.persistent_notification(
-        message="Your API Test Suite just said hello!", title="Test Suite Notifcation"
+    resp = notify.persistent_notification.trigger(
+        message="Your API Test Suite just said hello!",
+        title="Test Suite Notifcation",
     )
     # Websocket API doesnt return changed states so we check for None
     assert resp is None
 
 
 async def test_async_websocket_trigger_service(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "trigger_service"` websocket command."""
-    notify = await async_websocket_client.async_get_domain("notify")
+    notify = await async_websocket_client.get_domain("notify")
     assert notify is not None
-    resp = await notify.persistent_notification(
-        message="Your API Test Suite just said hello!", title="Test Suite Notifcation"
+    resp = await notify.persistent_notification.trigger(
+        message="Your API Test Suite just said hello!",
+        title="Test Suite Notifcation",
     )
     # Websocket API doesnt return changed states so we check for None
     assert resp is None
@@ -546,18 +557,20 @@ def test_trigger_service_with_response(cached_client: Client) -> None:
     """Tests the `POST /api/services/<domain>/<service>?return_response` endpoint."""
     weather = cached_client.get_domain("weather")
     assert weather is not None
-    changed_states, data = weather.get_forecasts(
+    _changed_states, data = weather.get_forecasts.trigger(
         entity_id="weather.forecast_home",
         type="hourly",
     )
     assert data is not None
 
 
-async def test_async_trigger_service_with_response(async_cached_client: Client) -> None:
+async def test_async_trigger_service_with_response(
+    async_cached_client: AsyncClient,
+) -> None:
     """Tests the `POST /api/services/<domain>/<service>?return_response` endpoint."""
-    weather = await async_cached_client.async_get_domain("weather")
+    weather = await async_cached_client.get_domain("weather")
     assert weather is not None
-    changed_states, data = await weather.get_forecasts(
+    _changed_states, data = await weather.get_forecasts.trigger(
         entity_id="weather.forecast_home",
         type="hourly",
     )
@@ -570,7 +583,7 @@ def test_websocket_trigger_service_with_response(
     """Tests the `"type": "trigger_service_with_response"` websocket command."""
     weather = websocket_client.get_domain("weather")
     assert weather is not None
-    data = weather.get_forecasts(
+    data = weather.get_forecasts.trigger(
         entity_id="weather.forecast_home",
         type="hourly",
     )
@@ -579,12 +592,12 @@ def test_websocket_trigger_service_with_response(
 
 
 async def test_async_websocket_trigger_service_with_response(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "trigger_service_with_response"` websocket command."""
-    weather = await async_websocket_client.async_get_domain("weather")
+    weather = await async_websocket_client.get_domain("weather")
     assert weather is not None
-    data = await weather.get_forecasts(
+    data = await weather.get_forecasts.trigger(
         entity_id="weather.forecast_home",
         type="hourly",
     )
@@ -599,9 +612,9 @@ def test_get_states(cached_client: Client) -> None:
         assert isinstance(state, State)
 
 
-async def test_async_get_states(async_cached_client: Client) -> None:
+async def test_async_get_states(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/states` endpoint."""
-    states = await async_cached_client.async_get_states()
+    states = await async_cached_client.get_states()
     for state in states:
         assert isinstance(state, State)
 
@@ -614,10 +627,10 @@ def test_websocket_get_states(websocket_client: WebsocketClient) -> None:
 
 
 async def test_async_websocket_get_states(
-    async_websocket_client: WebsocketClient,
+    async_websocket_client: AsyncWebsocketClient,
 ) -> None:
     """Tests the `"type": "get_states"` websocket command."""
-    states = await async_websocket_client.async_get_states()
+    states = await async_websocket_client.get_states()
     for state in states:
         assert isinstance(state, State)
 
@@ -628,24 +641,24 @@ def test_get_state(cached_client: Client) -> None:
     assert state.state in {"above_horizon", "below_horizon"}
 
 
-async def test_async_get_state(async_cached_client: Client) -> None:
+async def test_async_get_state(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/states/<entity_id>` endpoint."""
-    state = await async_cached_client.async_get_state(entity_id="sun.sun")
+    state = await async_cached_client.get_state(entity_id="sun.sun")
     assert state.state in {"above_horizon", "below_horizon"}
 
 
 def test_set_state(cached_client: Client) -> None:
     """Tests the `POST /api/states/<entity_id>` endpoint."""
     state = cached_client.set_state(
-        State(state="beyond_our_solar_system", entity_id="sun.red_sun")
+        State(state="beyond_our_solar_system", entity_id="sun.red_sun"),
     )
     assert state.state == "beyond_our_solar_system"
 
 
-async def test_async_set_state(async_cached_client: Client) -> None:
+async def test_async_set_state(async_cached_client: AsyncClient) -> None:
     """Tests the `POST /api/states/<entity_id>` endpoint."""
-    state = await async_cached_client.async_set_state(
-        State(state="beyond_our_solar_system", entity_id="sun.red_sun")
+    state = await async_cached_client.set_state(
+        State(state="beyond_our_solar_system", entity_id="sun.red_sun"),
     )
     assert state.state == "beyond_our_solar_system"
 
@@ -657,11 +670,11 @@ def test_get_events(cached_client: Client) -> None:
         assert isinstance(event, Event)
 
 
-async def test_async_get_events(async_cached_client: Client) -> None:
+async def test_async_get_events(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/events` endpoint."""
-    events = await async_cached_client.async_get_events()
+    events = await async_cached_client.get_events()
     for event in events:
-        assert isinstance(event, Event)
+        assert isinstance(event, AsyncEvent)
 
 
 def test_fire_event(cached_client: Client) -> None:
@@ -670,9 +683,9 @@ def test_fire_event(cached_client: Client) -> None:
     assert data == "Event my_new_event fired."
 
 
-async def test_async_fire_event(async_cached_client: Client) -> None:
+async def test_async_fire_event(async_cached_client: AsyncClient) -> None:
     """Tests the `POST /api/events/<event_type>` endpoint."""
-    data = await async_cached_client.async_fire_event("my_new_event", parameter="123")
+    data = await async_cached_client.fire_event("my_new_event", parameter="123")
     assert data == "Event my_new_event fired."
 
 
@@ -682,7 +695,7 @@ def test_get_components(cached_client: Client) -> None:
     assert "person" in components
 
 
-async def test_async_get_components(async_cached_client: Client) -> None:
+async def test_async_get_components(async_cached_client: AsyncClient) -> None:
     """Tests the `GET /api/components` endpoint."""
-    components = await async_cached_client.async_get_components()
+    components = await async_cached_client.get_components()
     assert "person" in components

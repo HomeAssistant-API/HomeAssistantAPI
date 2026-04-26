@@ -1,19 +1,20 @@
 """Event Model File"""
 
-from typing import TYPE_CHECKING, Any, Optional, Union
-from typing_extensions import Self
-from pydantic import Field
-from typing_extensions import override
+from typing import TYPE_CHECKING
+from typing import Any
 
-from homeassistant_api.utils import JSONType
+from pydantic import Field
+from typing_extensions import Self
+from typing_extensions import override
 
 from .base import BaseModel
 
 if TYPE_CHECKING:
+    from homeassistant_api import AsyncClient
     from homeassistant_api import Client
 
 
-class Event(BaseModel):
+class BaseEvent(BaseModel):
     """
     Event class for Home Assistant Event Triggers
 
@@ -21,35 +22,48 @@ class Event(BaseModel):
     https://data.home-assistant.io/docs/events
     """
 
-    _client: "Client"
     event: str = Field(..., description="The event name/type.")
     listener_count: int = Field(
         ...,
-        description="How many listeners are interesting in this event in Home Assistant.",
+        description="How many listeners are interested in this event in Home Assistant.",
     )
-
-    def __init__(self, *args, _client: Optional["Client"] = None, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        object.__setattr__(self, "_client", _client)
-
-    def fire(self, **event_data) -> Optional[str]:
-        """Fires the corresponding event in Home Assistant."""
-        return self._client.fire_event(self.event, **event_data)
-
-    async def async_fire(self, **event_data) -> str:
-        """Fires the event type in homeassistant. Ex. `on_startup`"""
-        return await self._client.async_fire_event(self.event, **event_data)
 
     @classmethod
     @override
-    def from_json(cls, json: Union[dict[str, JSONType], Any, None], **kwargs) -> Self:
-        raise ValueError(
-            f"`{cls.__name__}` does not support `from_json()`. Use `from_json_with_client()`"
-        )
+    def from_json(cls, json: dict[str, Any] | Any | None, **kwargs: Any) -> Self:
+        msg = f"`{cls.__name__}` does not support `from_json()`. Use `from_json_with_client()`"
+        raise NotImplementedError(msg)
+
+
+class Event(BaseEvent):
+    """Sync event with sync fire method."""
+
+    client: "Client" = Field(exclude=True, repr=False)
+
+    @classmethod
+    def from_json_with_client(cls, json: dict[str, Any], client: "Client") -> "Event":
+        """Constructs Event model from json data"""
+        return cls(**json, client=client)
+
+    def fire(self, **event_data: Any) -> str | None:
+        """Fires the corresponding event in Home Assistant."""
+        return self.client.fire_event(self.event, **event_data)
+
+
+class AsyncEvent(BaseEvent):
+    """Async event with async fire method."""
+
+    client: "AsyncClient" = Field(exclude=True, repr=False)
 
     @classmethod
     def from_json_with_client(
-        cls, json: dict[str, JSONType], client: "Client"
-    ) -> "Event":
+        cls,
+        json: dict[str, Any],
+        client: "AsyncClient",
+    ) -> "AsyncEvent":
         """Constructs Event model from json data"""
-        return cls(**json, _client=client)
+        return cls(**json, client=client)
+
+    async def fire(self, **event_data: Any) -> str:
+        """Fires the event type in homeassistant."""
+        return await self.client.fire_event(self.event, **event_data)

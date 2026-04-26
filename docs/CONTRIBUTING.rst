@@ -37,12 +37,12 @@ Next run in your terminal.
 Step Three: Installing Dependencies
 ======================================
 
-Firstly, you need to have Python 3.7 or newer with Pip installed.
+Firstly, you need to have Python 3.11 or newer installed.
 Download the latest Python Version from `here <https://www.python.org/>`__.
-Then you need to install the very popular Python Package Manager, :code:`poetry`.
-Checkout the `Poetry Docs <https://python-poetry.org/docs/>`__.
-You can install that with :code:`pip` by running :code:`pip install poetry`.
-Now you can install the project's dependencies by running :code:`cd HomeAssistantAPI && poetry install`
+Then you need to install :code:`uv`, a fast Python package manager.
+Checkout the `uv Docs <https://docs.astral.sh/uv/>`__.
+You can install it with :code:`pip` by running :code:`pip install uv`, or see the uv docs for other installation methods.
+Now you can install the project's dependencies by running :code:`cd HomeAssistantAPI && uv sync`
 
 Step Four: [Optional] Setting Up a Home Assistant Development Environment.
 =============================================================================
@@ -69,7 +69,7 @@ Code Styling Guidelines
 In order to make sure that our code is easy to read, and navigate.
 As well as to stop stupid mistakes like typos, undefined variables, etc.
 We enforce code standards.
-Using the tools, :code:`ruff`, :code:`pytest`, and :code:`docker`, we make make sure that our code quality is top notch, and that are changes work everywhere.
+Using the tools, :code:`ruff`, :code:`zuban`, :code:`pytest`, and :code:`docker`, we make make sure that our code quality is top notch, and that are changes work everywhere.
 You can those tools manually yourself, but they also run automatically when you open a PR.
 
 Merging Your Contributions

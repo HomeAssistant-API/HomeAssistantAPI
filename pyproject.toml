@@ -1,57 +1,47 @@
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
 
-[tool.poetry]
-authors = ["GrandMoff100 <minecraftcrusher100@gmail.com>"]
-description = "Python Wrapper for Homeassistant's REST API"
-documentation = "https://homeassistantapi.readthedocs.io"
-homepage = "https://github.com/GrandMoff100/HomeAssistantAPI"
-license = "GPL-3.0-or-later"
+[project]
 name = "HomeAssistant-API"
+version = "6.0.0"
+description = "Python Wrapper for Homeassistant's REST API"
 readme = "README.md"
-include = ["homeassistant_api/py.typed"]
-repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
-version = "5.0.3"
-packages = [{ include = "homeassistant_api" }]
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11,<4.0"
+authors = [
+    { name = "GrandMoff100", email = "minecraftcrusher100@gmail.com" },
+]
+dependencies = [
+    "niquests[ws]>=3",
+    "pydantic>=2,<3",
+    "simplejson>=3,<4",
+]
 
-[tool.poetry.dependencies]
-aiohttp = "^3"
-aiohttp-client-cache = "^0"
-pydantic = "^2"
-python = "^3.9,<4.0.0"
-requests = "^2"
-requests-cache = "^1"
-simplejson = "^3"
-websockets = "^15"
+[project.urls]
+Documentation = "https://homeassistantapi.readthedocs.io"
+Homepage = "https://github.com/GrandMoff100/HomeAssistantAPI"
+Repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
 
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx-autodoc-typehints = "^1.25.2"
-sphinx-rtd-theme = "^2.0.0"
-autodoc-pydantic = "^2.0.1"
-
-[tool.poetry.group.styling]
-optional = true
-
-[tool.poetry.group.styling.dependencies]
-pre-commit = "^2.17.0"
-types-docutils = "^0.17.5"
-types-requests = "^2.27.9"
-types-simplejson = "^3.17.3"
-types-toml = "^0.10.4"
-mypy = "^1.8.0"
-ruff = "^0.15"
-
-[tool.poetry.group.testing]
-optional = true
-[tool.poetry.group.testing.dependencies]
-pytest-asyncio = "^1"
-pytest-cov = "^7"
-pytest = "^8"
-aiosqlite = "^0.22"
+[dependency-groups]
+docs = [
+    "sphinx-autodoc-typehints>=3,<4",
+    "sphinx-rtd-theme>=3,<4",
+    "autodoc-pydantic>=2,<3",
+]
+dev = [
+    "types-docutils>=0.22",
+    "types-simplejson>=3.20",
+    "types-toml>=0.10",
+    "zuban>=0.7",
+    "ruff>=0.15",
+    "pytest-asyncio>=1",
+    "pytest-cov>=7",
+    "pytest>=8",
+    "aiosqlite>=0.22",
+    "prek>=0.3.8",
+    "pre-commit>=4.5.1",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -64,14 +54,20 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.coverage.report]
 exclude_lines = [
+    "pragma: no cover",
     "if TYPE_CHECKING:",
     "def __repr__\\(self\\) -> str:",
     "raise RequestTimeoutError\\(",
-    "except \\(json\\.decoder\\.JSONDecodeError, simplejson.decoder\\.JSONDecodeError\\) as err:",
     "pass",
-    "last_updated < \\(now := datetime\\.now\\(\\)\\) - wait",
-    "pragma: no cover"
+    "msg = r?f?\".+\"",
+    "raise \\w+Error\\(msg\\)",
+    "if not isinstance\\(",
+    "except RequestsConnectionError:  # noqa: PERF203",
 ]
+
+
+[tool.ruff]
+target-version = "py310"
 
 [tool.ruff.lint]
 exclude = [
@@ -79,22 +75,39 @@ exclude = [
     '__pycache__',
     '.github',
 ]
-ignore = ['E501']
-select = [
-    'E',
-    'F',
-    'W',
+select = ['ALL']
+ignore = [
+    'E501',
+    "D",
+    "G004",
+    "ANN401",
+    "FBT",
+    "TD",
+    "FIX",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ['F401']
 "conf.py" = ['E402']
-
-[tool.isort]
-profile = "black"
-
-[tool.mypy]
-disable_error_code = [
-    "no-untyped-def",
-    "name-defined",
+"docs/*" = ['ALL']
+"examples/*" = ['INP001']
+"tests/*" = [
+    "S101",
+    "ANN202",
+    "SLF001",
+    "PLR2004",
+    "INP001",
 ]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.zuban]
+exclude = ["^docs/"]
+untyped_function_return_mode = "inferred"
+
+[tool.hatch.build.targets.wheel]
+packages = ["homeassistant_api"]
+
+[tool.hatch.build.targets.sdist]
+include = ["homeassistant_api", "homeassistant_api/py.typed"]

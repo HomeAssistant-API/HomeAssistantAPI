@@ -1,11 +1,12 @@
 repos:
-  - repo: https://github.com/pre-commit/mirrors-mypy
+  - repo: local
     hooks:
-      - id: mypy
-        additional_dependencies:
-          - types-requests
-          - types-simplejson
-    rev: "v1.17.1"
+      - id: zuban
+        name: zuban
+        entry: uv run zuban check homeassistant_api
+        language: system
+        types: [python]
+        pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     hooks:
       - id: trailing-whitespace
