@@ -55,3 +55,4 @@ WS clients accept a `max_size` parameter (default 16 MB) to handle large respons
 - Test coverage improved to ~99%
 - Modernized type annotations throughout
 - Response content is now read lazily, eliminating internal `_buffer` access hacks
+- Migrated from `requests`/`aiohttp`/`websockets` to `niquests`, for modernization and performance.
