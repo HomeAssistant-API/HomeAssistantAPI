@@ -1,0 +1,52 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "uri": "http://localhost:8123/api/",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": {
+          "code": 401,
+          "message": "Unauthorized"
+        },
+        "headers": {
+          "WWW-Authenticate": [
+            "Bearer resource_metadata=\"http://localhost:8123/.well-known/oauth-protected-resource\""
+          ],
+          "Content-Type": [
+            "text/plain; charset=utf-8"
+          ],
+          "Referrer-Policy": [
+            "no-referrer"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            ""
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "Content-Length": [
+            "17"
+          ],
+          "Date": [
+            "Tue, 21 Apr 2026 03:30:53 GMT"
+          ]
+        },
+        "body": {
+          "string": "401: Unauthorized"
+        },
+        "protocol": null,
+        "url": "http://localhost:8123/api/"
+      },
+      "recorded_at": "2026-04-21T03:30:53.769540+00:00"
+    }
+  ],
+  "websocket_sessions": []
+}

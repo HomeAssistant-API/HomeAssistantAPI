@@ -1,0 +1,55 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "ws://localhost:8123/api/websocket",
+      "handshake_recorded_at": "2026-04-21T02:58:30.716685+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"id\": 2, \"type\": \"config_entries/get\"}",
+          "offset_ms": 2
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":true,\"result\":[{\"created_at\":0.0,\"entry_id\":\"5f8426fa502435857743f302651753c9\",\"domain\":\"sun\",\"modified_at\":0.0,\"title\":\"Sun\",\"source\":\"import\",\"state\":\"loaded\",\"supports_options\":false,\"supports_remove_device\":false,\"supports_unload\":true,\"supports_reconfigure\":false,\"supported_subentry_types\":{},\"pref_disable_new_entities\":false,\"pref_disable_polling\":false,\"disabled_by\":null,\"reason\":null,\"error_reason_translation_key\":null,\"error_reason_translation_placeholders\":null,\"num_subentries\":0},{\"created_at\":0.0,\"entry_id\":\"bb18b688994e8cfa5e4e880452735628\",\"domain\":\"radio_browser\",\"modified_at\":0.0,\"title\":\"Radio Browser\",\"source\":\"onboarding\",\"state\":\"loaded\",\"supports_options\":false,\"supports_remove_device\":false,\"supports_unload\":true,\"supports_reconfigure\":false,\"supported_subentry_types\":{},\"pref_disable_new_entities\":false,\"pref_disable_polling\":false,\"disabled_by\":null,\"reason\":null,\"error_reason_translation_key\":null,\"error_reason_translation_placeholders\":null,\"num_subentries\":0},{\"created_at\":1734714367.193748,\"entry_id\":\"01JFJGH76SD417XC4YJTG8QJWB\",\"domain\":\"met\",\"modified_at\":1734714367.193752,\"title\":\"Home\",\"source\":\"user\",\"state\":\"loaded\",\"supports_options\":true,\"supports_remove_device\":false,\"supports_unload\":true,\"supports_reconfigure\":false,\"supported_subentry_types\":{},\"pref_disable_new_entities\":false,\"pref_disable_polling\":false,\"disabled_by\":null,\"reason\":null,\"error_reason_translation_key\":null,\"error_reason_translation_placeholders\":null,\"num_subentries\":0},{\"created_at\":1776736291.851382,\"entry_id\":\"01KPPVRK0BN6QZ94H1CA6J4MX7\",\"domain\":\"backup\",\"modified_at\":1776736291.851383,\"title\":\"Backup\",\"source\":\"system\",\"state\":\"loaded\",\"supports_options\":false,\"supports_remove_device\":false,\"supports_unload\":true,\"supports_reconfigure\":false,\"supported_subentry_types\":{},\"pref_disable_new_entities\":false,\"pref_disable_polling\":false,\"disabled_by\":null,\"reason\":null,\"error_reason_translation_key\":null,\"error_reason_translation_placeholders\":null,\"num_subentries\":0}]}",
+          "offset_ms": 2
+        }
+      ]
+    }
+  ]
+}

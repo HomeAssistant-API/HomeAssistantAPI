@@ -158,3 +158,4 @@ volumes/coverage/
 volumes/config/.HA_VERSION
 volumes/config/home-assistant*
 volumes/config/deps
+.code-graph/

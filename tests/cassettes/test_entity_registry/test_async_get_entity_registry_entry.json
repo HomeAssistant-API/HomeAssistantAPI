@@ -1,0 +1,55 @@
+{
+  "nimax_version": "1.0.0",
+  "http_interactions": [],
+  "websocket_sessions": [
+    {
+      "uri": "ws://localhost:8123/api/websocket",
+      "handshake_recorded_at": "2026-04-21T02:58:30.996687+00:00",
+      "protocol": null,
+      "frames": [
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_required\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk\", \"type\": \"auth\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"type\":\"auth_ok\",\"ha_version\":\"2026.4.3\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"features\": {}, \"id\": 1, \"type\": \"supported_features\"}",
+          "offset_ms": 0
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":1,\"type\":\"result\",\"success\":true,\"result\":null}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "send",
+          "type": "text",
+          "payload": "{\"entity_id\": \"sensor.sun_next_dawn\", \"id\": 2, \"type\": \"config/entity_registry/get\"}",
+          "offset_ms": 1
+        },
+        {
+          "direction": "recv",
+          "type": "text",
+          "payload": "{\"id\":2,\"type\":\"result\",\"success\":true,\"result\":{\"area_id\":null,\"categories\":{},\"config_entry_id\":\"5f8426fa502435857743f302651753c9\",\"config_subentry_id\":null,\"created_at\":1734400728.780004,\"device_id\":\"b3d3fadee11d077d99d948c173631abc\",\"disabled_by\":null,\"entity_category\":\"diagnostic\",\"entity_id\":\"sensor.sun_next_dawn\",\"has_entity_name\":true,\"hidden_by\":null,\"icon\":null,\"id\":\"d7e14c775a20078d98703325848bd203\",\"labels\":[],\"modified_at\":1776740310.969806,\"name\":null,\"options\":{\"conversation\":{\"should_expose\":false}},\"original_name\":\"Next dawn\",\"platform\":\"sun\",\"translation_key\":\"next_dawn\",\"unique_id\":\"5f8426fa502435857743f302651753c9-next_dawn\",\"aliases\":[null],\"capabilities\":null,\"device_class\":null,\"original_device_class\":\"timestamp\",\"original_icon\":null}}",
+          "offset_ms": 1
+        }
+      ]
+    }
+  ]
+}
