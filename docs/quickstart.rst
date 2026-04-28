@@ -5,7 +5,7 @@ Quickstart
 Prerequisites
 ==============
 
-Homeassistant
+1. Homeassistant
 ---------------
 Before using this library, you need to have Home Assistant running on a device.
 Something like a `Raspberry Pi 3 or 4 <https://www.raspberrypi.com>`_ or spare laptop.
@@ -15,7 +15,7 @@ See `here <https://www.home-assistant.io/installation/>`__ for how to install th
 Configuring the REST API Server in Homeassistant
 =======================================================
 
-Enable the :code:`api` integration in Homeassistant
+1. Enable the :code:`api` integration in Homeassistant
 ------------------------------------------------------
 This library requires that the :code:`api` integration on your Home Assistant is enabled.
 It is enabled by default with the :code:`default_config` integration.
@@ -26,7 +26,7 @@ If you are not sure if it is enabled or not, chances are if your frontend is ena
 
 .. _access_token_setup:
 
-Access Token
+2. Access Token
 --------------
 Then once you have done that you need to head over to your profile and set up a "Long Lived Access Token" to use in your code later.
 A good guide on how to do that is `here <https://www.home-assistant.io/docs/authentication/#your-account-profile>`__
@@ -34,21 +34,23 @@ Also if you are building a website and want to integrate Home Assistant you can 
 See their `Authentication API docs <https://developers.home-assistant.io/docs/auth_api/>`__ for more information.
 Every time you refresh your token you will need to update the :py:attr:`Client.token` attribute of your :py:class:`Client` instance.
 
-Exposing Home Assistant to the Web
+3. Exposing Home Assistant to the Web (optional)
 --------------------------------------
 You may want to setup remote access through a Dynamic DNS server like DuckDNS (a good youtube tutorial on how to do that
 `here <https://www.youtube.com/watch?v=AK5E2T5tWyM>`__, keep in mind you will need to port forward to set that up.)
 If you do pursue this your API URL will be something like :code:`https://yourhomeassistant.duckdns.org:8123/api`.
-Which is different than what it could have looked like before.
-Which might have been something like :code:`http://homeassistant.local:8123/api` or :code:`http://localhost:8123/api`
+as opposed to what it might have looked like before, :code:`http://homeassistant.local:8123/api` or :code:`http://localhost:8123/api`.
 
 Installation
 ==============
 
-Installing with :code:`pip`
+There are a variety of our different ways you can install the library.
+
+Installing with :code:`pip` (recommended)
 -----------------------------------
 
 Installation with pip is really easy and will install the dependencies this project needs.
+This installs the latest stable version from :resource:`PyPI <pypi>`
 
 .. code-block:: bash
 
@@ -62,7 +64,8 @@ Installation with pip is really easy and will install the dependencies this proj
 Installing with :code:`git`
 ----------------------------------
 
-To install with git we're going to clone the repository and then run :code:`$ uv sync` like so.
+This installs the latest development version directly from :resource:`GitHub <repo>`.
+To install with :code:`git` we're going to clone the repository and then run :code:`$ uv sync` like so.
 
 .. code-block:: bash
 
@@ -85,8 +88,8 @@ If run into any problems open an issue on our github :resource:`issue tracker <i
 
 Example Usages
 ================
-Some examples applications of this project include integrating it into a another library, flask application or just a regular python script.
-Maybe you want to start a project that allows you to use your Home Assistant from your command line but some sassy responses.
+Some examples applications of this project include integrating it into a another library, web application or a custom automation script.
+Maybe you want to start a project that allows you to use your Home Assistant from your command line but with some sassy responses.
 Or maybe add it to a discord bot to manage your Home Assistant from inside discord.
 In any event, the possibilities are endless, so go make some cool stuff and share it with us on the :resource:`repository <discussions>`!
 We hope to see your project soon!

@@ -23,6 +23,7 @@ sys.path.append(os.path.abspath("extensions"))
 project = "Homeassistant API"
 copyright = "2023-2025, Nathan Larsen"  # pylint: disable=redefined-builtin
 author = "Nathan Larsen"
+repo_url = "https://github.com/GrandMoff100/HomeassistantAPI"
 
 # The full version, including alpha/beta/rc tags
 with open("../pyproject.toml") as f:
@@ -51,11 +52,12 @@ extensions = [
 autodoc_pydantic_model_show_json = False
 
 resource_links = {
-    "repo": "https://github.com/GrandMoff100/HomeassistantAPI/",
-    "issues": "https://github.com/GrandMoff100/HomeassistantAPI/issues",
-    "discussions": "https://github.com/GrandMoff100/HomeassistantAPI/discussions",
-    "examples": f"https://github.com/GrandMoff100/HomeassistantAPI/tree/{branch}/examples",
-    "new_pr": "https://github.com/GrandMoff100/HomeAssistantAPI/compare",
+    "repo": repo_url,
+    "issues": f"{repo_url}/issues",
+    "discussions": f"{repo_url}/discussions",
+    "examples": f"{repo_url}/tree/{branch}/examples",
+    "new_pr": f"{repo_url}/compare",
+    "pypi": "https://pypi.org/project/homeassistant_api",
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -89,5 +91,5 @@ intersphinx_mapping = {
         "https://docs.python.org/3",
         None,
     ),
-    "homeassistant_api": ("https://homeassistantapi.readthedocs.io/en/latest", None),
+    "homeassistant_api": ("https://homeassistantapi.readthedocs.io/en/stable", None),
 }
