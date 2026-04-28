@@ -28,6 +28,7 @@ docs = [
     "sphinx-autodoc-typehints>=3,<4",
     "sphinx-rtd-theme>=3,<4",
     "autodoc-pydantic>=2,<3",
+    "sphinx-autobuild>=2025.8.25",
 ]
 dev = [
     "types-docutils>=0.22",
