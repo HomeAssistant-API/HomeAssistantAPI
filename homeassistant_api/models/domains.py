@@ -630,7 +630,9 @@ class Service(BaseService):
                 **service_data,
             )
 
-    def __call__(self, **service_data: Any) -> (
+    def __call__(
+        self, **service_data: Any
+    ) -> (
         tuple[State, ...]
         | tuple[tuple[State, ...], dict[str, Any]]
         | dict[str, Any]
@@ -668,7 +670,9 @@ class AsyncService(BaseService):
                 **service_data,
             )
 
-    async def __call__(self, **service_data: Any) -> (
+    async def __call__(
+        self, **service_data: Any
+    ) -> (
         tuple[State, ...]
         | tuple[tuple[State, ...], dict[str, Any]]
         | dict[str, Any]

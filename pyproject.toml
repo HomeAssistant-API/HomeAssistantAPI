@@ -82,6 +82,7 @@ exclude = [
 ]
 select = ['ALL']
 ignore = [
+    'COM812',
     'E501',
     "D",
     "G004",
@@ -106,6 +107,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 force-single-line = true
+
 
 [tool.zuban]
 exclude = ["^docs/"]
