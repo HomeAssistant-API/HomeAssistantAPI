@@ -86,8 +86,8 @@ Then you should be all set to start using the library!
 If run into any problems open an issue on our github :resource:`issue tracker <issues>`
 
 
-Example Usages
-================
+Example Use Case Ideas
+=======================
 Some examples applications of this project include integrating it into a another library, web application or a custom automation script.
 Maybe you want to start a project that allows you to use your Home Assistant from your command line but with some sassy responses.
 Or maybe add it to a discord bot to manage your Home Assistant from inside discord.

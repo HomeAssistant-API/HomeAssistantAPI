@@ -11,7 +11,12 @@ Contribution Ideas
 *********************
 
 If you don't know what you want to contribute yet you should take a look at our :resource:`issues page <issues>`.
-See what other people have been up to and if you have an idea for a new feature or a new way to implement a feature you should :resource:`create an issue <issues>` or :resource:`fork the repository <repo>` and start contributing.
+Some other places to start with are:
+
+- **Writing and Rewriting Documentation**---as more code changes happen and this library continues to mature, more features get added which need documenting.
+- **Adding examples**--- 
+
+See what other people have been up to all across the home assistant community and if you have an idea for a new feature you should :resource:`create an issue <issues>` or :resource:`fork the repository <repo>` and start contributing.
 We're always interested in integrating ways to make the library faster, extensible and easier to use.
 
 Setting up your Development Environment
@@ -22,7 +27,7 @@ So now that you know what you want to contribute it is time to setup a developme
 Step One: Fork the Repository
 ===============================
 
-Click `here <https://github.com/GrandMoff100/HomeAssistantAPI/fork>`__ to fork the repository.
+Click :resource:`here <fork>` to fork the repository.
 Then click your username.
 
 Step Two: Clone the Repository Locally
@@ -95,9 +100,9 @@ If you add a new test that makes real HTTP or WebSocket requests, you need to re
 Code Styling Guidelines
 **************************
 
-In order to make sure that our code is easy to read, and navigate.
-As well as to stop stupid mistakes like typos, undefined variables, etc.
-We enforce code standards.
+In order to make sure that our code is easy to read, and navigate
+as well as to stop stupid mistakes like typos, undefined variables, etc,
+we enforce code standards.
 Using the tools, :code:`ruff`, :code:`zuban`, and :code:`pytest`, we make sure that our code quality is top notch and that changes work everywhere.
 You can those tools manually yourself, but they also run automatically when you open a PR.
 
@@ -105,10 +110,9 @@ Merging Your Contributions
 *****************************
 
 Once you have tested your changes and committed them to your fork you can merge them back into the :resource:`original repository <repo>`.
-Head over to the :resource:`Pull Request Page <new_pr>` and select your fork to merge into the `GrandMoff100/dev` branch.
+Head over to the :resource:`Pull Request Page <new_pr>` and select your fork to merge into the main branch.
 Then you can hit "Create Pull Request" and we'll review it as soon as possible.
-In order to be merged though, your code needs to follow our :ref:`Styling Guidelines <styling>`.
-A Github Actions workflow will run on your PR automatically to verify that it does follow the guidelines.
-Then once the checks have passed one of our maintainers will review the changes (basically to make sure your changes won't break anything ;)).
+In order to be merged, a Github Actions workflow will run on your PR automatically, to check that your code passes the styling checks and tests.
+Then once the checks have passed, one of our maintainers will review the changes and ask for clarification or changes (if needed).
 Then after that your changes will get merged and will be available in the next release!
 

@@ -56,8 +56,9 @@ resource_links = {
     "issues": f"{repo_url}/issues",
     "discussions": f"{repo_url}/discussions",
     "examples": f"{repo_url}/tree/{branch}/examples",
-    "new_pr": f"{repo_url}/compare",
+    "new_pr": f"{repo_url}/pulls",
     "pypi": "https://pypi.org/project/homeassistant_api",
+    "fork": f"{repo_url}/fork",
 }
 
 # Add any paths that contain templates here, relative to this directory.
