@@ -25,6 +25,7 @@ Repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
 
 [dependency-groups]
 docs = [
+    "sphinx>=7,<9",
     "sphinx-autodoc-typehints>=3,<4",
     "sphinx-rtd-theme>=3,<4",
     "autodoc-pydantic>=2,<3",

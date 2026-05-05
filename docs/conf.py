@@ -51,7 +51,7 @@ extensions = [
 ]
 
 autodoc_pydantic_model_show_json = False
-autodoc_pydantic_model_show_config = False
+autodoc_pydantic_model_show_config_summary = False
 
 
 resource_links = {
@@ -89,7 +89,47 @@ autodoc_typehints = "signature"
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    "exclude-members": "model_config",
+    "exclude-members": ",".join(
+        [
+            "model_json_schema",
+            "model_copy",
+            "model_rebuild",
+            "model_dump",
+            "construct",
+            "copy",
+            "dict",
+            "from_orm",
+            "json",
+            "parse_file",
+            "model_validate",
+            "parse_raw",
+            "parse_obj",
+            "parse_str",
+            "parse_url",
+            "schema",
+            "schema_json",
+            "schema_yaml",
+            "schema_yml",
+            "to_orm",
+            "update_forward_refs",
+            "validate",
+            "validate_file",
+            "validate_obj",
+            "validate_raw",
+            "validate_str",
+            "validate_url",
+            "model_validate_strings",
+            "model_validate_json",
+            "model_validate",
+            "model_post_init",
+            "model_parametrized_name",
+            "model_extra",
+            "model_fields_set",
+            "model_dump_json",
+            "model_construct",
+            "model_computed_fields",
+        ]
+    )
 }
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),

@@ -14,8 +14,14 @@ Clients
 .. autoclass:: homeassistant_api.AsyncClient
    :members:
 
+.. autoclass:: homeassistant_api.BaseClient
+
 
 .. autoclass:: homeassistant_api.WebsocketClient
+   :members:
+
+
+.. autoclass:: homeassistant_api.BaseWebsocketClient
    :members:
 
 
@@ -23,38 +29,43 @@ Data Models
 ===========
 
 
-Domains
+Domain
 --------
 
 .. automodule:: homeassistant_api.models.domains
    :members:
+   :inherited-members:
 
-Entities
+Entity
 --------
 
 .. automodule:: homeassistant_api.models.entity
    :members:
+   :inherited-members:
 
 
-Events
+Event
 -------
 
 .. automodule:: homeassistant_api.models.events
    :members:
+   :inherited-members:
 
 History
 --------
 
 .. automodule:: homeassistant_api.models.history
    :members:
+   :inherited-members:
 
 Logbook
 --------
 
 .. automodule:: homeassistant_api.models.logbook
    :members:
+   :inherited-members:
 
-Entity States
+State
 --------------
 
 .. automodule:: homeassistant_api.models.states
