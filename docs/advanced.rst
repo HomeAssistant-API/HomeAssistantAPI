@@ -20,22 +20,19 @@ Persistent Caching
 
 If you want your cache to persist between runs (e.g. to a filesystem), you can pass your own custom cached session via the :code:`session` parameter.
 
-Depending on whether you are using a sync or async client you will want to use either :py:class:`requests_cache.CachedSession` or :py:class:`aiohttp_client_cache.session.CachedSession` respectively.
-See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/latest/>`__ and `aiohttp_client_cache <https://aiohttp-client-cache.readthedocs.io/en/latest/>`__ for backend options and more.
+Depending on whether you are using a sync or async client you will want to use either :py:class:`niquests_cache.session.CachedSession` or :py:class:`niquests_cache.session.AsyncCachedSession` respectively.
+See the docs for `niquests_cache <https://niquests-cache.readthedocs.io/en/stable/#example-usage>`__ for backend options and more.
 
 .. code-block:: python
 
     from datetime import timedelta
     from homeassistant_api import Client
-    from requests_cache import CachedSession
+    from niquests_cache.session import CachedSession
 
     client = Client(
         "<API_URL>",
         "<TOKEN>",
-        session=CachedSession(
-            backend="filesystem",
-            expire_after=timedelta(minutes=5),
-        ),
+        session=CachedSession(cache_name=Path('.cache') / 'http'),  # defaults to sqlite cache
     )
 
     with client:
@@ -48,15 +45,13 @@ See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/lates
     import asyncio
     from datetime import timedelta
     from homeassistant_api import AsyncClient
-    from aiohttp_client_cache import CachedSession, FileBackend
+    from niquests_cache.session import AsyncCachedSession
 
     client = AsyncClient(
         "<API_URL>",
         "<TOKEN>",
-        session=CachedSession(
-            cache=FileBackend(
-                expire_after=timedelta(minutes=5),
-            ),
+        session=AsyncCachedSession(
+            cache_name=Path('.cache') / 'http',
         ),
     )
 
@@ -68,7 +63,7 @@ See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/lates
     asyncio.run(main())
 
 
-Why the heck is :py:class:`Client` a context manager?
+Why is :py:class:`Client` a context manager?
 ********************************************************
 
 The :py:class:`Client` is a context manager because it manages the underlying HTTP session and pings Home Assistant to make sure it's running.
