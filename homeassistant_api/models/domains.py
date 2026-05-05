@@ -24,6 +24,15 @@ if TYPE_CHECKING:
 
     from .states import State
 
+__all__ = (
+    "AsyncDomain",
+    "BaseDomain",
+    "Domain",
+    "BaseService",
+    "AsyncService",
+    "Service"
+)
+
 
 class BaseDomain(BaseModel):
     """Model representing the domain that services belong to."""
@@ -64,7 +73,7 @@ class BaseDomain(BaseModel):
         raise NotImplementedError
 
     def get_service(self, service_id: str) -> BaseService | None:
-        """Return a Service with the given service_id, returns None if no such service exists"""
+        """Return a Service with the given :code:`service_id`, returns None if no such service exists"""
         return self.services.get(service_id)
 
     def __getattr__(self, attr: str) -> Any:

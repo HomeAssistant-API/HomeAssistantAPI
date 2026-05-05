@@ -6,7 +6,7 @@ Prerequisites
 ==============
 
 1. Homeassistant
----------------
+----------------
 Before using this library, you need to have Home Assistant running on a device.
 Something like a `Raspberry Pi 3 or 4 <https://www.raspberrypi.com>`_ or spare laptop.
 If you don't want to do that you can setup a Home Assistant container on your laptop or desktop with docker.
@@ -27,7 +27,7 @@ If you are not sure if it is enabled or not, chances are if your frontend is ena
 .. _access_token_setup:
 
 2. Access Token
---------------
+---------------
 Then once you have done that you need to head over to your profile and set up a "Long Lived Access Token" to use in your code later.
 A good guide on how to do that is `here <https://www.home-assistant.io/docs/authentication/#your-account-profile>`__
 Also if you are building a website and want to integrate Home Assistant you can use a refresh token instead.
@@ -35,7 +35,7 @@ See their `Authentication API docs <https://developers.home-assistant.io/docs/au
 Every time you refresh your token you will need to update the :py:attr:`Client.token` attribute of your :py:class:`Client` instance.
 
 3. Exposing Home Assistant to the Web (optional)
---------------------------------------
+------------------------------------------------
 You may want to setup remote access through a Dynamic DNS server like DuckDNS (a good youtube tutorial on how to do that
 `here <https://www.youtube.com/watch?v=AK5E2T5tWyM>`__, keep in mind you will need to port forward to set that up.)
 If you do pursue this your API URL will be something like :code:`https://yourhomeassistant.duckdns.org:8123/api`.
@@ -47,7 +47,7 @@ Installation
 There are a variety of our different ways you can install the library.
 
 Installing with :code:`pip` (recommended)
------------------------------------
+-----------------------------------------
 
 Installation with pip is really easy and will install the dependencies this project needs.
 This installs the latest stable version from :resource:`PyPI <pypi>`

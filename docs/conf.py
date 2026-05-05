@@ -15,13 +15,14 @@ import os
 import re
 import sys
 
+
 sys.path.insert(0, os.path.abspath("../"))
 sys.path.append(os.path.abspath("extensions"))
 
 # -- Project information -----------------------------------------------------
 
 project = "Homeassistant API"
-copyright = "2023-2025, Nathan Larsen"  # pylint: disable=redefined-builtin
+copyright = "2023-2026, Nathan Larsen"  # pylint: disable=redefined-builtin
 author = "Nathan Larsen"
 repo_url = "https://github.com/GrandMoff100/HomeassistantAPI"
 
@@ -50,6 +51,8 @@ extensions = [
 ]
 
 autodoc_pydantic_model_show_json = False
+autodoc_pydantic_model_show_config = False
+
 
 resource_links = {
     "repo": repo_url,
@@ -86,11 +89,15 @@ autodoc_typehints = "signature"
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
+    "exclude-members": "model_config",
 }
 intersphinx_mapping = {
-    "python": (
-        "https://docs.python.org/3",
-        None,
-    ),
+    "python": ("https://docs.python.org/3", None),
     "homeassistant_api": ("https://homeassistantapi.readthedocs.io/en/stable", None),
+    "niquests": ("https://niquests.readthedocs.io/en/stable", None),
+    "niquests-cache": ("https://niquests-cache.readthedocs.io/en/stable/", None)
+}
+
+autodoc_type_aliases = {
+    "JsonValue": "typing.Any",
 }
