@@ -26,11 +26,11 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AsyncDomain",
-    "BaseDomain",
-    "Domain",
-    "BaseService",
     "AsyncService",
-    "Service"
+    "BaseDomain",
+    "BaseService",
+    "Domain",
+    "Service",
 )
 
 

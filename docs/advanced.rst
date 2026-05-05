@@ -5,23 +5,36 @@ Advanced Section
 Caching
 **********
 
-By default, caching is **disabled**. You can enable the built-in in-memory cache by passing :code:`use_cache=True`:
+The packaged :py:class:`Client` and :py:class:`AsyncClient` do not come with any built-in caching.
+A convenient option is to use the :py:class:`niquests_cache.session.CachedSession` or :py:class:`niquests_cache.session.AsyncCachedSession` classes from the `niquests_cache` library.
+
 
 .. code-block:: python
 
     from homeassistant_api import Client
 
-    client = Client("<API_URL>", "<TOKEN>", use_cache=True)
+    from niquests_cache.session import CachedSession
+    from niquests_cache.backend import MemoryBackend
 
-This creates an in-memory cache that expires after 300 seconds.
+    client = Client("<API_URL>", "<TOKEN>", session=CachedSession(backend=MemoryBackend(), expire_after=300))
+
+.. code-block:: python
+    from homeassistant_api import AsyncClient
+
+    from niquests_cache.session import AsyncCachedSession
+    from niquests_cache.backend import MemoryBackend
+
+    client = AsyncClient("<API_URL>", "<TOKEN>", session=AsyncCachedSession(backend=MemoryBackend(), expire_after=300))
+
+
+This creates an in-memory cache that expires after 300 seconds. You can adjust the `expire_after` value to fit your needs or set it to `-1` to disable expiration.
+For more information on the available caching options, see the `niquests_cache <https://niquests-cache.readthedocs.io/en/stable/>` documentation.
+
 
 Persistent Caching
 ********************
 
 If you want your cache to persist between runs (e.g. to a filesystem), you can pass your own custom cached session via the :code:`session` parameter.
-
-Depending on whether you are using a sync or async client you will want to use either :py:class:`niquests_cache.session.CachedSession` or :py:class:`niquests_cache.session.AsyncCachedSession` respectively.
-See the docs for `niquests_cache <https://niquests-cache.readthedocs.io/en/stable/#example-usage>`__ for backend options and more.
 
 .. code-block:: python
 
@@ -32,7 +45,7 @@ See the docs for `niquests_cache <https://niquests-cache.readthedocs.io/en/stabl
     client = Client(
         "<API_URL>",
         "<TOKEN>",
-        session=CachedSession(cache_name=Path('.cache') / 'http'),  # defaults to sqlite cache
+        session=CachedSession(cache_name=Path('.cache') / 'http'),  # by default uses sqlite backend
     )
 
     with client:

@@ -5,10 +5,8 @@
 from typing import Any
 
 import sphinx
-from docutils import nodes
-from docutils import utils
-from docutils.nodes import Node
-from docutils.nodes import system_message
+from docutils import nodes, utils
+from docutils.nodes import Node, system_message
 from docutils.parsers.rst.states import Inliner
 from sphinx.application import Sphinx
 from sphinx.util.nodes import split_explicit_title

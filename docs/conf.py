@@ -15,7 +15,6 @@ import os
 import re
 import sys
 
-
 sys.path.insert(0, os.path.abspath("../"))
 sys.path.append(os.path.abspath("extensions"))
 
@@ -129,15 +128,11 @@ autodoc_default_options = {
             "model_construct",
             "model_computed_fields",
         ]
-    )
+    ),
 }
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "homeassistant_api": ("https://homeassistantapi.readthedocs.io/en/stable", None),
     "niquests": ("https://niquests.readthedocs.io/en/stable", None),
-    "niquests-cache": ("https://niquests-cache.readthedocs.io/en/stable/", None)
-}
-
-autodoc_type_aliases = {
-    "JsonValue": "typing.Any",
+    "niquests-cache": ("https://niquests-cache.readthedocs.io/en/stable/", None),
 }
