@@ -20,6 +20,8 @@ Clients
 .. autoclass:: homeassistant_api.WebsocketClient
    :members:
 
+.. autoclass:: homeassistant_api.AsyncWebsocketClient
+   :members:
 
 .. autoclass:: homeassistant_api.BaseWebsocketClient
    :members:

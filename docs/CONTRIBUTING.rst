@@ -79,7 +79,7 @@ To do so, you can run
 
 .. code-block:: bash
 
-   $ docker-compose up server
+   $ docker compose up server
 
 which spins up a container running Home Assistant with port 8123 exposed to your local machine.
 You'll need the following environment variables set to use the repository docker setup:
@@ -137,7 +137,7 @@ In order to make sure that our code is easy to read, and navigate
 as well as to stop stupid mistakes like typos, undefined variables, etc,
 we enforce code standards.
 Using the tools, :code:`ruff`, :code:`zuban`, and :code:`pytest`, we make sure that our code quality is top notch and that changes work everywhere.
-You can those tools manually yourself, but they also run automatically when you open a PR.
+You can run those tools manually yourself, but they also run automatically when you open a Pull Request on :resource:`GitHub <repo>`.
 
 
 Merging Your Contributions
