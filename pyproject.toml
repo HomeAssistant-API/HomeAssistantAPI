@@ -107,7 +107,6 @@ ignore = [
 [tool.ruff.lint.isort]
 force-single-line = true
 
-
 [tool.zuban]
 exclude = ["^docs/"]
 untyped_function_return_mode = "inferred"
