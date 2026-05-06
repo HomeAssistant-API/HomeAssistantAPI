@@ -82,7 +82,6 @@ exclude = [
 ]
 select = ['ALL']
 ignore = [
-    'COM812',
     'E501',
     "D",
     "G004",

@@ -499,12 +499,34 @@ def test_trigger_service(cached_client: Client) -> None:
     logger.info(resp)
     assert isinstance(resp, tuple)
 
+def test_call_service(cached_client: Client) -> None:
+    """Tests the `POST /api/services/<domain>/<service>` endpoint."""
+    notify = cached_client.get_domain("notify")
+    assert notify is not None
+    resp = notify.persistent_notification(
+        message="Your API Test Suite just said hello!",
+        title="Test Suite Notifcation",
+    )
+    logger.info(resp)
+    assert isinstance(resp, tuple)
+
 
 async def test_async_trigger_service(async_cached_client: AsyncClient) -> None:
     """Tests the `POST /api/services/<domain>/<service>` endpoint."""
     notify = await async_cached_client.get_domain("notify")
     assert notify is not None
     resp = await notify.persistent_notification.trigger(
+        message="Your API Test Suite just said hello!",
+        title="Test Suite Notifcation (Async)",
+    )
+    assert isinstance(resp, tuple)
+
+
+async def test_async_call_service(async_cached_client: AsyncClient) -> None:
+    """Tests the `POST /api/services/<domain>/<service>` endpoint."""
+    notify = await async_cached_client.get_domain("notify")
+    assert notify is not None
+    resp = await notify.persistent_notification(
         message="Your API Test Suite just said hello!",
         title="Test Suite Notifcation (Async)",
     )
