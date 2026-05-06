@@ -19,6 +19,7 @@ A convenient option is to use the :py:class:`niquests_cache.session.CachedSessio
     client = Client("<API_URL>", "<TOKEN>", session=CachedSession(backend=MemoryBackend(), expire_after=300))
 
 .. code-block:: python
+
     from homeassistant_api import AsyncClient
 
     from niquests_cache.session import AsyncCachedSession
