@@ -13,8 +13,8 @@ Contribution Ideas
 If you don't know what you want to contribute yet you should take a look at our :resource:`issues page <issues>`.
 Some other places to start with are:
 
-- **Writing and Rewriting Documentation**---as more code changes happen and this library continues to mature, more features get added which need documenting.
-- **Adding examples**--- 
+- **Writing and Rewriting Documentation**--- As more code changes happen and this library continues to mature, more features get added which need documenting.
+- **Adding examples**--- We'd appreciate more self-contained examples that show common use cases.
 
 See what other people have been up to all across the home assistant community and if you have an idea for a new feature you should :resource:`create an issue <issues>` or :resource:`fork the repository <repo>` and start contributing.
 We're always interested in integrating ways to make the library faster, extensible and easier to use.
@@ -43,21 +43,54 @@ Step Three: Installing Dependencies
 ======================================
 
 Firstly, you need to have Python 3.11 or newer installed.
-Download the latest Python Version from `here <https://www.python.org/>`__.
+Download the latest Python Version from `here <https://www.python.org/>`__ (or your usual method of installation).
 Then you need to install :code:`uv`, a fast Python package manager.
 Checkout the `uv Docs <https://docs.astral.sh/uv/>`__.
 You can install it with :code:`pip` by running :code:`pip install uv`, or see the uv docs for other installation methods.
 Now you can install the project's dependencies by running :code:`cd HomeAssistantAPI && uv sync`
 
-Step Four: [Optional] Setting Up a Home Assistant Development Environment.
+Step Four: [Optional] Setting Up a Home Assistant Server
 =============================================================================
 
+Option A. Have a Home Assistant installation running.
+------------------------------------------------------
+
+If you already have a Home Assistant installation running, you can use it for development.
+You'll just need to have the API URL and a Long-Lived Access Token available like you would to use the library normally.
+
+
+Option B. Setup a Home Assistant Development Environment.
+----------------------------------------------------------
+
 If you do not have a Home Assistant installation running already, you can setup a Home Assistant Development environment.
-Which is basically a local, unpackaged, Home Assistant Core installation, that runs with just Python (no Docker or Operating System).
+This is basically a local, unpackaged, Home Assistant Core installation, that runs with just Python (no Docker or Operating System).
 You can start and stop the server really easily as it runs just in your
-terminal and gives you lots of control over it, making it ideal for testing your changes to Home Assistant API.
+terminal and gives you an large affordance of control over it, making it ideal for quickly testing your changes.
 Follow this great guide `here <https://developers.home-assistant.io/docs/development_environment>`__ to do that.
-After that you are now ready to make your changes to the codebase!
+You'll access the web dashboard to create the Long-Lived Access Token.
+
+
+Option C. Use a Docker-based Development Environment.
+-----------------------------------------------------
+
+If you prefer to use Docker, you can use your own Docker setup to run a Home Assistant development environment.
+There is also a Dockerfile and compose file that comes with the repository to make it convenient to spin up a development environment.
+To do so, you can run
+
+.. code-block:: bash
+
+   $ docker-compose up server
+
+which spins up a container running Home Assistant with port 8123 exposed to your local machine.
+You'll need the following environment variables set to use the repository docker setup:
+
+.. code-block:: bash
+
+   HOMEASSISTANTAPI_URL=http://localhost:8123/api
+   HOMEASSISTANTAPI_WS_URL=ws://localhost:8123/api/websocket
+   HOMEASSISTANTAPI_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMDE4YjQ4YzMyZTE0ODNhYjY2ZWQzOTZmYzg3ZDAyNiIsImlhdCI6MTY3ODU3NDUwMSwiZXhwIjoxOTkzOTM0NTAxfQ.fyhnfwpont4uE0gn46_Ut_pPmyn4QWv0MDaVAei2PPk
+
+
 
 Testing
 ********
@@ -105,6 +138,7 @@ as well as to stop stupid mistakes like typos, undefined variables, etc,
 we enforce code standards.
 Using the tools, :code:`ruff`, :code:`zuban`, and :code:`pytest`, we make sure that our code quality is top notch and that changes work everywhere.
 You can those tools manually yourself, but they also run automatically when you open a PR.
+
 
 Merging Your Contributions
 *****************************
