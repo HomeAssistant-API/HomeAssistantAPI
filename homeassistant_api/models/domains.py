@@ -630,6 +630,18 @@ class Service(BaseService):
                 **service_data,
             )
 
+    def __call__(
+        self,
+        **service_data: Any,
+    ) -> (
+        tuple[State, ...]
+        | tuple[tuple[State, ...], dict[str, Any]]
+        | dict[str, Any]
+        | None
+    ):
+        """Calls the service associated with this object."""
+        return self.trigger(**service_data)
+
 
 class AsyncService(BaseService):
     """Async service with async trigger method."""
@@ -658,3 +670,15 @@ class AsyncService(BaseService):
                 self.service_id,
                 **service_data,
             )
+
+    async def __call__(
+        self,
+        **service_data: Any,
+    ) -> (
+        tuple[State, ...]
+        | tuple[tuple[State, ...], dict[str, Any]]
+        | dict[str, Any]
+        | None
+    ):
+        """Calls the service associated with this object."""
+        return await self.trigger(**service_data)
