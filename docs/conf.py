@@ -44,7 +44,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "resourcelinks",
     "sphinx_autodoc_typehints",
-    "sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.pydantic",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
 ]
