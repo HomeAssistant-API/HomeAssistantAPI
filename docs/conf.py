@@ -23,7 +23,7 @@ sys.path.append(os.path.abspath("extensions"))
 project = "Homeassistant API"
 copyright = "2023-2026, Nathan Larsen"  # pylint: disable=redefined-builtin
 author = "Nathan Larsen"
-repo_url = "https://github.com/GrandMoff100/HomeassistantAPI"
+repo_url = "https://github.com/HomeAssistant-API/HomeassistantAPI"
 
 # The full version, including alpha/beta/rc tags
 with open("../pyproject.toml") as f:
@@ -38,7 +38,7 @@ with open("../pyproject.toml") as f:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-branch = "dev" if re.match(r".+\.(post|pre)\d+", version) else "v" + version
+branch = "main" if re.match(r".+\.(post|pre)\d+", version) else "v" + version
 
 extensions = [
     "sphinx.ext.autodoc",

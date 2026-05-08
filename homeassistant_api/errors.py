@@ -68,7 +68,7 @@ class InternalServerError(HomeassistantAPIError):
             f"Home Assistant returned a response with an error status code {status_code!r}.\n"
             f"{content!r}\n"
             "If this happened, "
-            "please report it at https://github.com/GrandMoff100/HomeAssistantAPI/issues "
+            "please report it at https://github.com/HomeAssistant-API/HomeAssistantAPI/issues "
             "with the request status code and the request content. Thanks!",
         )
 

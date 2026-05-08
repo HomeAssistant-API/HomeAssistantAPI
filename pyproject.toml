@@ -20,8 +20,8 @@ dependencies = [
 
 [project.urls]
 Documentation = "https://homeassistantapi.readthedocs.io"
-Homepage = "https://github.com/GrandMoff100/HomeAssistantAPI"
-Repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
+Homepage = "https://github.com/HomeAssistant-API/HomeAssistantAPI"
+Repository = "https://github.com/HomeAssistant-API/HomeAssistantAPI"
 
 [dependency-groups]
 docs = [

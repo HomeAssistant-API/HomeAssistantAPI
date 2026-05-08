@@ -58,7 +58,7 @@ This installs the latest stable version from :resource:`PyPI <pypi>`
    $ pip install homeassistant_api
 
    # To install the latest dev version
-   $ pip install git+https://github.com/GrandMoff100/HomeassistantAPI
+   $ pip install git+https://github.com/HomeAssistant-API/HomeAssistantAPI
 
 
 Installing with :code:`git`
@@ -70,7 +70,7 @@ To install with :code:`git` we're going to clone the repository and then run :co
 .. code-block:: bash
 
    # Clone with git
-   git clone https://github.com/GrandMoff100/HomeassistantAPI
+   git clone https://github.com/HomeAssistant-API/HomeAssistantAPI
 
    # CD into your project
    cd HomeAssistantAPI

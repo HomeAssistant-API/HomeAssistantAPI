@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: "Python Package Deployment"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -31,7 +30,6 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    environment: "Python Package Deployment"
     permissions:
       id-token: write
     needs:
