@@ -136,3 +136,6 @@ intersphinx_mapping = {
     "niquests": ("https://niquests.readthedocs.io/en/stable", None),
     "niquests-cache": ("https://niquests-cache.readthedocs.io/en/stable/", None),
 }
+autodoc_type_aliases = {
+    "JsonValue": "typing.Any",
+}
