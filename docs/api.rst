@@ -78,7 +78,7 @@ Websocket Models
 
 .. automodule:: homeassistant_api.models.websocket
    :members:
-   
+
 Request Processing
 ==================
 

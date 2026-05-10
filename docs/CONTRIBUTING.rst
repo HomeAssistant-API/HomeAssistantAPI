@@ -65,7 +65,7 @@ Option B. Setup a Home Assistant Development Environment.
 If you do not have a Home Assistant installation running already, you can setup a Home Assistant Development environment.
 This is basically a local, unpackaged, Home Assistant Core installation, that runs with just Python (no Docker or Operating System).
 You can start and stop the server really easily as it runs just in your
-terminal and gives you an large affordance of control over it, making it ideal for quickly testing your changes.
+terminal and gives you control over it, making it ideal for quickly testing your changes.
 Follow this great guide `here <https://developers.home-assistant.io/docs/development_environment>`__ to do that.
 You'll access the web dashboard to create the Long-Lived Access Token.
 

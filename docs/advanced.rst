@@ -29,7 +29,7 @@ A convenient option is to use the :py:class:`niquests_cache.session.CachedSessio
 
 
 This creates an in-memory cache that expires after 300 seconds. You can adjust the `expire_after` value to fit your needs or set it to `-1` to disable expiration.
-For more information on the available caching options, see the `niquests_cache <https://niquests-cache.readthedocs.io/en/stable/>` documentation.
+For more information on the available caching options, see the `niquests_cache <https://niquests-cache.readthedocs.io/en/stable/>`__ documentation.
 
 
 Persistent Caching
@@ -39,7 +39,7 @@ If you want your cache to persist between runs (e.g. to a filesystem), you can p
 
 .. code-block:: python
 
-    from datetime import timedelta
+    from pathlib import Path
     from homeassistant_api import Client
     from niquests_cache.session import CachedSession
 
@@ -57,7 +57,7 @@ If you want your cache to persist between runs (e.g. to a filesystem), you can p
 
     # Or an example for async
     import asyncio
-    from datetime import timedelta
+    from pathlib import Path
     from homeassistant_api import AsyncClient
     from niquests_cache.session import AsyncCachedSession
 

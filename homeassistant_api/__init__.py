@@ -53,7 +53,6 @@ __all__ = (
     "ServiceField",
     "State",
     "WebsocketClient",
-    "WebsocketClient",
 )
 
 from .asyncclient import AsyncClient
