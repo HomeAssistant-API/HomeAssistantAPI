@@ -21,8 +21,9 @@ sys.path.append(os.path.abspath("extensions"))
 # -- Project information -----------------------------------------------------
 
 project = "Homeassistant API"
-copyright = "2023-2025, Nathan Larsen"  # pylint: disable=redefined-builtin
+copyright = "2023-2026, Nathan Larsen"  # pylint: disable=redefined-builtin
 author = "Nathan Larsen"
+repo_url = "https://github.com/HomeAssistant-API/HomeassistantAPI"
 
 # The full version, including alpha/beta/rc tags
 with open("../pyproject.toml") as f:
@@ -37,25 +38,29 @@ with open("../pyproject.toml") as f:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-branch = "dev" if re.match(r".+\.(post|pre)\d+", version) else "v" + version
+branch = "main" if re.match(r".+\.(post|pre)\d+", version) else "v" + version
 
 extensions = [
     "sphinx.ext.autodoc",
     "resourcelinks",
     "sphinx_autodoc_typehints",
-    "sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.pydantic",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
 ]
 
 autodoc_pydantic_model_show_json = False
+autodoc_pydantic_model_show_config_summary = False
+
 
 resource_links = {
-    "repo": "https://github.com/GrandMoff100/HomeassistantAPI/",
-    "issues": "https://github.com/GrandMoff100/HomeassistantAPI/issues",
-    "discussions": "https://github.com/GrandMoff100/HomeassistantAPI/discussions",
-    "examples": f"https://github.com/GrandMoff100/HomeassistantAPI/tree/{branch}/examples",
-    "new_pr": "https://github.com/GrandMoff100/HomeAssistantAPI/compare",
+    "repo": repo_url,
+    "issues": f"{repo_url}/issues",
+    "discussions": f"{repo_url}/discussions",
+    "examples": f"{repo_url}/tree/{branch}/examples",
+    "new_pr": f"{repo_url}/pulls",
+    "pypi": "https://pypi.org/project/homeassistant_api",
+    "fork": f"{repo_url}/fork",
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -83,16 +88,54 @@ autodoc_typehints = "signature"
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
+    "exclude-members": ",".join(
+        [
+            "model_json_schema",
+            "model_copy",
+            "model_rebuild",
+            "model_dump",
+            "construct",
+            "copy",
+            "dict",
+            "from_orm",
+            "json",
+            "parse_file",
+            "model_validate",
+            "parse_raw",
+            "parse_obj",
+            "parse_str",
+            "parse_url",
+            "schema",
+            "schema_json",
+            "schema_yaml",
+            "schema_yml",
+            "to_orm",
+            "update_forward_refs",
+            "validate",
+            "validate_file",
+            "validate_obj",
+            "validate_raw",
+            "validate_str",
+            "validate_url",
+            "model_validate_strings",
+            "model_validate_json",
+            "model_validate",
+            "model_post_init",
+            "model_parametrized_name",
+            "model_extra",
+            "model_fields_set",
+            "model_dump_json",
+            "model_construct",
+            "model_computed_fields",
+        ]
+    ),
 }
 intersphinx_mapping = {
-    "python": (
-        "https://docs.python.org/3",
-        None,
-    ),
-    "homeassistant_api": ("https://homeassistantapi.readthedocs.io/en/latest", None),
-    "requests_cache": ("https://requests-cache.readthedocs.io/en/stable/", None),
-    "aiohttp_client_cache": (
-        "https://aiohttp-client-cache.readthedocs.io/en/latest/",
-        None,
-    ),
+    "python": ("https://docs.python.org/3", None),
+    "homeassistant_api": ("https://homeassistantapi.readthedocs.io/en/stable", None),
+    "niquests": ("https://niquests.readthedocs.io/en/stable", None),
+    "niquests-cache": ("https://niquests-cache.readthedocs.io/en/stable/", None),
+}
+autodoc_type_aliases = {
+    "JsonValue": "typing.Any",
 }

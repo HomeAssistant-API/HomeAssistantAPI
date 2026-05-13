@@ -1,7 +1,93 @@
 Code Reference
 ***************
 
-.. automodule:: homeassistant_api
-      :platform: Linux, Windows, MacOS
-      :inherited-members:
-      :exclude-members: model_json_schema, model_copy, model_rebuild, model_dump, construct, copy, dict, from_orm, json, parse_file, model_validate, parse_raw, parse_obj, parse_str, parse_url, schema, schema_json, schema_yaml, schema_yml, to_orm, update_forward_refs, validate, validate_file, validate_obj, validate_raw, validate_str, validate_url, model_validate_strings, model_validate_json, model_validate, model_post_init, model_parametrized_name, model_extra, model_fields_set, model_dump_json, model_construct, model_computed_fields
+Here you can find a detailed reference for most classes and methods in the library.
+
+
+Clients
+=======
+
+.. autoclass:: homeassistant_api.Client
+   :members:
+
+
+.. autoclass:: homeassistant_api.AsyncClient
+   :members:
+
+.. autoclass:: homeassistant_api.BaseClient
+
+
+.. autoclass:: homeassistant_api.WebsocketClient
+   :members:
+
+.. autoclass:: homeassistant_api.AsyncWebsocketClient
+   :members:
+
+.. autoclass:: homeassistant_api.BaseWebsocketClient
+   :members:
+
+
+Data Models
+===========
+
+
+Domain
+--------
+
+.. automodule:: homeassistant_api.models.domains
+   :members:
+   :inherited-members:
+
+Entity
+--------
+
+.. automodule:: homeassistant_api.models.entity
+   :members:
+   :inherited-members:
+
+
+Event
+-------
+
+.. automodule:: homeassistant_api.models.events
+   :members:
+   :inherited-members:
+
+History
+--------
+
+.. automodule:: homeassistant_api.models.history
+   :members:
+   :inherited-members:
+
+Logbook
+--------
+
+.. automodule:: homeassistant_api.models.logbook
+   :members:
+   :inherited-members:
+
+State
+--------------
+
+.. automodule:: homeassistant_api.models.states
+   :members:
+
+Websocket Models
+----------------
+
+.. automodule:: homeassistant_api.models.websocket
+   :members:
+
+Request Processing
+==================
+
+.. automodule:: homeassistant_api.processing
+   :members:
+
+
+Errors
+=======
+
+.. automodule:: homeassistant_api.errors
+   :members:

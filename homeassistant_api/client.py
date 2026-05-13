@@ -44,7 +44,7 @@ class Client(BaseClient):
     :param token: The refresh or long lived access token to authenticate your requests. Required.
     :param session: A custom :py:class:`niquests.Session` instance. Optional.
     :param verify_ssl: Whether to verify SSL certificates. Default :code:`True`.
-    :param global_request_kwargs: Kwargs to pass to :func:`requests.request`. Optional.
+    :param global_request_kwargs: Kwargs to pass to :py:meth:`niquests.Session.request`. Optional.
     """  # pylint: disable=line-too-long
 
     _session: Session

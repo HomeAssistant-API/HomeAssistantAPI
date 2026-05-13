@@ -74,3 +74,8 @@ body {
 .version {
     color: #d9d9d9;
 }
+
+table.docutils {
+    margin-bottom: 1.5em !important;
+    margin-left: 0 !important;
+}

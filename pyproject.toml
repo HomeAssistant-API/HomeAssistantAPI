@@ -20,14 +20,16 @@ dependencies = [
 
 [project.urls]
 Documentation = "https://homeassistantapi.readthedocs.io"
-Homepage = "https://github.com/GrandMoff100/HomeAssistantAPI"
-Repository = "https://github.com/GrandMoff100/HomeAssistantAPI"
+Homepage = "https://github.com/HomeAssistant-API/HomeAssistantAPI"
+Repository = "https://github.com/HomeAssistant-API/HomeAssistantAPI"
 
 [dependency-groups]
 docs = [
     "sphinx-autodoc-typehints>=3,<4",
     "sphinx-rtd-theme>=3,<4",
-    "autodoc-pydantic>=2,<3",
+    "sphinx-autobuild>=2025.8.25",
+    "sphinxcontrib-pydantic>=0.3.0",
+    "sphinx>=9"
 ]
 dev = [
     "types-docutils>=0.22",

@@ -1,13 +1,13 @@
 # HomeassistantAPI
 
-[![Code Coverage](https://img.shields.io/codecov/c/github/GrandMoff100/HomeAssistantAPI/dev?style=for-the-badge&token=SJFC3HX5R1)](https://codecov.io/gh/GrandMoff100/HomeAssistantAPI)
+[![Code Coverage](https://img.shields.io/codecov/c/github/HomeAssistant-API/HomeAssistantAPI/dev?style=for-the-badge&token=SJFC3HX5R1)](https://codecov.io/gh/HomeAssistant-API/HomeAssistantAPI)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/HomeAssistant-API?style=for-the-badge)](https://pypistats.org/packages/homeassistant-api)
-![GitHub commits since latest release (by date including pre-releases)](https://img.shields.io/github/commits-since/GrandMoff100/HomeassistantAPI/latest/dev?include_prereleases&style=for-the-badge)
+![GitHub commits since latest release (by date including pre-releases)](https://img.shields.io/github/commits-since/HomeAssistant-API/HomeAssistantAPI/latest/dev?include_prereleases&style=for-the-badge)
 [![Read the Docs (version)](https://img.shields.io/readthedocs/homeassistantapi?style=for-the-badge)](https://homeassistantapi.readthedocs.io/en/latest/?badge=latest)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/GrandMoff100/HomeassistantAPI?style=for-the-badge)](https://github.com/GrandMoff100/HomeassistantAPI/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/HomeAssistant-API/HomeAssistantAPI?style=for-the-badge)](https://github.com/HomeAssistant-API/HomeAssistantAPI/releases)
 
 <a href="https://home-assistant.io">
-    <img src="https://github.com/GrandMoff100/HomeAssistantAPI/blob/7edb4e6298d37bda19c08b807613c6d351788491/docs/images/homeassistant-logo.png?raw=true" width="80%">
+    <img src="https://github.com/HomeAssistant-API/HomeAssistantAPI/blob/7edb4e6298d37bda19c08b807613c6d351788491/docs/images/homeassistant-logo.png?raw=true" width="80%">
 </a>
 
 ## Python wrapper for Homeassistant's [Websocket API](https://developers.home-assistant.io/docs/api/websocket/) and [REST API](https://developers.home-assistant.io/docs/api/rest/)
@@ -65,7 +65,7 @@ you'd want to know is on our readthedocs site [here](https://homeassistantapi.re
 If there is something missing, open an issue and let us know! Thanks!
 
 Go make some cool stuff! Maybe come back and tell us about it in a
-[discussion](https://github.com/GrandMoff100/HomeAssistantAPI/discussions)?
+[discussion](https://github.com/HomeAssistant-API/HomeAssistantAPI/discussions)?
 We'd love to hear about how you use our library!!
 
 ## License

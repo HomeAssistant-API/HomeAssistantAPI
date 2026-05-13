@@ -5,37 +5,48 @@ Advanced Section
 Caching
 **********
 
-By default, caching is **disabled**. You can enable the built-in in-memory cache by passing :code:`use_cache=True`:
+The packaged :py:class:`Client` and :py:class:`AsyncClient` do not come with any built-in caching.
+A convenient option is to use the :py:class:`niquests_cache.session.CachedSession` or :py:class:`niquests_cache.session.AsyncCachedSession` classes from the `niquests_cache` library.
+
 
 .. code-block:: python
 
     from homeassistant_api import Client
 
-    client = Client("<API_URL>", "<TOKEN>", use_cache=True)
+    from niquests_cache.session import CachedSession
+    from niquests_cache.backend import MemoryBackend
 
-This creates an in-memory cache that expires after 300 seconds.
+    client = Client("<API_URL>", "<TOKEN>", session=CachedSession(backend=MemoryBackend(), expire_after=300))
+
+.. code-block:: python
+
+    from homeassistant_api import AsyncClient
+
+    from niquests_cache.session import AsyncCachedSession
+    from niquests_cache.backend import MemoryBackend
+
+    client = AsyncClient("<API_URL>", "<TOKEN>", session=AsyncCachedSession(backend=MemoryBackend(), expire_after=300))
+
+
+This creates an in-memory cache that expires after 300 seconds. You can adjust the `expire_after` value to fit your needs or set it to `-1` to disable expiration.
+For more information on the available caching options, see the `niquests_cache <https://niquests-cache.readthedocs.io/en/stable/>`__ documentation.
+
 
 Persistent Caching
 ********************
 
 If you want your cache to persist between runs (e.g. to a filesystem), you can pass your own custom cached session via the :code:`session` parameter.
 
-Depending on whether you are using a sync or async client you will want to use either :py:class:`requests_cache.CachedSession` or :py:class:`aiohttp_client_cache.session.CachedSession` respectively.
-See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/latest/>`__ and `aiohttp_client_cache <https://aiohttp-client-cache.readthedocs.io/en/latest/>`__ for backend options and more.
-
 .. code-block:: python
 
-    from datetime import timedelta
+    from pathlib import Path
     from homeassistant_api import Client
-    from requests_cache import CachedSession
+    from niquests_cache.session import CachedSession
 
     client = Client(
         "<API_URL>",
         "<TOKEN>",
-        session=CachedSession(
-            backend="filesystem",
-            expire_after=timedelta(minutes=5),
-        ),
+        session=CachedSession(cache_name=Path('.cache') / 'http'),  # by default uses sqlite backend
     )
 
     with client:
@@ -46,17 +57,15 @@ See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/lates
 
     # Or an example for async
     import asyncio
-    from datetime import timedelta
+    from pathlib import Path
     from homeassistant_api import AsyncClient
-    from aiohttp_client_cache import CachedSession, FileBackend
+    from niquests_cache.session import AsyncCachedSession
 
     client = AsyncClient(
         "<API_URL>",
         "<TOKEN>",
-        session=CachedSession(
-            cache=FileBackend(
-                expire_after=timedelta(minutes=5),
-            ),
+        session=AsyncCachedSession(
+            cache_name=Path('.cache') / 'http',
         ),
     )
 
@@ -68,7 +77,7 @@ See the docs for `requests_cache <https://requests-cache.readthedocs.io/en/lates
     asyncio.run(main())
 
 
-Why the heck is :py:class:`Client` a context manager?
+Why is :py:class:`Client` a context manager?
 ********************************************************
 
 The :py:class:`Client` is a context manager because it manages the underlying HTTP session and pings Home Assistant to make sure it's running.

@@ -5,6 +5,7 @@
 from typing import Any
 
 import sphinx
+
 from docutils import nodes
 from docutils import utils
 from docutils.nodes import Node

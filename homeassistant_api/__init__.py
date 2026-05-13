@@ -11,11 +11,13 @@ __all__ = (
     "AuthInvalid",
     "AuthOk",
     "AuthRequired",
+    "BaseClient",
     "BaseDomain",
     "BaseEntity",
     "BaseEvent",
     "BaseGroup",
     "BaseService",
+    "BaseWebsocketClient",
     "Client",
     "ConfigEntry",
     "ConfigEntryChange",
@@ -55,6 +57,8 @@ __all__ = (
 
 from .asyncclient import AsyncClient
 from .asyncwebsocket import AsyncWebsocketClient
+from .baseclient import BaseClient
+from .basewebsocket import BaseWebsocketClient
 from .client import Client
 from .models.config_entries import ConfigEntry
 from .models.config_entries import ConfigEntryChange

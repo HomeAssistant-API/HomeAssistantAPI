@@ -472,7 +472,7 @@ class AsyncWebsocketClient(BaseWebsocketClient):
         """
         Listen for all events of a certain type.
 
-        For example, to listen for all events of type `test_event`:
+        For example, to listen for all events of type :code:`test_event`:
 
         .. code-block:: python
 

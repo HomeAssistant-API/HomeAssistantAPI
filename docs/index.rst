@@ -29,12 +29,12 @@ Index
 Features
 ----------
 
-- Full consumption of the Home Assistant REST API endpoints.
-- Full consumption of the Home Assistant Websocket API (all of the documented commands and some undocumented ones).
-- Convenient Pydantic Models for data validation.
-- Synchronous and asynchronous support for both REST and WebSocket clients.
-- Modular design for intuitive readability.
-- Request caching for more efficient repetitive requests.
+1. Full consumption of the Home Assistant REST API endpoints.
+2. Full consumption of the Home Assistant Websocket API (all of the documented commands and some undocumented ones).
+3. Convenient Pydantic Models for data validation.
+4. Synchronous and asynchronous support for both REST and WebSocket clients.
+5. Modular design for intuitive readability.
+6. Request caching for more efficient repetitive requests.
 
 Getting Started
 -------------------
@@ -63,14 +63,10 @@ View the documentation for each class and method :doc:`here <api>`.
 Contributing Guidelines
 --------------------------
 
-We absolutely looooooooooove contributions!
-This library has come a long way since its one-file humble beginning, on a Saturday afternoon with some our programming buddies.
-But while much has been done already there is still much much much more to do!
-Which is exciting!
-If you're a developer that has an idea, suggestion or just wants to be helpful because you're an awesome person.
-See our \*newly minted\* :ref:`Development and Contribution page <development_page>` for contribution ideas, guidelines, procedures and what to expect with your PR.
-Happy developing!
-We hope to see your PRs soon.
-
-..
-   We would love to give a special shoutout to `FoxNerdSaysMoo <https://github.com/FoxNerdSaysMoo>` for contributions to some of the awesome theme styling on these docs!
+We absolutely love contributions!
+This library has come a long way since its one-file humble beginning on a Saturday afternoon.
+However, while much has been done already there is still much much much more to do,
+which is as exciting as it daunting!
+If you're a developer that has an idea/suggestion or just wants to be helpful,
+see our :ref:`Development and Contribution page <development_page>` for contribution ideas to get started, guidance, and what to expect with your PR.
+Happy developing, and we hope to see your PRs soon.
