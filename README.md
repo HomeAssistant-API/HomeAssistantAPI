@@ -1,8 +1,8 @@
 # HomeassistantAPI
 
-[![Code Coverage](https://img.shields.io/codecov/c/github/HomeAssistant-API/HomeAssistantAPI/dev?style=for-the-badge&token=SJFC3HX5R1)](https://codecov.io/gh/HomeAssistant-API/HomeAssistantAPI)
+[![Code Coverage](https://img.shields.io/codecov/c/github/HomeAssistant-API/HomeAssistantAPI/main?style=for-the-badge&token=SJFC3HX5R1)](https://codecov.io/gh/HomeAssistant-API/HomeAssistantAPI)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/HomeAssistant-API?style=for-the-badge)](https://pypistats.org/packages/homeassistant-api)
-![GitHub commits since latest release (by date including pre-releases)](https://img.shields.io/github/commits-since/HomeAssistant-API/HomeAssistantAPI/latest/dev?include_prereleases&style=for-the-badge)
+![GitHub commits since latest release (by date including pre-releases)](https://img.shields.io/github/commits-since/HomeAssistant-API/HomeAssistantAPI/latest/main?include_prereleases&style=for-the-badge)
 [![Read the Docs (version)](https://img.shields.io/readthedocs/homeassistantapi?style=for-the-badge)](https://homeassistantapi.readthedocs.io/en/latest/?badge=latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/HomeAssistant-API/HomeAssistantAPI?style=for-the-badge)](https://github.com/HomeAssistant-API/HomeAssistantAPI/releases)
 
