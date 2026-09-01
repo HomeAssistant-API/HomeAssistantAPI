@@ -51,6 +51,7 @@ class EntityRegistryEntry(BaseModel):
     hidden_by: EntityHiddenBy | None = None
     icon: str | None = None
     id: str
+    labels: set[str] = Field(default_factory=set)
     modified_at: DatetimeIsoField
     name: str | None = None
     options: dict[str, Any] = Field(default_factory=dict)
