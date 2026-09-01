@@ -22,10 +22,10 @@
 from homeassistant_api import Client
 
 with Client(
-    '<API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
-    '<Your Long Lived Access-Token>'
+    "<API Server URL>",  # i.e. 'http://homeassistant.local:8123/api/'
+    "<Your Long Lived Access-Token>",
 ) as client:
-    client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+    client.trigger_service("light", "turn_on", entity_id="light.living_room")
 ```
 
 All four client classes share the same method names.
@@ -35,12 +35,14 @@ The async clients (`AsyncClient`, `AsyncWebsocketClient`) use `async def` method
 import asyncio
 from homeassistant_api import AsyncClient
 
+
 async def main():
     async with AsyncClient(
-        '<REST API Server URL>', # i.e. 'http://homeassistant.local:8123/api/'
-        '<Your Long Lived Access-Token>',
+        "<REST API Server URL>",  # i.e. 'http://homeassistant.local:8123/api/'
+        "<Your Long Lived Access-Token>",
     ) as client:
-        await client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+        await client.trigger_service("light", "turn_on", entity_id="light.living_room")
+
 
 asyncio.run(main())
 ```
@@ -51,10 +53,10 @@ asyncio.run(main())
 from homeassistant_api import WebsocketClient
 
 with WebsocketClient(
-    '<WS API Server URL>', # i.e. 'ws://homeassistant.local:8123/api/websocket'
-    '<Your Long Lived Access-Token>'
+    "<WS API Server URL>",  # i.e. 'ws://homeassistant.local:8123/api/websocket'
+    "<Your Long Lived Access-Token>",
 ) as ws_client:
-    ws_client.trigger_service('light', 'turn_on', entity_id="light.living_room")
+    ws_client.trigger_service("light", "turn_on", entity_id="light.living_room")
 ```
 
 ## Documentation

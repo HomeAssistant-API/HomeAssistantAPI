@@ -117,9 +117,7 @@ _PARSERS: dict[str, Callable[[ResponseType], Any]] = {
 def _parse_content(response: ResponseType) -> Any:
     """Look up and call the appropriate parser by content-type."""
     content_type = response.headers.get("content-type", "text/plain")
-    if isinstance(content_type, bytes):
-        content_type = content_type.decode("utf-8")  # pragma: no cover
-    mimetype = str(content_type).split(";")[0].strip().lower()
+    mimetype = content_type.split(";")[0].strip().lower()
 
     if (parser := _PARSERS.get(mimetype)) is None:
         msg = f"No response processor found for mimetype {mimetype!r}."

@@ -499,6 +499,7 @@ def test_trigger_service(cached_client: Client) -> None:
     logger.info(resp)
     assert isinstance(resp, tuple)
 
+
 def test_call_service(cached_client: Client) -> None:
     """Tests the `POST /api/services/<domain>/<service>` endpoint."""
     notify = cached_client.get_domain("notify")

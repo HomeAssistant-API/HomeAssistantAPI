@@ -91,6 +91,7 @@ ignore = [
     "FBT",
     "TD",
     "FIX",
+    "CPY",
 ]
 
 [tool.ruff.lint.per-file-ignores]
