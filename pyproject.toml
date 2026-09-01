@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "HomeAssistant-API"
-version = "6.0.1"
+version = "6.1.0"
 description = "Python Wrapper for Homeassistant's REST API"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -91,6 +91,7 @@ ignore = [
     "FBT",
     "TD",
     "FIX",
+    "CPY",
 ]
 
 [tool.ruff.lint.per-file-ignores]
