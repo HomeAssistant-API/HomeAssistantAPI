@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import logging
@@ -74,6 +75,8 @@ class AsyncWebsocketClient(BaseWebsocketClient):
             msg = "Server did not upgrade to WebSocket"
             raise ReceivingError(msg)
         self._ws = resp.extension
+        self._read_lock = asyncio.Condition()
+        self._read_active = False
         okay = await self.authentication_phase()
         logger.info("Authenticated with Home Assistant (%s)", okay.ha_version)
         await self.supported_features_phase()
@@ -148,19 +151,34 @@ class AsyncWebsocketClient(BaseWebsocketClient):
     ) -> EventResponse | ResultResponse | PingResponse | None:
         """Receive a response to a message from the websocket server."""
         while True:
-            ## have we received a message with the id we're looking for?
-            if self._result_responses.get(msg_id) is not None:
-                return self._result_responses.pop(msg_id)
-            if self._event_responses.get(msg_id, []):
-                return self._event_responses[msg_id].pop(0)
-            if (
-                self._ping_responses.get(msg_id) is not None
-                and self._ping_responses[msg_id].end is not None
-            ):
-                return self._ping_responses.pop(msg_id)
+            await self._read_lock.acquire()
+            try:
+                ## have we received a message with the id we're looking for?
+                if self._result_responses.get(msg_id) is not None:
+                    return self._result_responses.pop(msg_id)
+                if self._event_responses.get(msg_id, []):
+                    return self._event_responses[msg_id].pop(0)
+                if (
+                    self._ping_responses.get(msg_id) is not None
+                    and self._ping_responses[msg_id].end is not None
+                ):
+                    return self._ping_responses.pop(msg_id)
 
-            ## if not, keep receiving messages until we do
-            self.handle_recv(await self._async_recv())
+                ## if not, keep receiving messages until we do, ensuring that
+                ## only one task is actively reading at any time
+                if not self._read_active:
+                    self._read_active = True
+                    self._read_lock.release()
+                    try:
+                        self.handle_recv(await self._async_recv())
+                    finally:
+                        await self._read_lock.acquire()
+                        self._read_active = False
+                        self._read_lock.notify_all()
+                else:
+                    await self._read_lock.wait()
+            finally:
+                self._read_lock.release()
 
     async def recv_result(self, msg_id: int) -> ResultResponse:
         """Receive a ResultResponse, raising TypeError if the response is not a ResultResponse."""
