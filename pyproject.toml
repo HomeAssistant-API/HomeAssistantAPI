@@ -43,12 +43,13 @@ dev = [
     "aiosqlite>=0.22",
     "prek>=0.3.8",
     "pre-commit>=4.5.1",
-    "nimax",
+    "nimax>=1.1.1",
 ]
 
 [tool.nimax]
 cassette_library_dir = "tests/cassettes"
 match_on = ["method", "uri"]
+ws_id_extractor = "id"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
